@@ -16,8 +16,6 @@ class DcomposeExtension {
 
     final private Set<Container> containers = new HashSet<>()
 
-    final private DockerRegistryCredentials registry = new DockerRegistryCredentials()
-
     String containerNamePrefix
 
     DcomposeExtension(TaskContainer tasks, File rootProjectDir) {
@@ -99,7 +97,4 @@ class DcomposeExtension {
         container
     }
 
-    DockerRegistryCredentials getRegistry() {
-        return registry
-    }
 }

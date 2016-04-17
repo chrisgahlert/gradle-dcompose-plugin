@@ -1,12 +1,13 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
-import com.chrisgahlert.gradledcomposeplugin.helpers.DockerOutput
-import com.chrisgahlert.gradledcomposeplugin.helpers.DockerTaskAction
+
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 
 /**
  * Created by chris on 15.04.16.
@@ -25,35 +26,38 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         container.containerName
     }
 
-    @DockerTaskAction
+    @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void startContainer() {
-        ignoreException('com.github.dockerjava.api.exception.NotModifiedException') {
-            def result = client.startContainerCmd(containerName).exec()
-        }
-
-        if(container.waitForCommand) {
-            def start = System.currentTimeMillis()
-
-            while(container.waitTimeout <= 0 || start + 1000L * container.waitTimeout > System.currentTimeMillis()) {
-                def inspectResult = client.inspectContainerCmd(containerName).exec()
-                if(!inspectResult.state.running) {
-                    return
-                }
-
-                Thread.sleep(1000)
+        runInDockerClasspath {
+            ignoreException('com.github.dockerjava.api.exception.NotModifiedException') {
+                def result = client.startContainerCmd(containerName).exec()
             }
 
-            throw new GradleException("Timed out waiting for command to finish after $container.waitTimeout seconds")
+            if (container.waitForCommand) {
+                def start = System.currentTimeMillis()
+
+                while (container.waitTimeout <= 0 || start + 1000L * container.waitTimeout > System.currentTimeMillis()) {
+                    def inspectResult = client.inspectContainerCmd(containerName).exec()
+                    if (!inspectResult.state.running) {
+                        return
+                    }
+
+                    Thread.sleep(1000)
+                }
+
+                throw new GradleException("Timed out waiting for command to finish after $container.waitTimeout seconds")
+            }
         }
     }
 
-    @DockerOutput
+    @OutputFile
     @TypeChecked(TypeCheckingMode.SKIP)
-    void getContainerState(Closure callback) {
-        ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
-            def result = client.inspectContainerCmd(containerName).exec()
-            callback(result)
+    File getContainerState() {
+        dockerOutput('container-state') {
+            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+                client.inspectContainerCmd(containerName).exec()
+            }
         }
     }
 

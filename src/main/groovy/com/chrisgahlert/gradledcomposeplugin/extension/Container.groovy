@@ -120,6 +120,7 @@ class Container {
         if (!(dockerFile == null ^ image == null)) {
             throw new GradleException("Either dockerFile or image must be provided for dcompose container '$name'")
         }
+
         if (dockerFile == null) {
             if (baseDir != null) {
                 throw new GradleException("Cannot set baseDir when image in use for dcompose container '$name'")

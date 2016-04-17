@@ -1,6 +1,8 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
+import com.chrisgahlert.gradledcomposeplugin.DcomposePlugin
 import com.chrisgahlert.gradledcomposeplugin.extension.Container
+import groovy.json.JsonBuilder
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -14,6 +16,10 @@ import org.gradle.api.tasks.Optional
  */
 @CompileStatic
 class AbstractDcomposeTask extends DefaultTask {
+
+    private Set<String> initializedOutputs = []
+
+    private ClassLoader dockerClassLoader
 
     @Input
     @Optional
@@ -78,12 +84,63 @@ class AbstractDcomposeTask extends DefaultTask {
                 t.getClass() == loadClass(exceptionClassName)
             }
 
-            if(exceptionMatched) {
+            if (exceptionMatched) {
                 logger.debug("Caught expected docker exception:", t)
                 return null
             }
 
             throw t
         }
+    }
+
+    protected def runInDockerClasspath(Closure action) {
+        def originalClassLoader = getClass().classLoader
+
+        try {
+            Thread.currentThread().contextClassLoader = getDockerClassLoader()
+
+            action.resolveStrategy = Closure.DELEGATE_FIRST
+            return action()
+        } finally {
+            Thread.currentThread().contextClassLoader = originalClassLoader
+        }
+
+        return null
+    }
+
+    private ClassLoader getDockerClassLoader() {
+        if (dockerClassLoader == null) {
+            def config = project.configurations.getByName(DcomposePlugin.CONFIGURATION_NAME)
+            dockerClassLoader = new URLClassLoader(toURLArray(config.files), ClassLoader.systemClassLoader.parent)
+        }
+
+        dockerClassLoader
+    }
+
+    private URL[] toURLArray(Set<File> files) {
+        files.collect { file -> file.toURI().toURL() } as URL[]
+    }
+
+    protected String toJson(Object input) {
+        new JsonBuilder(input).toPrettyString()
+    }
+
+    protected File dockerOutput(String name, Closure value) {
+        def outputFile = new File(temporaryDir, "output-${name}.json")
+
+        if (!initializedOutputs.contains(name)) {
+            initializedOutputs << name
+
+            runInDockerClasspath {
+                outputFile.text = toJson(value())
+            }
+            doLast {
+                runInDockerClasspath {
+                    outputFile.text = toJson(value())
+                }
+            }
+        }
+
+        outputFile
     }
 }

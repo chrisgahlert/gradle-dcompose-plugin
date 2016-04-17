@@ -1,84 +1,54 @@
 package com.chrisgahlert.gradledcomposeplugin
 
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
-import com.chrisgahlert.gradledcomposeplugin.helpers.DcomposeTaskAnnotationProcessor
 import com.chrisgahlert.gradledcomposeplugin.tasks.*
 import groovy.transform.CompileStatic
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.tasks.TaskContainer
 
 @CompileStatic
 class DcomposePlugin implements Plugin<Project> {
 
+
+    public static final String TASK_GROUP = "Dcompose Docker"
+    public static final String TASK_GROUP_ALL = "$TASK_GROUP (all)"
+    public static final String TASK_GROUP_CONTAINER = "$TASK_GROUP '%s' container"
+    public static final String CONFIGURATION_NAME = "dcompose"
+
     @Override
     void apply(Project project) {
-//        project.extensions.create("dcompose", DcomposeExtension, project.tasks)
         def extension = project.extensions.create("dcompose", DcomposeExtension, project.tasks, project.rootDir)
 
-
-        def config = project.configurations.create("dcompose")
-            .setVisible(false)
-            .setTransitive(true);
+        def config = project.configurations.create(CONFIGURATION_NAME)
+                .setVisible(false)
+                .setTransitive(true);
 
         config.dependencies.add(project.dependencies.create('com.github.docker-java:docker-java:3.0.0-RC4'))
-//            dependencies.add(project.dependencies.create('org.slf4j:slf4j-simple:1.7.5'))
-//            dependencies.add(project.dependencies.create('cglib:cglib:3.2.0'))
 
-//        project.buildscript.dependencies {
-//            classpath ('com.github.docker-java:docker-java:3.0.0-RC4') {
-//                transitive = false
-//            }
-//        }
-
-
-        def createAll = project.tasks.create("createContainers")
-        project.tasks.withType(DcomposeContainerCreateTask) {
-            createAll.dependsOn it
-        }
-
-        def startAll = project.tasks.create("startContainers")
-        project.tasks.withType(DcomposeContainerStartTask) {
-            startAll.dependsOn it
-        }
-
-        def stopAll = project.tasks.create("stopContainers")
-        project.tasks.withType(DcomposeContainerStopTask) {
-            stopAll.dependsOn it
-        }
-
-        def removeAllContainers = project.tasks.create("removeContainers")
-        project.tasks.withType(DcomposeContainerRemoveTask) {
-            removeAllContainers.dependsOn it
-        }
-
-        def removeAllImages = project.tasks.create("removeImages")
-        project.tasks.withType(DcomposeImageRemoveTask) {
-            removeAllImages.dependsOn it
-        }
-
-        project.gradle.taskGraph.addTaskExecutionListener(new DcomposeTaskAnnotationProcessor(config))
+        createAllTask(project.tasks, "createContainers", DcomposeContainerCreateTask)
+        createAllTask(project.tasks, "startContainers", DcomposeContainerStartTask)
+        createAllTask(project.tasks, "stopContainers", DcomposeContainerStopTask)
+        createAllTask(project.tasks, "removeContainers", DcomposeContainerRemoveTask)
+        createAllTask(project.tasks, "removeImages", DcomposeImageRemoveTask)
+        createAllTask(project.tasks, "buildImages", DcomposeImageBuildTask)
+        createAllTask(project.tasks, "pullImages", DcomposeImagePullTask)
 
         project.afterEvaluate {
-            project.tasks.withType(DcomposeImagePullTask) { DcomposeImagePullTask task ->
-                task.registry = extension.registry
+            project.tasks.withType(AbstractDcomposeTask) { AbstractDcomposeTask task ->
+                task.group = String.format(TASK_GROUP_CONTAINER, task.container.name)
             }
         }
 
-
-        Thread.currentThread().contextClassLoader = new MyCl(Thread.currentThread().contextClassLoader)
     }
 
-    public static class MyCl extends ClassLoader {
-        MyCl(ClassLoader var1) {
-            super(var1)
-        }
+    private void createAllTask(TaskContainer tasks, String name, Class taskClass) {
+        def allTask = tasks.create(name)
+        allTask.group = TASK_GROUP_ALL
 
-        @Override
-        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-            if(name .equals('javax.ws.rs.client.ClientBuilder')) {
-                println 'here'
-            }
-            return super.loadClass(name, resolve)
+        tasks.withType(taskClass) { Task task ->
+            allTask.dependsOn task
         }
     }
 }
