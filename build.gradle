@@ -1,0 +1,88 @@
+group 'com.chrisgahlert'
+version '0.1'
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.gradle.publish:plugin-publish-plugin:0.9.1"
+    }
+}
+
+apply plugin: 'com.gradle.plugin-publish'
+apply plugin: 'groovy'
+//apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+
+repositories {
+    mavenCentral()
+}
+
+
+configurations {
+    all {
+        resolutionStrategy {
+            force "org.codehaus.groovy:groovy-all:${GroovySystem.getVersion()}"
+        }
+
+//        exclude group: 'javax.ws.rs', module: 'javax.ws.rs-api'
+    }
+
+    providedCompile
+}
+
+sourceSets {
+    main {
+        compileClasspath += configurations.providedCompile
+    }
+}
+
+
+dependencies {
+    compile gradleApi()
+//    compile ('com.github.docker-java:docker-java:3.0.0-RC4') {
+//        transitive = true
+//        exclude group: 'javax.ws.rs', module: 'javax.ws.rs-api'
+//    }
+//    providedCompile 'javax.ws.rs:javax.ws.rs-api:2.0'
+
+    testCompile 'com.netflix.nebula:nebula-test:4.0.0'
+}
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+}
+
+test {
+    maxParallelForks = 4
+}
+
+pluginBundle {
+    website = vcsUrl = 'http://github.com/chrisgahlert/gradle-dcompose'
+    description = 'Plugin for automatically manageing docker container lifecycles in Gradle. This plugin was inspired by the gradle-docker-plugin from Benjamin Muschko and by docker-compose'
+    tags = ['docker', 'management', 'application', 'container', 'lifecycle', 'compose']
+
+    plugins {
+        dcomposePlugin {
+            id = 'com.chrisgahlert.gradle-dcompose'
+            displayName = 'Gradle dcompose Plugin'
+        }
+    }
+}
+publishPlugins.dependsOn test
