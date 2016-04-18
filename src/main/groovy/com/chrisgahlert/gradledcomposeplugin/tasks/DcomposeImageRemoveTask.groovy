@@ -35,7 +35,7 @@ class DcomposeImageRemoveTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean doesExist() {
         runInDockerClasspath {
-            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+            ignoreDockerException('NotFoundException') {
                 client.inspectImageCmd(image).exec()
                 true
             }
@@ -46,7 +46,7 @@ class DcomposeImageRemoveTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     void removeImage() {
         runInDockerClasspath {
-            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+            ignoreDockerException('NotFoundException') {
                 client.removeImageCmd(image)
                         .withForce(force)
                         .withNoPrune(noPrune)

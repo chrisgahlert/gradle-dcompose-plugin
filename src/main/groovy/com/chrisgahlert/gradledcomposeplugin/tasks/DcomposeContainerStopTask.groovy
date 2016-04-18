@@ -19,7 +19,7 @@ public class DcomposeContainerStopTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean containerRunning() {
         runInDockerClasspath {
-            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+            ignoreDockerException('NotFoundException') {
                 client.inspectContainerCmd(container.containerName).exec().state.running
             }
         }
@@ -29,8 +29,7 @@ public class DcomposeContainerStopTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     void stopContainer() {
         runInDockerClasspath {
-            ignoreExceptions(['com.github.dockerjava.api.exception.NotFoundException',
-                              'com.github.dockerjava.api.exception.NotModifiedException']) {
+            ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
                 client.stopContainerCmd(container.containerName).exec()
             }
         }

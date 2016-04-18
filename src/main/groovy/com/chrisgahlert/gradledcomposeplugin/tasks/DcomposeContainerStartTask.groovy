@@ -15,6 +15,8 @@ import org.gradle.api.tasks.TaskAction
 @CompileStatic
 class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
+    int waitTimeout = 1000
+
     DcomposeContainerStartTask() {
         outputs.upToDateWhen {
             !container.waitForCommand
@@ -30,7 +32,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     void startContainer() {
         runInDockerClasspath {
-            ignoreException('com.github.dockerjava.api.exception.NotModifiedException') {
+            ignoreDockerException('NotModifiedException') {
                 def result = client.startContainerCmd(containerName).exec()
             }
 
@@ -43,10 +45,10 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                         return
                     }
 
-                    Thread.sleep(1000)
+                    Thread.sleep(waitTimeout)
                 }
 
-                throw new GradleException("Timed out waiting for command to finish after $container.waitTimeout seconds")
+                throw new GradleException("Timed out waiting for command to finish after ${System.currentTimeMillis() - start} ms")
             }
         }
     }
@@ -55,7 +57,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     File getContainerState() {
         dockerOutput('container-state') {
-            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+            ignoreDockerException('NotFoundException') {
                 client.inspectContainerCmd(containerName).exec()
             }
         }

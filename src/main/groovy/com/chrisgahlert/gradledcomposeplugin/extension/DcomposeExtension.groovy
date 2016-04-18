@@ -1,11 +1,11 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import com.chrisgahlert.gradledcomposeplugin.tasks.*
+import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import groovy.transform.CompileStatic
+import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.util.ConfigureUtil
-
-import java.security.MessageDigest
 
 /**
  * Created by chris on 14.04.16.
@@ -16,22 +16,21 @@ class DcomposeExtension {
 
     final private Set<Container> containers = new HashSet<>()
 
-    String containerNamePrefix
+    String namePrefix
 
     DcomposeExtension(TaskContainer tasks, File rootProjectDir) {
         this.tasks = tasks
 
-        def sha1 = MessageDigest.getInstance("SHA1")
-        def digest = sha1.digest(rootProjectDir.canonicalPath.bytes)
-        def pathHash = new BigInteger(1, digest).toString(16).substring(0, 7)
-        containerNamePrefix = "dcompose_${pathHash}"
+        String hash = DcomposeUtils.sha1Hash(rootProjectDir.canonicalPath)
+        def pathHash = hash.substring(0, 7)
+        namePrefix = "dcompose_${pathHash}_"
     }
 
     Container getByNameOrCreate(String name, Closure config) {
         def container = findByName(name)
 
         if (container == null) {
-            container = new Container(name, { containerNamePrefix })
+            container = new Container(name, { namePrefix })
             ConfigureUtil.configure(config, container)
             container.validate()
 
@@ -77,6 +76,16 @@ class DcomposeExtension {
         return containers.find { it.name == name }
     }
 
+    Container getByName(String name) {
+        def container = findByName(name)
+
+        if (container == null) {
+            throw new GradleException("dcompose container with name '$name' not found")
+        }
+
+        container
+    }
+
     def methodMissing(String name, def args) {
         def argsAr = args as Object[]
 
@@ -88,13 +97,7 @@ class DcomposeExtension {
     }
 
     def propertyMissing(String name) {
-        def container = findByName(name)
-
-        if (container == null) {
-            throw new MissingPropertyException(name, DcomposeExtension)
-        }
-
-        container
+        getByName(name)
     }
 
 }

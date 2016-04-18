@@ -28,7 +28,7 @@ class Container {
 
     private String tag
 
-    File dockerFile
+    String dockerFilename
 
     File baseDir
 
@@ -105,7 +105,7 @@ class Container {
     }
 
     String getTag() {
-        tag ?: "dcompose/" + (containerName.startsWith('dcompose_') ? containerName.substring(9) : containerName).replace('_', '')
+        tag ?: (dockerPrefix() + '/' + name).replace('_', '')
     }
 
     String getImage() {
@@ -117,12 +117,12 @@ class Container {
     }
 
     void validate() {
-        if (!(dockerFile == null ^ image == null)) {
+        if (!(baseDir == null ^ image == null)) {
             throw new GradleException("Either dockerFile or image must be provided for dcompose container '$name'")
         }
 
-        if (dockerFile == null) {
-            if (baseDir != null) {
+        if (baseDir == null) {
+            if (dockerFilename != null) {
                 throw new GradleException("Cannot set baseDir when image in use for dcompose container '$name'")
             }
             if (tag != null) {

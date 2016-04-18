@@ -14,50 +14,27 @@ buildscript {
 
 apply plugin: 'com.gradle.plugin-publish'
 apply plugin: 'groovy'
-//apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
-
-
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
-
 
 repositories {
     mavenCentral()
 }
 
+sourceCompatibility = targetCompatibility = 1.6
 
 configurations {
     all {
         resolutionStrategy {
             force "org.codehaus.groovy:groovy-all:${GroovySystem.getVersion()}"
         }
-
-//        exclude group: 'javax.ws.rs', module: 'javax.ws.rs-api'
-    }
-
-    providedCompile
-}
-
-sourceSets {
-    main {
-        compileClasspath += configurations.providedCompile
     }
 }
-
 
 dependencies {
     compile gradleApi()
-//    compile ('com.github.docker-java:docker-java:3.0.0-RC4') {
-//        transitive = true
-//        exclude group: 'javax.ws.rs', module: 'javax.ws.rs-api'
-//    }
-//    providedCompile 'javax.ws.rs:javax.ws.rs-api:2.0'
-
     testCompile 'com.netflix.nebula:nebula-test:4.0.0'
 }
-
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
@@ -70,7 +47,7 @@ artifacts {
 }
 
 test {
-    maxParallelForks = 4
+    maxParallelForks = Runtime.runtime.availableProcessors() / 2
 }
 
 pluginBundle {

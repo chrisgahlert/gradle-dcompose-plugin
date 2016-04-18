@@ -1,12 +1,13 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
-import com.chrisgahlert.gradledcomposeplugin.DcomposePlugin
 import com.chrisgahlert.gradledcomposeplugin.extension.Container
+import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import groovy.json.JsonBuilder
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
@@ -18,8 +19,6 @@ import org.gradle.api.tasks.Optional
 class AbstractDcomposeTask extends DefaultTask {
 
     private Set<String> initializedOutputs = []
-
-    private ClassLoader dockerClassLoader
 
     @Input
     @Optional
@@ -34,6 +33,8 @@ class AbstractDcomposeTask extends DefaultTask {
     String apiVersion
 
     private Container container
+
+    DockerClassLoaderFactory dockerClassLoaderFactory
 
     void setContainer(Container container) {
         if (this.container != null) {
@@ -72,16 +73,16 @@ class AbstractDcomposeTask extends DefaultTask {
         Thread.currentThread().contextClassLoader.loadClass(name)
     }
 
-    protected def ignoreException(String exceptionClassName, Closure action) {
-        ignoreExceptions([exceptionClassName], action)
+    protected def ignoreDockerException(String exceptionClassName, Closure action) {
+        ignoreDockerExceptions([exceptionClassName], action)
     }
 
-    protected def ignoreExceptions(List<String> exceptionClassNames, Closure action) {
+    protected def ignoreDockerExceptions(List<String> exceptionClassNames, Closure action) {
         try {
             return action()
         } catch (Throwable t) {
             def exceptionMatched = exceptionClassNames.find { exceptionClassName ->
-                t.getClass() == loadClass(exceptionClassName)
+                t.getClass() == loadClass("com.github.dockerjava.api.exception.$exceptionClassName")
             }
 
             if (exceptionMatched) {
@@ -97,28 +98,16 @@ class AbstractDcomposeTask extends DefaultTask {
         def originalClassLoader = getClass().classLoader
 
         try {
-            Thread.currentThread().contextClassLoader = getDockerClassLoader()
+            Thread.currentThread().contextClassLoader = dockerClassLoaderFactory.getDefaultInstance()
 
-            action.resolveStrategy = Closure.DELEGATE_FIRST
             return action()
+        } catch (Exception e) {
+            throw new GradleException("Docker command failed: $e.message", e)
         } finally {
             Thread.currentThread().contextClassLoader = originalClassLoader
         }
 
         return null
-    }
-
-    private ClassLoader getDockerClassLoader() {
-        if (dockerClassLoader == null) {
-            def config = project.configurations.getByName(DcomposePlugin.CONFIGURATION_NAME)
-            dockerClassLoader = new URLClassLoader(toURLArray(config.files), ClassLoader.systemClassLoader.parent)
-        }
-
-        dockerClassLoader
-    }
-
-    private URL[] toURLArray(Set<File> files) {
-        files.collect { file -> file.toURI().toURL() } as URL[]
     }
 
     protected String toJson(Object input) {

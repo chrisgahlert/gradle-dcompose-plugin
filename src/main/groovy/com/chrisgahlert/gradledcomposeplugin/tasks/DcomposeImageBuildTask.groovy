@@ -53,15 +53,14 @@ class DcomposeImageBuildTask extends AbstractDcomposeTask {
         container.cpusetcpus
     }
 
-    @InputFile
-    File getDockerFile() {
-        container.dockerFile
-    }
-
     @InputDirectory
-    @Optional
     File getBaseDir() {
         container.baseDir
+    }
+
+    @InputFile
+    File getDockerFile() {
+        new File(baseDir, container.dockerFilename ?: 'Dockerfile')
     }
 
     @Input
@@ -75,11 +74,11 @@ class DcomposeImageBuildTask extends AbstractDcomposeTask {
     void buildImage() {
         runInDockerClasspath {
             def cmd = client.buildImageCmd(dockerFile)
+                    .withBaseDirectory(baseDir)
                     .withTag(tag)
                     .withNoCache(noCache)
                     .withRemove(remove)
                     .withPull(pull)
-                    .withBaseDirectory(baseDir ?: dockerFile.parentFile)
 
             if (memory != null) {
                 cmd.withMemory(memory)
@@ -111,7 +110,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     File getImageState() {
         dockerOutput('image-state') {
-            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+            ignoreDockerException('NotFoundException') {
                 client.inspectImageCmd(tag).exec()
             }
         }

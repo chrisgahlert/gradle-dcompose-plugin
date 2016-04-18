@@ -20,7 +20,7 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean containerExist() {
         runInDockerClasspath {
-            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+            ignoreDockerException('NotFoundException') {
                 client.inspectContainerCmd(container.containerName).exec()
                 true
             }
@@ -36,8 +36,7 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     void removeContainer() {
         runInDockerClasspath {
-            ignoreExceptions(['com.github.dockerjava.api.exception.NotFoundException',
-                              'com.github.dockerjava.api.exception.NotModifiedException']) {
+            ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
                 client.removeContainerCmd(container.containerName)
                         .withRemoveVolumes(!preserveVolumes)
                         .exec()

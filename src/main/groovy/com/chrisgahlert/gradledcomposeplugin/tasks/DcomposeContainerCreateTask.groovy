@@ -62,7 +62,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     void createNewContainer() {
         runInDockerClasspath {
             def oldVolumes = [:]
-            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+            ignoreDockerException('NotFoundException') {
                 if (preserveVolumes) {
                     client.inspectContainerCmd(containerName).exec().mounts.each { mount ->
                         oldVolumes.put(mount.destination, mount.name)
@@ -99,9 +99,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
             }
 
             if (preserveVolumes) {
-                def imageVolumes = client.inspectImageCmd(image).exec().config.volumes.keySet().collect {
-                    volumeClass.newInstance(it)
+                def imageVolumes = []
+                client.inspectImageCmd(image).exec().config.volumes?.keySet().each {
+                    imageVolumes << volumeClass.newInstance(it)
                 }
+
                 def knownVolumes = new HashSet(imageVolumes)
                 knownVolumes.addAll(cmd.volumes)
 
@@ -109,17 +111,19 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
                     def bind = allBinds.find { volume == it.volume }
 
                     if (!bind) {
+                        def volumeName
                         if (oldVolumes.containsKey(volume)) {
-                            allBinds << oldVolumes.get(volume) + ':' + volume.path
+                            volumeName = oldVolumes.get(volume)
                         } else {
-                            allBinds << containerName + '__' + GUtil.toLowerCamelCase(volume.path) + ':' + volume.path
+                            volumeName = containerName + '__' + GUtil.toLowerCamelCase(volume.path)
                         }
+                        allBinds << bindParser.invoke(null, volumeName + ':' + volume.path)
                     }
                 }
             }
 
             if (allBinds) {
-                cmd.withBinds(allBinds.collect { bindParser.invoke(null, it as String) })
+                cmd.withBinds(allBinds)
             }
 
             def result = cmd.withName(containerName).exec()
@@ -131,7 +135,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     File getContainerState() {
         dockerOutput('container-state') {
-            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+            ignoreDockerException('NotFoundException') {
                 def result = client.inspectContainerCmd(containerName).exec()
                 result.state = null
                 result.hostsPath = null

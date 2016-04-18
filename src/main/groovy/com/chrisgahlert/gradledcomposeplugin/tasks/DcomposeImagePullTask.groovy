@@ -27,7 +27,7 @@ class DcomposeImagePullTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean imageNotExists() {
         def exists = runInDockerClasspath {
-            ignoreException('com.github.dockerjava.api.exception.NotFoundException') {
+            ignoreDockerException('NotFoundException') {
                 client.inspectImageCmd(image).exec()
                 true
             }
