@@ -17,9 +17,6 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
-/**
- * Created by chris on 18.04.16.
- */
 class DcomposeImagePullTaskSpec extends AbstractDcomposeSpec {
 
     private static final String PULL_IMAGE = 'busybox:1.24.1-musl'

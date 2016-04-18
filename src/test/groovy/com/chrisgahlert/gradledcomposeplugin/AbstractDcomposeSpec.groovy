@@ -18,9 +18,6 @@ package com.chrisgahlert.gradledcomposeplugin
 import groovy.transform.CompileStatic
 import nebula.test.IntegrationSpec
 
-/**
- * Created by chris on 17.04.16.
- */
 @CompileStatic
 abstract class AbstractDcomposeSpec extends IntegrationSpec {
     protected static final String DEFAULT_IMAGE = 'busybox:1.24.2-musl'

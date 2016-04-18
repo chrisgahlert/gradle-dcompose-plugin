@@ -17,9 +17,6 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
-/**
- * Created by chris on 18.04.16.
- */
 class DcomposeImageRemoveTaskSpec extends AbstractDcomposeSpec {
 
     private static final String REMOVE_IMAGE = 'busybox:1.24.2-glibc'

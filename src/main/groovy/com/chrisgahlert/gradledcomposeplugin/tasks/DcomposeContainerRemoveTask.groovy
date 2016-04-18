@@ -21,9 +21,6 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 
-/**
- * Created by chris on 16.04.16.
- */
 class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
 
     DcomposeContainerRemoveTask() {

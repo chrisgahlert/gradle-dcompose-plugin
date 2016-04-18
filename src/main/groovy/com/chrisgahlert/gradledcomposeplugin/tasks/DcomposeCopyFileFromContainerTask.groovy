@@ -24,9 +24,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
-/**
- * Created by chris on 18.04.16.
- */
 @CompileStatic
 class DcomposeCopyFileFromContainerTask extends AbstractDcomposeTask {
 

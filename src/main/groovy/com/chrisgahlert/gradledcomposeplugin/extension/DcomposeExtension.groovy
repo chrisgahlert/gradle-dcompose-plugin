@@ -22,9 +22,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.util.ConfigureUtil
 
-/**
- * Created by chris on 14.04.16.
- */
 @CompileStatic
 class DcomposeExtension {
     final private TaskContainer tasks

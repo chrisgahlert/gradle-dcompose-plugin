@@ -24,9 +24,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.GUtil
 
-/**
- * Created by chris on 14.04.16.
- */
 @CompileStatic
 class DcomposeContainerCreateTask extends AbstractDcomposeTask {
 

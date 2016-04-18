@@ -19,9 +19,6 @@ import groovy.transform.CompileStatic
 import org.gradle.api.GradleException
 import org.gradle.util.GUtil
 
-/**
- * Created by chris on 15.04.16.
- */
 @CompileStatic
 class Container {
     final String name

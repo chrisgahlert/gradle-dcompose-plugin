@@ -22,9 +22,6 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 
-/**
- * Created by chris on 15.04.16.
- */
 @CompileStatic
 class DcomposeImagePullTask extends AbstractDcomposeTask {
 

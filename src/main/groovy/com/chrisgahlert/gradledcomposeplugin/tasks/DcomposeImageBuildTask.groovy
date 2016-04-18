@@ -19,9 +19,6 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.*
 
-/**
- * Created by chris on 17.04.16.
- */
 class DcomposeImageBuildTask extends AbstractDcomposeTask {
 
     @Input

@@ -27,9 +27,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 
-/**
- * Created by chris on 15.04.16.
- */
 @CompileStatic
 class AbstractDcomposeTask extends DefaultTask {
 

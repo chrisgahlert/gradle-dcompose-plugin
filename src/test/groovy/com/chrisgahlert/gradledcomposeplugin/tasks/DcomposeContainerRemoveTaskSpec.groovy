@@ -17,9 +17,6 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
-/**
- * Created by chris on 18.04.16.
- */
 class DcomposeContainerRemoveTaskSpec extends AbstractDcomposeSpec {
 
     def 'remove container should run successfully'() {

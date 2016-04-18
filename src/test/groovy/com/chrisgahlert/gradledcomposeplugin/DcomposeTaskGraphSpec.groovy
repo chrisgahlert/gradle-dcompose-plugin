@@ -18,9 +18,6 @@ package com.chrisgahlert.gradledcomposeplugin
 import spock.lang.IgnoreRest
 import spock.lang.Unroll
 
-/**
- * Created by chris on 18.04.16.
- */
 class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
 
     @Unroll

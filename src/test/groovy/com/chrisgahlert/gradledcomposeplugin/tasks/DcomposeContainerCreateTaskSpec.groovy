@@ -17,9 +17,6 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
-/**
- * Created by chris on 17.04.16.
- */
 class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
 
     def 'create should work successfully'() {

@@ -18,9 +18,6 @@ package com.chrisgahlert.gradledcomposeplugin.utils
 import groovy.transform.CompileStatic
 import org.gradle.api.artifacts.Configuration
 
-/**
- * Created by chris on 19.04.16.
- */
 @CompileStatic
 class DockerClassLoaderFactory {
 

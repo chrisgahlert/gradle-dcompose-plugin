@@ -20,9 +20,6 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.TaskAction
 
-/**
- * Created by chris on 16.04.16.
- */
 public class DcomposeContainerStopTask extends AbstractDcomposeTask {
 
     DcomposeContainerStopTask() {
