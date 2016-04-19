@@ -44,6 +44,8 @@ class AbstractDcomposeTask extends DefaultTask {
     @Optional
     String apiVersion
 
+    Set<Container> otherContainers
+
     private Container container
 
     DockerClassLoaderFactory dockerClassLoaderFactory

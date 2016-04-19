@@ -37,10 +37,11 @@ class DcomposePlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        createExtension(project)
+        def extension = createExtension(project)
         createDockerConfiguration(project)
         createAllTasks(project.tasks)
         updateTaskGroups(project)
+        injectOtherContainersIntoTasks(extension, project)
         injectExtraProperties(project)
     }
 
@@ -87,6 +88,16 @@ class DcomposePlugin implements Plugin<Project> {
         project.afterEvaluate {
             project.tasks.withType(AbstractDcomposeTask) { AbstractDcomposeTask task ->
                 task.group = String.format(TASK_GROUP_CONTAINER_TEMPLATE, task.container.name)
+            }
+        }
+    }
+
+    private void injectOtherContainersIntoTasks(DcomposeExtension extension, Project project) {
+        project.afterEvaluate {
+            project.tasks.withType(AbstractDcomposeTask) { AbstractDcomposeTask task ->
+                task.otherContainers = extension.containers.findAll { otherContainer ->
+                    otherContainer != task.container
+                }
             }
         }
     }

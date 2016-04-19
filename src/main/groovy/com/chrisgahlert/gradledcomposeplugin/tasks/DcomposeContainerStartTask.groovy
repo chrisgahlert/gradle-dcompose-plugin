@@ -33,6 +33,10 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         outputs.upToDateWhen {
             !container.waitForCommand
         }
+
+        dependsOn {
+            container.links?.collect { it.container?.startTaskName }
+        }
     }
 
     @Input

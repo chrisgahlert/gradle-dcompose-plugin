@@ -56,4 +56,31 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':stopMainContainer')
     }
 
+    def 'stop should work for linked containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    exposedPorts = ['8000']
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    link server
+                }
+            }
+        """
+
+        runTasksSuccessfully 'startClientContainer'
+
+        when:
+        def result = runTasksSuccessfully 'stopServerContainer'
+
+        then:
+        result.wasExecuted(':stopClientContainer')
+        result.wasExecuted(':stopServerContainer')
+    }
+
 }

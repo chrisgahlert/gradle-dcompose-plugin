@@ -28,6 +28,8 @@ class Container {
 
     List<String> portBindings
 
+    List<String> exposedPorts
+
     boolean waitForCommand
 
     int waitTimeout
@@ -54,6 +56,8 @@ class Container {
 
     Map<String, String> buildArgs
 
+    List<LinkDependency> links = []
+
     boolean forceRemoveImage
 
     boolean noPruneParentImages
@@ -78,10 +82,6 @@ class Container {
 
     def methodMissing(String name, def args) {
         throw new MissingMethodException(name, Container, args as Object[])
-    }
-
-    def propertyMissing(String name) {
-        throw new MissingPropertyException(name, Container)
     }
 
     String getPullTaskName() {
@@ -124,6 +124,14 @@ class Container {
         image ?: getTag()
     }
 
+    void link(Container container, String alias = container.name) {
+        links << new LinkDependency(container, alias)
+    }
+
+    void link(String container, String alias = container) {
+        links << new LinkDependency(container, alias)
+    }
+
     boolean hasImage() {
         image
     }
@@ -140,6 +148,43 @@ class Container {
             if (tag != null) {
                 throw new GradleException("Cannot set tag when image in use for dcompose container '$name'")
             }
+        }
+    }
+
+    static class LinkDependency {
+        final private container
+        final private String alias
+        final private Closure<String> taskDependency
+
+        LinkDependency(container, String alias) {
+            this.container = container
+            this.alias = alias
+            this.taskDependency = taskDependency
+        }
+
+        Container getContainer() {
+            if (container instanceof Container) {
+                return (Container) container
+            } else {
+                return null
+            }
+        }
+
+        String getContainerName() {
+            if(getContainer() != null) {
+                return getContainer().containerName
+            } else {
+                return container.toString()
+            }
+        }
+
+        String getAlias() {
+            return alias
+        }
+
+        @Override
+        String toString() {
+            return getContainerName() + ':' + getAlias()
         }
     }
 

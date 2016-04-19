@@ -27,6 +27,11 @@ import org.gradle.util.GUtil
 @CompileStatic
 class DcomposeContainerCreateTask extends AbstractDcomposeTask {
 
+    DcomposeContainerCreateTask() {
+        dependsOn {
+            container.links?.collect { it.container?.createTaskName }
+        }
+    }
 
     @Input
     String getImage() {
@@ -42,6 +47,12 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     @Optional
     List<String> getPortBindings() {
         container.portBindings
+    }
+
+    @Input
+    @Optional
+    List<String> getExposedPorts() {
+        container.exposedPorts
     }
 
     @Input
@@ -65,6 +76,14 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     @Input
     boolean isPreserveVolumes() {
         container.preserveVolumes
+    }
+
+    @Input
+    @Optional
+    List<String> getLinks() {
+        container.links?.collect {
+            it as String
+        }
     }
 
     // TODO: add cpu/mem options
@@ -136,6 +155,16 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
 
             if (allBinds) {
                 cmd.withBinds(allBinds)
+            }
+
+            if(links) {
+                def linkParser = loadClass('com.github.dockerjava.api.model.Link').getMethod('parse', String)
+                cmd.withLinks(links.collect { linkParser.invoke(null, it) })
+            }
+
+            if(exposedPorts) {
+                def ePortParser = loadClass('com.github.dockerjava.api.model.ExposedPort').getMethod('parse', String)
+                cmd.withExposedPorts(exposedPorts.collect { ePortParser.invoke(null, it) })
             }
 
             def result = cmd.withName(containerName).exec()

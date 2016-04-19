@@ -130,4 +130,62 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':createMainContainer')
         result.wasExecuted(':startMainContainer')
     }
+
+    def 'start should work for linked containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc server 8000 > /transfer']
+                    link server
+                    waitForCommand = true
+                }
+            }
+
+            ${copyTaskConfig('client', '/transfer')}
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startClientContainer', 'copy'
+
+        then:
+        result.wasExecuted(':startServerContainer')
+        result.wasExecuted(':startClientContainer')
+        file('build/copy/transfer').text.trim() == 'linkcool'
+    }
+
+    def 'start should work for linked containers with alias'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc alias 8000 > /transfer']
+                    link server, 'alias'
+                    waitForCommand = true
+                }
+            }
+
+            ${copyTaskConfig('client', '/transfer')}
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startClientContainer', 'copy'
+
+        then:
+        result.wasExecuted(':startServerContainer')
+        result.wasExecuted(':startClientContainer')
+        file('build/copy/transfer').text.trim() == 'linkcool'
+    }
 }

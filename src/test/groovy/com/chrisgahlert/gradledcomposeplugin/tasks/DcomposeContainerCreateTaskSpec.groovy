@@ -248,4 +248,30 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         file('build/copy/content').text.trim() == 'ptest'
     }
 
+    def 'create should work for linked containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    exposedPorts = ['8000']
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    link server
+                    link 'other', 'manual'
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'createClientContainer'
+
+        then:
+        result.wasExecuted(':createServerContainer')
+        result.wasExecuted(':createClientContainer')
+    }
+
 }

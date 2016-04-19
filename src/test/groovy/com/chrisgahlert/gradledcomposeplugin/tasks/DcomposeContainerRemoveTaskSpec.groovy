@@ -54,4 +54,31 @@ class DcomposeContainerRemoveTaskSpec extends AbstractDcomposeSpec {
         then:
         result.wasSkipped(':removeMainContainer')
     }
+
+    def 'remove should work for linked containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    exposedPorts = ['8000']
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    link server
+                }
+            }
+        """
+
+        runTasksSuccessfully 'createClientContainer'
+
+        when:
+        def result = runTasksSuccessfully 'removeServerContainer'
+
+        then:
+        result.wasExecuted(':removeClientContainer')
+        result.wasExecuted(':removeServerContainer')
+    }
 }
