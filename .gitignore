@@ -1,0 +1,14 @@
+build
+out
+bin
+.gradle
+.vagrant
+.DS_Store
+.settings
+.classpath
+.project
+.README*
+.idea
+*.iml
+*.ipr
+*.iws
