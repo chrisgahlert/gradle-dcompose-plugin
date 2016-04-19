@@ -47,7 +47,7 @@ artifacts {
 }
 
 test {
-    maxParallelForks = Runtime.runtime.availableProcessors() / 2
+    maxParallelForks = Math.round(Runtime.runtime.availableProcessors() / 2)
 }
 
 pluginBundle {
