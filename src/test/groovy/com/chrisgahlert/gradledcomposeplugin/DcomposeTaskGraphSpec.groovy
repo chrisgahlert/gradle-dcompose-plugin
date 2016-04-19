@@ -15,7 +15,6 @@
  */
 package com.chrisgahlert.gradledcomposeplugin
 
-import spock.lang.IgnoreRest
 import spock.lang.Unroll
 
 class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
@@ -86,7 +85,6 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
     }
 
     @Unroll
-    @IgnoreRest
     def 'should support using the #taskNameProperty property as a dependency for build containers'() {
         given:
         buildFile << """
