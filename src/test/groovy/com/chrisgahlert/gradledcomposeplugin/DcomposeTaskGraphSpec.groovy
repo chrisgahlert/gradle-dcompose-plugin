@@ -59,7 +59,6 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
     }
 
     @Unroll
-    @IgnoreRest
     def 'should support using the #taskNameProperty property as a dependency for pull containers'() {
         given:
         buildFile << """
