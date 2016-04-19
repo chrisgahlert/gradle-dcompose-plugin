@@ -257,14 +257,20 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                     command = ['echo', 'abc']
                     exposedPorts = ['8000']
                 }
+                other {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                }
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['echo', 'abc']
                     link server
-                    link 'other', 'manual'
+                    link other.containerName, 'manual'
                 }
             }
         """
+
+        runTasksSuccessfully 'createOtherContainer'
 
         when:
         def result = runTasksSuccessfully 'createClientContainer'

@@ -34,8 +34,12 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
             !container.waitForCommand
         }
 
-        dependsOn {
-            container.links?.collect { it.container?.startTaskName }
+        project.afterEvaluate {
+            container.links?.each {
+                if(it.container) {
+                    dependsOn it.container.startTaskName
+                }
+            }
         }
     }
 

@@ -28,8 +28,12 @@ import org.gradle.util.GUtil
 class DcomposeContainerCreateTask extends AbstractDcomposeTask {
 
     DcomposeContainerCreateTask() {
-        dependsOn {
-            container.links?.collect { it.container?.createTaskName }
+        project.afterEvaluate {
+            container.links?.each {
+                if(it.container) {
+                    dependsOn it.container.createTaskName
+                }
+            }
         }
     }
 
