@@ -56,7 +56,9 @@ class Container {
 
     Map<String, String> buildArgs
 
-    List<LinkDependency> links = []
+    List links
+
+    List volumesFrom
 
     boolean forceRemoveImage
 
@@ -124,12 +126,31 @@ class Container {
         image ?: getTag()
     }
 
-    void link(Container container, String alias = container.name) {
-        links << new LinkDependency(container, alias)
+    ContainerDependency link(String alias = name) {
+        new ContainerDependency({ "$containerName:$alias" }, this)
     }
 
-    void link(String container, String alias = container) {
-        links << new LinkDependency(container, alias)
+    Set<Container> getContainerDependencies() {
+        def result = new HashSet()
+
+        links?.each { link ->
+            if(link instanceof ContainerDependency) {
+                result << ((ContainerDependency) link).container
+            }
+        }
+
+        volumesFrom?.each { from ->
+            if(from instanceof Container) {
+                result << from
+            }
+        }
+
+        result
+    }
+
+    @Override
+    String toString() {
+        containerName
     }
 
     boolean hasImage() {
@@ -149,42 +170,30 @@ class Container {
                 throw new GradleException("Cannot set tag when image in use for dcompose container '$name'")
             }
         }
+
+        links?.each {
+            if(it instanceof Container) {
+                throw new GradleException("Invalid container link from $name to $it.name: Please use ${it.name}.link()")
+            }
+        }
     }
 
-    static class LinkDependency {
-        final private container
-        final private String alias
-        final private Closure<String> taskDependency
+    static class ContainerDependency {
+        final Container container
+        final private Closure definitionAction
 
-        LinkDependency(container, String alias) {
+        ContainerDependency(Closure definitionAction, Container container = null) {
             this.container = container
-            this.alias = alias
-            this.taskDependency = taskDependency
+            this.definitionAction = definitionAction
         }
 
-        Container getContainer() {
-            if (container instanceof Container) {
-                return (Container) container
-            } else {
-                return null
-            }
-        }
-
-        String getContainerName() {
-            if(getContainer() != null) {
-                return getContainer().containerName
-            } else {
-                return container.toString()
-            }
-        }
-
-        String getAlias() {
-            return alias
+        String getDefinition() {
+            definitionAction() as String
         }
 
         @Override
         String toString() {
-            return getContainerName() + ':' + getAlias()
+            getDefinition()
         }
     }
 

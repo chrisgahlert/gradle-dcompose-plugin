@@ -143,7 +143,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'nc server 8000 > /transfer']
-                    link server
+                    links = [server.link()]
                     waitForCommand = true
                 }
             }
@@ -172,7 +172,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'nc alias 8000 > /transfer']
-                    link server, 'alias'
+                    links = [server.link('alias')]
                     waitForCommand = true
                 }
             }

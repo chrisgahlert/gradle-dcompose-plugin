@@ -67,7 +67,7 @@ class DcomposeContainerRemoveTaskSpec extends AbstractDcomposeSpec {
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
-                    link server
+                    links = [server.link()]
                 }
             }
         """

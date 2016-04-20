@@ -264,8 +264,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['echo', 'abc']
-                    link server
-                    link other.containerName, 'manual'
+                    links = [server.link(), "\$other.containerName:manual"]
                 }
             }
         """

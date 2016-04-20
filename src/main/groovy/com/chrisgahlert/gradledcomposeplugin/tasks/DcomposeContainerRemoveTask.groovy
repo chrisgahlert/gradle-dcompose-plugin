@@ -24,13 +24,11 @@ import org.gradle.api.tasks.TaskAction
 class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
 
     DcomposeContainerRemoveTask() {
-        project.afterEvaluate {
-            otherContainers.each { otherContainer ->
-                otherContainer.links?.each { otherLink ->
-                    if(otherLink.container == container) {
-                        dependsOn otherContainer.removeContainerTaskName
-                    }
-                }
+        dependsOn {
+            otherContainers.findAll { otherContainer ->
+                otherContainer.containerDependencies.contains(container)
+            }.collect { otherContainer ->
+                otherContainer.removeContainerTaskName
             }
         }
 

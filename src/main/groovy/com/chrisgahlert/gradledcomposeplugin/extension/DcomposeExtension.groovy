@@ -43,14 +43,12 @@ class DcomposeExtension {
 
         if (container == null) {
             container = new Container(name, { namePrefix })
-            config.setDelegate container
             ConfigureUtil.configure(config, container)
             container.validate()
 
             createContainerTasks(container)
             containers << container
         } else {
-            config.setDelegate container
             ConfigureUtil.configure(config, container)
         }
 

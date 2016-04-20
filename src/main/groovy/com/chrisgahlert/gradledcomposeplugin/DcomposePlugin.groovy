@@ -43,6 +43,7 @@ class DcomposePlugin implements Plugin<Project> {
         updateTaskGroups(project)
         injectOtherContainersIntoTasks(extension, project)
         injectExtraProperties(project)
+        validateContainers(project, extension)
     }
 
     private DcomposeExtension createExtension(Project project) {
@@ -107,5 +108,11 @@ class DcomposePlugin implements Plugin<Project> {
                 DcomposeCopyFileFromContainerTask.simpleName,
                 DcomposeCopyFileFromContainerTask
         )
+    }
+
+    private void validateContainers(Project project, DcomposeExtension extension) {
+        project.afterEvaluate {
+            extension.containers.each { it.validate() }
+        }
     }
 }
