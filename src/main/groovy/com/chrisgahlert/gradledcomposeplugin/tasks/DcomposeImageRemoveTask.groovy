@@ -19,6 +19,7 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
 class DcomposeImageRemoveTask extends AbstractDcomposeTask {
@@ -35,12 +36,14 @@ class DcomposeImageRemoveTask extends AbstractDcomposeTask {
     }
 
     @Input
-    boolean isForce() {
+    @Optional
+    Boolean getForce() {
         container.forceRemoveImage
     }
 
     @Input
-    boolean isNoPrune() {
+    @Optional
+    Boolean getNoPrune() {
         container.noPruneParentImages
     }
 
@@ -59,10 +62,17 @@ class DcomposeImageRemoveTask extends AbstractDcomposeTask {
     void removeImage() {
         runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.removeImageCmd(image)
-                        .withForce(force)
-                        .withNoPrune(noPrune)
-                        .exec()
+                def cmd = client.removeImageCmd(image)
+
+                if (force != null) {
+                    cmd.withForce(force)
+                }
+
+                if (noPrune != null) {
+                    cmd.withNoPrune(noPrune)
+                }
+
+                cmd.exec()
             }
         }
     }

@@ -317,4 +317,69 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         file('build/copy/content').text.trim() == 'test123'
     }
 
+    def 'create should support all other optional properties'() {
+        given:
+        buildFile << """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo "\$TESTENV\\n\$(pwd)" > /data/result && echo abc > /etc/hosts']
+                    waitForCommand = true
+
+                    env = ['TESTENV=yes']
+                    workingDir = '/somewhere'
+                    user = 'root'
+                    readonlyRootfs = true
+                    volumes = ['/data']
+                    publishAllPorts = true
+                    hostName = 'yeehaw'
+                    dns = ['1.2.3.4']
+                    dnsSearch = ['somedomain']
+                    extraHosts = ['test:1.4.7.8']
+                    networkMode = 'bridge'
+                    attachStdin = true
+                    attachStdout = true
+                    attachStderr = true
+                    privileged = true
+                }
+            }
+
+            ${copyTaskConfig('main', '/data/result', 'copyResult')}
+            ${copyTaskConfig('main', '/etc', 'copy')}
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startMainContainer', 'copy', 'copyResult'
+
+        then:
+        result.wasExecuted(':createMainContainer')
+        result.wasExecuted(':startMainContainer')
+        file('build/copyResult/result').text.trim() == "yes\n/somewhere"
+        file('build/copy/hostname').text.trim() == 'yeehaw'
+        file('build/copy/resolv.conf').text.contains('search somedomain')
+        file('build/copy/resolv.conf').text.contains('nameserver 1.2.3.4')
+        file('build/copy/hosts').text.contains('1.4.7.8\ttest')
+    }
+
+    def 'create should support entrypoint'() {
+        given:
+        buildFile << """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'hello']
+                    entrypoints = ['/entry.sh']
+                }
+            }
+        """
+
+        when:
+        def result = runTasksWithFailure 'startMainContainer'
+
+        then:
+        result.wasExecuted(':createMainContainer')
+        result.wasExecuted(':startMainContainer')
+        result.standardError.contains("Container command '/entry.sh' not found or does not exist")
+    }
+
 }

@@ -21,56 +21,80 @@ import org.gradle.util.GUtil
 
 @CompileStatic
 class Container {
+    /**
+     * The internal dcompose container name, e.g. "database"
+     */
     final String name
+
+    /**
+     * The prefix for the actual name used in Docker later, e.g. "dcompose_12345_"
+     */
     final Closure<String> dockerPrefix
 
+    /**
+     * The name of the pre-existing image that should be pulled and used for creating containers.
+     * Cannot be used in combination with baseDir (for building images).
+     */
     private String image
 
-    List<String> portBindings
-
-    List<String> exposedPorts
-
+    /**
+     * Whether the "start<Name>Container" command should wait for the container to exit before continuing
+     */
     boolean waitForCommand
 
-    int waitTimeout
+    /**
+     * How long should it wait for the command to exit
+     */
+    int waitTimeout = 0
 
+    /**
+     * Whether a containers volumes should be preserved between
+     */
+    boolean preserveVolumes = false
+
+    /**
+     * Create container specific properties. Properties are optional by default.
+     */
     List<String> command
-
-    List<String> binds
-
+    List<String> entrypoints
+    List<String> env
+    String workingDir
+    String user
+    Boolean readonlyRootfs
     List<String> volumes
-
-    private String tag
-
-    String dockerFilename
-
-    File baseDir
-
-    Long memory
-
-    Long memswap
-
-    String cpushares
-
-    String cpusetcpus
-
-    Map<String, String> buildArgs
-
-    List links
-
+    List<String> binds
     List volumesFrom
+    List<String> exposedPorts
+    List<String> portBindings
+    Boolean publishAllPorts
+    List links
+    String hostName
+    List<String> dns
+    List<String> dnsSearch
+    List<String> extraHosts
+    String networkMode
+    Boolean attachStdin
+    Boolean attachStdout
+    Boolean attachStderr
+    Boolean privileged
 
-    boolean forceRemoveImage
+    /**
+     * Build image specific properties (can only be used when no image is defined). Properties are optional by default.
+     */
+    File baseDir          // Required
+    String dockerFilename // optional, Default: "Dockerfile"
+    String tag            // The image tag name, tag should be used
+    Long memory
+    Long memswap
+    String cpushares
+    String cpusetcpus
+    Map<String, String> buildArgs
+    Boolean forceRemoveImage
+    Boolean noPruneParentImages
+    Boolean buildNoCache
+    Boolean buildRemove
+    Boolean buildPull
 
-    boolean noPruneParentImages
-
-    boolean preserveVolumes
-
-    boolean buildNoCache = false
-
-    boolean buildRemove = true
-
-    boolean buildPull = false
 
     Container(String name, Closure<String> dockerPrefix) {
         this.name = name
@@ -134,7 +158,7 @@ class Container {
         def result = new HashSet()
 
         links?.each { link ->
-            if(link instanceof ContainerDependency) {
+            if (link instanceof ContainerDependency) {
                 result << ((ContainerDependency) link).container
             }
         }
@@ -146,7 +170,7 @@ class Container {
         def result = new HashSet()
 
         volumesFrom?.each { from ->
-            if(from instanceof Container) {
+            if (from instanceof Container) {
                 result << from
             }
         }
@@ -178,7 +202,7 @@ class Container {
         }
 
         links?.each {
-            if(it instanceof Container) {
+            if (it instanceof Container) {
                 throw new GradleException("Invalid container link from $name to $it.name: Please use ${it.name}.link()")
             }
         }

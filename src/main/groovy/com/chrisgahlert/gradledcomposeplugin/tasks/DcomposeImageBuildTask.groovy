@@ -22,17 +22,20 @@ import org.gradle.api.tasks.*
 class DcomposeImageBuildTask extends AbstractDcomposeTask {
 
     @Input
-    boolean isNoCache() {
+    @Optional
+    Boolean getNoCache() {
         container.buildNoCache
     }
 
     @Input
-    boolean isPull() {
+    @Optional
+    Boolean getPull() {
         container.buildPull
     }
 
     @Input
-    boolean isRemove() {
+    @Optional
+    Boolean getRemove() {
         container.buildRemove
     }
 
@@ -88,9 +91,18 @@ class DcomposeImageBuildTask extends AbstractDcomposeTask {
             def cmd = client.buildImageCmd(dockerFile)
                     .withBaseDirectory(baseDir)
                     .withTag(tag)
-                    .withNoCache(noCache)
-                    .withRemove(remove)
-                    .withPull(pull)
+
+            if (noCache != null) {
+                cmd.withNoCache(noCache)
+            }
+
+            if (remove != null) {
+                cmd.withRemove(remove)
+            }
+
+            if (pull != null) {
+                cmd.withPull(pull)
+            }
 
             if (memory != null) {
                 cmd.withMemory(memory)

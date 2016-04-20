@@ -97,26 +97,103 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
         }
     }
 
+    @Input
+    @Optional
+    List<String> getExtraHosts() {
+        container.extraHosts
+    }
+
+    @Input
+    @Optional
+    String getWorkingDir() {
+        container.workingDir
+    }
+
+    @Input
+    @Optional
+    List<String> getDns() {
+        container.dns
+    }
+
+    @Input
+    @Optional
+    List<String> getDnsSearch() {
+        container.dnsSearch
+    }
+
+    @Input
+    @Optional
+    String getHostName() {
+        container.hostName
+    }
+
+    @Input
+    @Optional
+    List<String> getEntrypoints() {
+        container.entrypoints
+    }
+
+    @Input
+    @Optional
+    List<String> getEnv() {
+        container.env
+    }
+
+    @Input
+    @Optional
+    String getUser() {
+        container.user
+    }
+
+    @Input
+    @Optional
+    Boolean getPublishAllPorts() {
+        container.publishAllPorts
+    }
+
+    @Input
+    @Optional
+    Boolean getReadonlyRootfs() {
+        container.readonlyRootfs
+    }
+
+    @Input
+    @Optional
+    Boolean getAttachStdin() {
+        container.attachStdin
+    }
+
+    @Input
+    @Optional
+    Boolean getAttachStdout() {
+        container.attachStdout
+    }
+
+    @Input
+    @Optional
+    Boolean getAttachStderr() {
+        container.attachStderr
+    }
+
+    @Input
+    @Optional
+    Boolean getPrivileged() {
+        container.privileged
+    }
+
+    @Input
+    @Optional
+    String getNetworkMode() {
+        container.networkMode
+    }
+
     // TODO: add cpu/mem options
 
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void createNewContainer() {
         runInDockerClasspath {
-            def oldVolumes = [:]
-            ignoreDockerException('NotFoundException') {
-                if (preserveVolumes) {
-                    client.inspectContainerCmd(containerName).exec().mounts.each { mount ->
-                        oldVolumes.put(mount.destination, mount.name)
-                    }
-                }
-
-                client.removeContainerCmd(containerName)
-                        .withForce(true)
-                        .withRemoveVolumes(!preserveVolumes)
-                        .exec()
-                logger.quiet("Removed container $containerName")
-            }
+            def oldVolumes = removeOldContainer()
 
             def cmd = client.createContainerCmd(image)
 
@@ -129,63 +206,153 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
                 cmd.withCmd(command)
             }
 
-            def volumeClass = loadClass('com.github.dockerjava.api.model.Volume')
             if (volumes) {
+                def volumeClass = loadClass('com.github.dockerjava.api.model.Volume')
                 cmd.withVolumes(volumes.collect { volumeClass.newInstance(it) })
             }
 
             def allBinds = []
-            def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
             if (binds) {
+                def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
                 allBinds.addAll(binds.collect { bindParser.invoke(null, it) })
             }
 
             if (preserveVolumes) {
-                def imageVolumes = []
-                client.inspectImageCmd(image).exec().config.volumes?.keySet().each {
-                    imageVolumes << volumeClass.newInstance(it)
-                }
-
-                def knownVolumes = new HashSet(imageVolumes)
-                knownVolumes.addAll(cmd.volumes)
-
-                for (def volume : knownVolumes) {
-                    def bind = allBinds.find { volume == it.volume }
-
-                    if (!bind) {
-                        def volumeName
-                        if (oldVolumes.containsKey(volume)) {
-                            volumeName = oldVolumes.get(volume)
-                        } else {
-                            volumeName = containerName + '__' + GUtil.toLowerCamelCase(volume.path)
-                        }
-                        allBinds << bindParser.invoke(null, volumeName + ':' + volume.path)
-                    }
-                }
+                createMissingBinds(allBinds, cmd.volumes, oldVolumes)
             }
 
             if (allBinds) {
                 cmd.withBinds(allBinds)
             }
 
-            if(links) {
+            if (links) {
                 def linkParser = loadClass('com.github.dockerjava.api.model.Link').getMethod('parse', String)
                 cmd.withLinks(links.collect { linkParser.invoke(null, it) })
             }
 
-            if(exposedPorts) {
+            if (exposedPorts) {
                 def ePortParser = loadClass('com.github.dockerjava.api.model.ExposedPort').getMethod('parse', String)
                 cmd.withExposedPorts(exposedPorts.collect { ePortParser.invoke(null, it) })
             }
 
-            if(volumesFrom) {
+            if (volumesFrom) {
                 def volumesFromParser = loadClass('com.github.dockerjava.api.model.VolumesFrom').getMethod('parse', String)
                 cmd.withVolumesFrom(volumesFrom.collect { volumesFromParser.invoke(null, it) })
+            }
+
+            if(extraHosts) {
+                cmd.withExtraHosts(extraHosts)
+            }
+
+            if(workingDir) {
+                cmd.withWorkingDir(workingDir)
+            }
+
+            if(dns) {
+                cmd.withDns(dns)
+            }
+
+            if(dnsSearch) {
+                cmd.withDnsSearch(dnsSearch)
+            }
+
+            if(hostName) {
+                cmd.withHostName(hostName)
+            }
+
+            if(entrypoints) {
+                cmd.withEntrypoint(entrypoints)
+            }
+
+            if(env) {
+                cmd.withEnv(env)
+            }
+
+            if(user) {
+                cmd.withUser(user)
+            }
+
+            if(publishAllPorts != null) {
+                cmd.withPublishAllPorts(publishAllPorts)
+            }
+
+            if(readonlyRootfs != null) {
+                cmd.withReadonlyRootfs(readonlyRootfs)
+            }
+
+            if(attachStdin != null) {
+                cmd.withAttachStdin(attachStdin)
+            }
+
+            if(attachStdout != null) {
+                cmd.withAttachStdout(attachStdout)
+            }
+
+            if(attachStderr != null) {
+                cmd.withAttachStderr(attachStderr)
+            }
+
+            if(privileged != null) {
+                cmd.withPrivileged(privileged)
+            }
+
+            if(networkMode) {
+                cmd.withNetworkMode(networkMode)
             }
 
             def result = cmd.withName(containerName).exec()
             logger.error("Created new container with id $result.id ($containerName)")
         }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected void createMissingBinds(ArrayList allBinds, commandVolumes, LinkedHashMap oldVolumes) {
+        def volumeClass = loadClass('com.github.dockerjava.api.model.Volume')
+        def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
+
+        def imageVolumes = []
+        client.inspectImageCmd(image).exec().config.volumes?.keySet().each {
+            imageVolumes << volumeClass.newInstance(it)
+        }
+
+        def knownVolumes = new HashSet(imageVolumes)
+        knownVolumes.addAll(commandVolumes)
+
+        for (def volume : knownVolumes) {
+            def bind = allBinds.find { volume == it.volume }
+
+            if (!bind) {
+                def volumeName
+                if (oldVolumes.containsKey(volume)) {
+                    volumeName = oldVolumes.get(volume)
+                } else {
+                    volumeName = containerName + '__' + GUtil.toLowerCamelCase(volume.path)
+                }
+
+                allBinds << bindParser.invoke(null, volumeName + ':' + volume.path)
+            }
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected Map<String, String> removeOldContainer() {
+        def oldVolumes = [:]
+
+        ignoreDockerException('NotFoundException') {
+            if (preserveVolumes) {
+                client.inspectContainerCmd(containerName).exec().mounts.each { mount ->
+                    oldVolumes.put(mount.destination, mount.name)
+                }
+            }
+
+            client.removeContainerCmd(containerName)
+                    .withForce(true)
+                    .withRemoveVolumes(!preserveVolumes)
+                    .exec()
+            logger.quiet("Removed container $containerName")
+        }
+
+        oldVolumes
     }
 
     @OutputFile
