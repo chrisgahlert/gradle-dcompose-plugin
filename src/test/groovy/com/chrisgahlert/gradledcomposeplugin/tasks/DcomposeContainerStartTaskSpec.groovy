@@ -239,8 +239,6 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
         when:
         def result = runTasks 'startClientContainer', 'copy'
-        println result.standardOutput
-        println result.standardError
 
         then:
         result.wasExecuted(':createServerContainer')
@@ -276,8 +274,6 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
         when:
         def result = runTasksSuccessfully 'startUserContainer'
-        println result.standardOutput
-        println result.standardError
 
         then:
         result.wasExecuted(':createDataContainer')
