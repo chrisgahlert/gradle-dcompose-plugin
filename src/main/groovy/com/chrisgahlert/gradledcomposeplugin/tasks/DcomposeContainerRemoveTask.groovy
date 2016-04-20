@@ -42,19 +42,24 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
         }
     }
 
+    @Input
+    boolean isPreserveVolumes() {
+        container.preserveVolumes
+    }
+
+    @Input
+    String getContainerName() {
+        container.containerName
+    }
+
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean containerExist() {
         runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectContainerCmd(container.containerName).exec()
+                client.inspectContainerCmd(containerName).exec()
                 true
             }
         }
-    }
-
-    @Input
-    boolean isPreserveVolumes() {
-        container.preserveVolumes
     }
 
     @TaskAction
@@ -62,9 +67,11 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
     void removeContainer() {
         runInDockerClasspath {
             ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
-                client.removeContainerCmd(container.containerName)
+                client.removeContainerCmd(containerName)
                         .withRemoveVolumes(!preserveVolumes)
                         .exec()
+
+                logger.quiet("Removed Docker container with name $containerName")
             }
         }
     }

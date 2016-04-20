@@ -301,7 +301,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
             }
 
             def result = cmd.withName(containerName).exec()
-            logger.error("Created new container with id $result.id ($containerName)")
+            logger.quiet("Created new container with id $result.id ($containerName)")
         }
     }
 
@@ -325,8 +325,10 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
                 def volumeName
                 if (oldVolumes.containsKey(volume)) {
                     volumeName = oldVolumes.get(volume)
+                    logger.info("Reusing old container's previously attached volume '$volumeName' for container $containerName")
                 } else {
                     volumeName = containerName + '__' + GUtil.toLowerCamelCase(volume.path)
+                    logger.info("Using named volume '$volumeName' (thus: persistent) for container $containerName")
                 }
 
                 allBinds << bindParser.invoke(null, volumeName + ':' + volume.path)
@@ -339,8 +341,9 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
         def oldVolumes = [:]
 
         ignoreDockerException('NotFoundException') {
+            def result = client.inspectContainerCmd(containerName).exec()
             if (preserveVolumes) {
-                client.inspectContainerCmd(containerName).exec().mounts.each { mount ->
+                        result.mounts.each { mount ->
                     oldVolumes.put(mount.destination, mount.name)
                 }
             }
@@ -349,7 +352,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
                     .withForce(true)
                     .withRemoveVolumes(!preserveVolumes)
                     .exec()
-            logger.quiet("Removed container $containerName")
+            logger.quiet("Removed old container with id $result.id ($containerName)")
         }
 
         oldVolumes

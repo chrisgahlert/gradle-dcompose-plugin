@@ -27,6 +27,10 @@ import org.gradle.api.tasks.TaskAction
 @CompileStatic
 class DcomposeCopyFileFromContainerTask extends AbstractDcomposeTask {
 
+    DcomposeCopyFileFromContainerTask() {
+        outputs.upToDateWhen { false }
+    }
+
     @Override
     void setContainer(Container container) {
         super.setContainer(container)
@@ -88,6 +92,8 @@ class DcomposeCopyFileFromContainerTask extends AbstractDcomposeTask {
                     from sourcePath.isDirectory() ? sourcePath : tarDir
                     into getDestinationDir()
                 }
+
+                logger.info("Copied files from Docker container with name $containerName into ${getDestinationDir()}")
             } finally {
                 tarStream?.close()
             }

@@ -100,7 +100,7 @@ class AbstractDcomposeTask extends DefaultTask {
             }
 
             if (exceptionMatched) {
-                logger.debug("Caught expected docker exception:", t)
+                logger.debug("Caught expected Docker exception:", t)
                 return null
             }
 
@@ -136,10 +136,12 @@ class AbstractDcomposeTask extends DefaultTask {
 
             runInDockerClasspath {
                 outputFile.text = toJson(value())
+                logger.debug("Initialzed Docker output file $outputFile for coming up-to-date checks")
             }
             doLast {
                 runInDockerClasspath {
                     outputFile.text = toJson(value())
+                    logger.debug("Updated Docker output file $outputFile for persisting output state")
                 }
             }
         }

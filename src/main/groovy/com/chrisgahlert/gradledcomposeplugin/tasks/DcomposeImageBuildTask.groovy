@@ -126,7 +126,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeTask {
             def response = cmd.exec(callback)
 
             def imageId = response.awaitImageId()
-            logger.error "Created $imageId"
+            logger.quiet("Built Docker image with id $imageId and tagged as $tag")
         }
     }
 

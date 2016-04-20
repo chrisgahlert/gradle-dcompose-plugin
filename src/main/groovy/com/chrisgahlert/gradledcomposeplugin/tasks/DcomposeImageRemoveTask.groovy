@@ -73,6 +73,7 @@ class DcomposeImageRemoveTask extends AbstractDcomposeTask {
                 }
 
                 cmd.exec()
+                logger.quiet("Successfully removed image $image")
             }
         }
     }

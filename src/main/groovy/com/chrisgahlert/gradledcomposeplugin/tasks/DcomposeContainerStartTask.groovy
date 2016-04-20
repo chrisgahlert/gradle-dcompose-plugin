@@ -27,7 +27,7 @@ import org.gradle.api.tasks.TaskAction
 @CompileStatic
 class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
-    int waitTimeout = 1000
+    int waitInterval = 1000
 
     DcomposeContainerStartTask() {
         outputs.upToDateWhen {
@@ -50,6 +50,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         runInDockerClasspath {
             ignoreDockerException('NotModifiedException') {
                 def result = client.startContainerCmd(containerName).exec()
+                logger.quiet("Started Docker container with name $containerName")
             }
 
             if (container.waitForCommand) {
@@ -58,10 +59,12 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 while (container.waitTimeout <= 0 || start + 1000L * container.waitTimeout > System.currentTimeMillis()) {
                     def inspectResult = client.inspectContainerCmd(containerName).exec()
                     if (!inspectResult.state.running) {
+                        logger.info("Docker container with name $containerName is not running anymore")
                         return
                     }
 
-                    Thread.sleep(waitTimeout)
+                    logger.debug("Waiting for Docker container with nane $containerName to stop running")
+                    Thread.sleep(waitInterval)
                 }
 
                 throw new GradleException("Timed out waiting for command to finish after ${System.currentTimeMillis() - start} ms")
