@@ -29,7 +29,10 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
 
     DcomposeContainerCreateTask() {
         dependsOn {
-            container.containerDependencies.collect { it.createTaskName }
+            container.linkDependencies.collect { it.createTaskName }
+        }
+        dependsOn {
+            container.volumesFromDependencies.collect { it.createTaskName }
         }
     }
 
@@ -82,6 +85,14 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     @Optional
     List<String> getLinks() {
         container.links?.collect {
+            it as String
+        }
+    }
+
+    @Input
+    @Optional
+    List<String> getVolumesFrom() {
+        container.volumesFrom?.collect {
             it as String
         }
     }
@@ -165,6 +176,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
             if(exposedPorts) {
                 def ePortParser = loadClass('com.github.dockerjava.api.model.ExposedPort').getMethod('parse', String)
                 cmd.withExposedPorts(exposedPorts.collect { ePortParser.invoke(null, it) })
+            }
+
+            if(volumesFrom) {
+                def volumesFromParser = loadClass('com.github.dockerjava.api.model.VolumesFrom').getMethod('parse', String)
+                cmd.withVolumesFrom(volumesFrom.collect { volumesFromParser.invoke(null, it) })
             }
 
             def result = cmd.withName(containerName).exec()

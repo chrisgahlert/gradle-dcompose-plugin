@@ -35,7 +35,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         }
 
         dependsOn {
-            container.containerDependencies.collect { it.startTaskName }
+            container.linkDependencies.collect { it.startTaskName }
         }
     }
 

@@ -83,4 +83,31 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':stopServerContainer')
     }
 
+    def 'stop should work for containers with volumes from'() {
+        given:
+        buildFile << """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumes = ['/data']
+                }
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumesFrom = [data]
+                }
+            }
+        """
+
+        runTasksSuccessfully 'startDataContainer', 'startUserContainer'
+
+        when:
+        def result = runTasksSuccessfully 'stopUserContainer'
+
+        then:
+        !result.wasExecuted(':stopDataContainer')
+        result.wasExecuted(':stopUserContainer')
+    }
+
 }

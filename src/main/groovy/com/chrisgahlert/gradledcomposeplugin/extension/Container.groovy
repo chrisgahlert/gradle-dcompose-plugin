@@ -130,7 +130,7 @@ class Container {
         new ContainerDependency({ "$containerName:$alias" }, this)
     }
 
-    Set<Container> getContainerDependencies() {
+    Set<Container> getLinkDependencies() {
         def result = new HashSet()
 
         links?.each { link ->
@@ -138,6 +138,12 @@ class Container {
                 result << ((ContainerDependency) link).container
             }
         }
+
+        result
+    }
+
+    Set<Container> getVolumesFromDependencies() {
+        def result = new HashSet()
 
         volumesFrom?.each { from ->
             if(from instanceof Container) {

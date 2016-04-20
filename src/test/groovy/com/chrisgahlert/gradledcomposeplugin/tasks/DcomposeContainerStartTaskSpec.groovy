@@ -188,4 +188,30 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':startClientContainer')
         file('build/copy/transfer').text.trim() == 'linkcool'
     }
+
+    def 'start should work for containers with volumes from'() {
+        given:
+        buildFile << """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumes = ['/data']
+                }
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumesFrom = [data]
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startUserContainer'
+
+        then:
+        result.wasExecuted(':createDataContainer')
+        !result.wasExecuted(':startDataContainer')
+        result.wasExecuted(':startUserContainer')
+    }
 }

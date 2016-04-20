@@ -279,4 +279,42 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':createClientContainer')
     }
 
+    def 'create should work for containers with volumes from'() {
+        given:
+        buildFile << """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    exposedPorts = ['8000']
+                    volumes = ['/data']
+                }
+                other {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo test123 > /other/content']
+                    volumes = ['/other']
+                    waitForCommand = true
+                }
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    volumesFrom = [data, other.containerName]
+                }
+
+            }
+
+            ${copyTaskConfig('user', '/other/content')}
+        """
+
+        runTasksSuccessfully 'startOtherContainer'
+
+        when:
+        def result = runTasksSuccessfully 'createUserContainer', 'copy'
+
+        then:
+        result.wasExecuted(':createDataContainer')
+        result.wasExecuted(':createUserContainer')
+        file('build/copy/content').text.trim() == 'test123'
+    }
+
 }

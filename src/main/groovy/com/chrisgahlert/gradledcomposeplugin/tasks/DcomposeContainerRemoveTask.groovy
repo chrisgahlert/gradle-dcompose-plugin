@@ -25,9 +25,14 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
 
     DcomposeContainerRemoveTask() {
         dependsOn {
-            otherContainers.findAll { otherContainer ->
-                otherContainer.containerDependencies.contains(container)
-            }.collect { otherContainer ->
+            def linkDeps = otherContainers.findAll { otherContainer ->
+                otherContainer.linkDependencies.contains(container)
+            }
+            def volFromDeps = otherContainers.findAll { otherContainer ->
+                otherContainer.volumesFromDependencies.contains(container)
+            }
+
+            (linkDeps + volFromDeps).collect { otherContainer ->
                 otherContainer.removeContainerTaskName
             }
         }

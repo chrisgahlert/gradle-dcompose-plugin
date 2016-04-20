@@ -25,7 +25,7 @@ public class DcomposeContainerStopTask extends AbstractDcomposeTask {
     DcomposeContainerStopTask() {
         dependsOn {
             otherContainers.findAll { otherContainer ->
-                otherContainer.containerDependencies.contains(container)
+                otherContainer.linkDependencies.contains(container)
             }.collect { otherContainer ->
                 otherContainer.stopTaskName
             }

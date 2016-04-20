@@ -81,4 +81,31 @@ class DcomposeContainerRemoveTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':removeClientContainer')
         result.wasExecuted(':removeServerContainer')
     }
+
+    def 'remove should work for containers with volumes from'() {
+        given:
+        buildFile << """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumes = ['/data']
+                }
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumesFrom = [data]
+                }
+            }
+        """
+
+        runTasksSuccessfully 'createUserContainer'
+
+        when:
+        def result = runTasksSuccessfully 'removeDataContainer'
+
+        then:
+        result.wasExecuted(':removeUserContainer')
+        result.wasExecuted(':removeDataContainer')
+    }
 }
