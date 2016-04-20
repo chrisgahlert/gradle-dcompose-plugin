@@ -1,5 +1,8 @@
 group 'com.chrisgahlert'
-version '0.1'
+
+if(project.hasProperty('publishVersion') && publishVersion) {
+    version = publishVersion
+}
 
 buildscript {
     repositories {
@@ -58,13 +61,13 @@ test {
 }
 
 pluginBundle {
-    website = vcsUrl = 'http://github.com/chrisgahlert/gradle-dcompose'
-    description = 'Plugin for automatically manageing docker container lifecycles in Gradle. This plugin was inspired by the gradle-docker-plugin from Benjamin Muschko and by docker-compose'
+    website = vcsUrl = 'http://github.com/chrisgahlert/gradle-dcompose-plugin'
+    description = 'Plugin for automatically managing Docker container lifecycles in Gradle. This plugin was inspired by the gradle-docker-plugin from Benjamin Muschko and by docker-compose'
     tags = ['docker', 'management', 'application', 'container', 'lifecycle', 'compose']
 
     plugins {
         dcomposePlugin {
-            id = 'com.chrisgahlert.gradle-dcompose'
+            id = 'com.chrisgahlert.gradle-dcompose-plugin'
             displayName = 'Gradle dcompose Plugin'
         }
     }
