@@ -15,6 +15,7 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
+import com.chrisgahlert.gradledcomposeplugin.extension.Container
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -193,7 +194,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     void createNewContainer() {
         runInDockerClasspath {
-            def oldVolumes = removeOldContainer()
+            removeOldContainer(container)
 
             def cmd = client.createContainerCmd(image)
 
@@ -218,7 +219,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
             }
 
             if (preserveVolumes) {
-                createMissingBinds(allBinds, cmd.volumes, oldVolumes)
+                createMissingBinds(allBinds, cmd.volumes)
             }
 
             if (allBinds) {
@@ -240,63 +241,63 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
                 cmd.withVolumesFrom(volumesFrom.collect { volumesFromParser.invoke(null, it) })
             }
 
-            if(extraHosts) {
+            if (extraHosts) {
                 cmd.withExtraHosts(extraHosts)
             }
 
-            if(workingDir) {
+            if (workingDir) {
                 cmd.withWorkingDir(workingDir)
             }
 
-            if(dns) {
+            if (dns) {
                 cmd.withDns(dns)
             }
 
-            if(dnsSearch) {
+            if (dnsSearch) {
                 cmd.withDnsSearch(dnsSearch)
             }
 
-            if(hostName) {
+            if (hostName) {
                 cmd.withHostName(hostName)
             }
 
-            if(entrypoints) {
+            if (entrypoints) {
                 cmd.withEntrypoint(entrypoints)
             }
 
-            if(env) {
+            if (env) {
                 cmd.withEnv(env)
             }
 
-            if(user) {
+            if (user) {
                 cmd.withUser(user)
             }
 
-            if(publishAllPorts != null) {
+            if (publishAllPorts != null) {
                 cmd.withPublishAllPorts(publishAllPorts)
             }
 
-            if(readonlyRootfs != null) {
+            if (readonlyRootfs != null) {
                 cmd.withReadonlyRootfs(readonlyRootfs)
             }
 
-            if(attachStdin != null) {
+            if (attachStdin != null) {
                 cmd.withAttachStdin(attachStdin)
             }
 
-            if(attachStdout != null) {
+            if (attachStdout != null) {
                 cmd.withAttachStdout(attachStdout)
             }
 
-            if(attachStderr != null) {
+            if (attachStderr != null) {
                 cmd.withAttachStderr(attachStderr)
             }
 
-            if(privileged != null) {
+            if (privileged != null) {
                 cmd.withPrivileged(privileged)
             }
 
-            if(networkMode) {
+            if (networkMode) {
                 cmd.withNetworkMode(networkMode)
             }
 
@@ -306,7 +307,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    protected void createMissingBinds(ArrayList allBinds, commandVolumes, LinkedHashMap oldVolumes) {
+    protected void createMissingBinds(ArrayList allBinds, commandVolumes) {
         def volumeClass = loadClass('com.github.dockerjava.api.model.Volume')
         def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
 
@@ -322,40 +323,33 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
             def bind = allBinds.find { volume == it.volume }
 
             if (!bind) {
-                def volumeName
-                if (oldVolumes.containsKey(volume)) {
-                    volumeName = oldVolumes.get(volume)
-                    logger.info("Reusing old container's previously attached volume '$volumeName' for container $containerName")
-                } else {
-                    volumeName = containerName + '__' + GUtil.toLowerCamelCase(volume.path)
-                    logger.info("Using named volume '$volumeName' (thus: persistent) for container $containerName")
-                }
-
+                def volumeName = containerName + '__' + GUtil.toLowerCamelCase(volume.path)
+                logger.info("Using named volume '$volumeName' (thus: persistent) for container $containerName")
                 allBinds << bindParser.invoke(null, volumeName + ':' + volume.path)
             }
         }
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    protected Map<String, String> removeOldContainer() {
-        def oldVolumes = [:]
-
+    protected void removeOldContainer(Container oldContainer, Container linkedFromContainer = null) {
         ignoreDockerException('NotFoundException') {
-            def result = client.inspectContainerCmd(containerName).exec()
-            if (preserveVolumes) {
-                        result.mounts.each { mount ->
-                    oldVolumes.put(mount.destination, mount.name)
+            def result = client.inspectContainerCmd(oldContainer.containerName).exec()
+
+            otherContainers.each {
+                if (it.linkDependencies.contains(oldContainer) || it.volumesFromDependencies.contains(oldContainer)) {
+                    removeOldContainer(it, oldContainer)
                 }
             }
 
-            client.removeContainerCmd(containerName)
+            client.removeContainerCmd(oldContainer.containerName)
                     .withForce(true)
-                    .withRemoveVolumes(!preserveVolumes)
+                    .withRemoveVolumes(!oldContainer.preserveVolumes)
                     .exec()
-            logger.quiet("Removed old container with id $result.id ($containerName)")
-        }
 
-        oldVolumes
+
+            logger.quiet("Removed old container with id $result.id ($oldContainer.containerName)" +
+                    (linkedFromContainer != null ? " as it depends on $linkedFromContainer.containerName" : ""))
+        }
     }
 
     @OutputFile

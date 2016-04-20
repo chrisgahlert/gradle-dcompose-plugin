@@ -214,4 +214,76 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         !result.wasExecuted(':startDataContainer')
         result.wasExecuted(':startUserContainer')
     }
+
+    def 'start should work for linked containers on update'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc server 8000 > /transfer']
+                    links = [server.link()]
+                }
+            }
+
+            ${copyTaskConfig('client', '/transfer')}
+        """
+
+        runTasksSuccessfully 'startClientContainer'
+        buildFile.text = buildFile.text.replace('linkcool', 'linkverycool')
+
+        when:
+        def result = runTasks 'startClientContainer', 'copy'
+        println result.standardOutput
+        println result.standardError
+
+        then:
+        result.wasExecuted(':createServerContainer')
+        !result.wasUpToDate(':createServerContainer')
+        result.wasExecuted(':startServerContainer')
+        result.wasExecuted(':createClientContainer')
+        !result.wasUpToDate(':createClientContainer')
+        result.wasExecuted(':startClientContainer')
+        file('build/copy/transfer').text.trim() == 'linkverycool'
+    }
+
+    def 'start should work for containers with volumes from on update'() {
+        given:
+        buildFile << """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    exposedPorts = ['8000']
+                    volumes = ['/data']
+                }
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    volumesFrom = [data]
+                }
+
+            }
+        """
+
+        runTasksSuccessfully 'createUserContainer'
+        buildFile << "dcompose.data.command = ['echo', 'def']"
+
+        when:
+        def result = runTasksSuccessfully 'startUserContainer'
+        println result.standardOutput
+        println result.standardError
+
+        then:
+        result.wasExecuted(':createDataContainer')
+        !result.wasUpToDate(':createDataContainer')
+        result.wasExecuted(':createUserContainer')
+        !result.wasUpToDate(':createUserContainer')
+        result.wasExecuted(':startUserContainer')
+    }
 }
