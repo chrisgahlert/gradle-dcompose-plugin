@@ -27,13 +27,13 @@ import org.gradle.api.tasks.TaskContainer
 @CompileStatic
 class DcomposePlugin implements Plugin<Project> {
 
-
     public static final String TASK_GROUP = "Dcompose Docker"
     public static final String TASK_GROUP_ALL = "$TASK_GROUP (all)"
     public static final String TASK_GROUP_CONTAINER_TEMPLATE = "$TASK_GROUP '%s' container"
     public static final String CONFIGURATION_NAME = "dcompose"
     public static final String EXTENSION_NAME = "dcompose"
     public static final String DOCKER_DEPENDENCY = 'com.github.docker-java:docker-java:3.0.0-RC4'
+    public static final String SLF4J_DEPENDENCY = 'org.slf4j:slf4j-simple:1.7.5'
 
     @Override
     void apply(Project project) {
@@ -56,6 +56,7 @@ class DcomposePlugin implements Plugin<Project> {
                 .setTransitive(true)
 
         config.dependencies.add(project.dependencies.create(DOCKER_DEPENDENCY))
+        config.dependencies.add(project.dependencies.create(SLF4J_DEPENDENCY))
 
         def classLoaderFactory = new DockerClassLoaderFactory(config)
 
