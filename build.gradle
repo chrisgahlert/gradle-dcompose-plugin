@@ -12,7 +12,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
-        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.2.0'
+        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.2.2'
     }
 }
 
