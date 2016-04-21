@@ -7,11 +7,12 @@ if(project.hasProperty('publishVersion') && publishVersion) {
 buildscript {
     repositories {
         maven {
-            url "https://plugins.gradle.org/m2/"
+            url 'https://plugins.gradle.org/m2/'
         }
     }
     dependencies {
-        classpath "com.gradle.publish:plugin-publish-plugin:0.9.1"
+        classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
+        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.2.0'
     }
 }
 
@@ -19,6 +20,7 @@ apply plugin: 'com.gradle.plugin-publish'
 apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
+apply plugin: 'com.chrisgahlert.gradle-dcompose-plugin'
 
 repositories {
     mavenCentral()
@@ -56,8 +58,32 @@ artifacts {
     archives sourcesJar
 }
 
+dcompose {
+    dockerDaemon {
+        image = 'docker:1.11.0-dind'
+        privileged = true
+        portBindings = ['2375']
+    }
+}
+
 test {
     maxParallelForks = Math.round(Runtime.runtime.availableProcessors() / 2)
+
+    doFirst {
+        def dockerHost;
+        if(System.getenv('DOCKER_HOST') == null || System.getenv('DOCKER_HOST').startsWith('unix://')) {
+            dockerHost = 'localhost'
+        } else {
+            dockerHost = new URI(System.getenv('DOCKER_HOST')).host
+        }
+
+        def dockerPort = dcompose.dockerDaemon.findHostPort(2375)
+
+        jvmArgs "-DDOCKER_HOST=tcp://$dockerHost:$dockerPort", '-DDOCKER_TLS_VERIFY=0'
+    }
+
+    dependsOn startDockerDaemonContainer
+    finalizedBy removeDockerDaemonContainer
 }
 
 pluginBundle {
