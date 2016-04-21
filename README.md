@@ -20,7 +20,7 @@ Start using this plugin with the help of Gradle's plugin mechanism introduced in
 
 ```
 plugins {
-  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.1.0"
+  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.1.1"
 }
 ```
 
