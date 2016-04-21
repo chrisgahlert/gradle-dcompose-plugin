@@ -16,6 +16,8 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
 import org.gradle.util.GUtil
 
@@ -95,6 +97,10 @@ class Container {
     Boolean buildRemove
     Boolean buildPull
 
+    /**
+     * Results populated after starting a container
+     */
+    Map hostPortBindings
 
     Container(String name, Closure<String> dockerPrefix) {
         this.name = name
@@ -105,10 +111,10 @@ class Container {
         dockerPrefix() + name
     }
 
-
     def methodMissing(String name, def args) {
         throw new MissingMethodException(name, Container, args as Object[])
     }
+
 
     String getPullTaskName() {
         "pull${taskLabel}Image"
@@ -176,6 +182,48 @@ class Container {
         }
 
         result
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    int findHostPort(Map<String, String> properties = [:], int containerPort) {
+        if(hostPortBindings == null) {
+            throw new GradleException("Host port bindings not available for $name - has it been started?")
+        }
+
+        def exposedPorts = hostPortBindings.findAll { exposedPort, bindings ->
+            if(exposedPort.port == containerPort) {
+                if(properties.protocol) {
+                    return exposedPort.protocol as String == properties.protocol.toLowerCase()
+                }
+
+                return true
+            }
+        }
+
+        if(exposedPorts.size() == 0) {
+            throw new GradleException("Could not find container port $containerPort for container $name")
+        }
+        if(exposedPorts.size() > 1) {
+            throw new GradleException("The port number for container port $containerPort is ambigous for container " +
+                    "$name - please specify a protocol with findHostPort(port, protocol: 'tcp or udp')")
+        }
+
+        def bindings = exposedPorts.values().first()?.findAll { binding ->
+            !properties.containsKey('hostIp') || binding.hostIp == properties.hostIp
+        }
+
+        if(!bindings) {
+            throw new GradleException("The container port $containerPort for container $name has not been bound to a host port")
+        }
+
+        def possibleIps = bindings.collect { it.hostIp }.unique()
+        if(bindings.size() > 1 && !properties.hostIp && possibleIps.size() > 1) {
+            throw new GradleException("The container port $containerPort for container $name has multiple host ports bound - " +
+                    "please specify a hostIp with findHostPort(port, hostIp: '127.0.0.1')! " +
+                    "Possible values: " + possibleIps)
+        }
+
+        bindings[0].hostPort
     }
 
     @Override

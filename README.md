@@ -34,7 +34,7 @@ After applying the plugin you can start by defining containers:
 
 ## Use existing image
 
-```
+```gradle
 dcompose {
   database {
     image = 'busybox:1.24.2'   // Required
@@ -60,7 +60,7 @@ Executing `gradle test` will result in the following tasks being executed:
 
 ## Build custom image from Dockerfile
 
-```
+```gradle
 dcompose {
   myImage {
     baseDir = file('docker/')             // Required; will monitor directory for changes
@@ -102,7 +102,7 @@ Executing `gradle test` will result in the following tasks being executed:
 The runtime properties are available for both types of containers (existing image or custom 
 built image). They are all optional and can be applied like this:
 
-```
+```gradle
 dcompose {
   myName {
     // image = '...' OR baseDir = file('...')
@@ -127,7 +127,7 @@ dcompose {
 | binds | List&lt;String&gt; | A list of container bindings. Here you can specify which volumes or which host paths should be mounted in the container.<br><br> *Samples:* `['custom_volume:/data1', '/host/path:/var/log', 'vol:/tmp:rw', ...]`
 | volumesFrom | List&lt;Container \| String&gt; | Here you can specify a list of other containers, which volumes should be mounted. You can pass in the container instance by referencing it by value. If you specify a String, it will be interpreted as an external non-managed container. <br><br> *Sample:* `[database, 'non_managed_container', ...]`
 | exposedPorts | List&lt;String&gt; | A list of ports or port ranges, that are available within this container.<br><br> *Sample:* `['8080', '10000-10020', ...]`
-| portBindings | List&lt;String&gt; | A list of port bindings. These specify which host ports should be mapped to which container ports. The possible formats are `hostIp:hostPort:containerPort`, `hostIp::containerPort` and `containerPort`. If no host port has been given, a port will be automatically chosen. <br><br> *Sample:* `['8080', '10000:8080', '1234-1236:1234-1236/tcp', '127.0.0.1::8080', '192.168.0.1:8080:8080']`
+| portBindings | List&lt;String&gt; | A list of port bindings. These specify which host ports should be mapped to which container ports. The possible formats are `hostIp:hostPort:containerPort`, `hostIp::containerPort` and `containerPort`. If no host port has been given, a port will be automatically chosen. In order to find a dynamically chosen port, see chapter *Dynamic host ports*. <br><br> *Sample:* `['8080', '10000:8080', '1234-1236:1234-1236/tcp', '127.0.0.1::8080', '192.168.0.1:8080:8080']`
 | publishAllPorts | Boolean<br> *Default: null* | Whether all ports of this container should be accessible from other containers.
 | links | List&lt;ContainerDependency \| String&gt; | A list of containers, that this container should be linked to. You can create a `ContainerDependency` by calling a Container's `link` method - optionally with an alias. If you specify a String, it will be interpreted as an external non-managed container.<br><br> *Sample:* `[database.link(), database.link('otheralias'), 'non_managed_container', 'non_managed_container:alias',]`
 | hostName | String | The hostname that should be given to the container instance. <br><br> *Sample:* `'myhost'`
@@ -174,7 +174,7 @@ Additionally, the following all-tasks will be created after applying the plugin 
 In order to copy files from a running (or stopped) container, you can manually create a task to 
 copy some files or directories from the container to the host:
 
-```
+```gradle
 task copyFiles(type: DcomposeCopyFileFromContainerTask) {
   container = dcompose.database     // Just reference the container from which the files should be copied
   containerPath = '/some/dir/or/file'
@@ -183,17 +183,43 @@ task copyFiles(type: DcomposeCopyFileFromContainerTask) {
 }
 ```
 
+## Dynamic host ports
+
+When linking containers, you have the option to not specify a host port. Instead Docker will automatically choose 
+a host port for you. In order to access this host port later on, you can reference them from the container definition:
+
+```gradle
+dcompose {
+  database {
+    image = 'mysql:latest'
+    exposedPorts = ['3306'] // Optional, as already provided by image
+    portBindings = ['3306']
+  }
+}
+
+task runTestsAgainstDatabase(type: Test) {
+  dependsOn 'startDatabaseContainer'
+  
+  doFirst {
+    // The method findHostPort can only be called AFTER the container start task has executed. 
+    // That's why it is wrapped in the doFirst block. This also has the advantage, that if the
+    // dynamic port changes, it will not be influencing the test task's UP-TO-DATE check.
+    jvmArgs '-Dmysql_port=' + dcompose.database.findHostPort(3306)
+  }
+}
+```
+
 # Advanced example (not tested)
 
 #### src/main/docker/Dockerfile
 
-```
+```dockerfile
 FROM 'nginx:latest'
 COPY index.html /www/
 ```
 
 #### build.gradle
-```
+```gradle
 dcompose {
   dbData {
     image = 'mongo:latest'
@@ -216,7 +242,7 @@ dcompose {
 }
 
 task copyDockerData(type: Copy) {
-  from 'src/main/www'
+  from 'src/main/www/' // Contains index.html
   from 'src/main/docker/'
   into "$buildDir/docker/"
 }

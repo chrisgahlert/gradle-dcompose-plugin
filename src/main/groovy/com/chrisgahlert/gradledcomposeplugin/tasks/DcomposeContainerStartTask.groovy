@@ -63,7 +63,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                         return
                     }
 
-                    logger.debug("Waiting for Docker container with nane $containerName to stop running")
+                    logger.debug("Waiting for Docker container with name $containerName to stop running")
                     Thread.sleep(waitInterval)
                 }
 
@@ -76,9 +76,18 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     File getContainerState() {
         dockerOutput('container-state') {
-            ignoreDockerException('NotFoundException') {
+            def result = ignoreDockerException('NotFoundException') {
                 client.inspectContainerCmd(containerName).exec()
             }
+
+            if(result.state.running) {
+                container.hostPortBindings = result?.networkSettings?.ports?.bindings
+            } else {
+                container.hostPortBindings = null
+            }
+
+
+            result
         }
     }
 
