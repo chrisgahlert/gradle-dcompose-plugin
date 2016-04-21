@@ -24,7 +24,7 @@ When running the build, it will automatically look for the following Docker envi
 variables:
 
 * DOCKER_HOST (e.g. `tcp://localhost:2376`)
-* DOCKER_TLS_VERIFY (e.g. `1` or `0`)
+* DOCKER_TLS_VERIFY (e.g. `0`)
 * DOCKER_CERT_PATH
 
 You can easily set these variables with the help of this shell script (when using docker-machine): 
@@ -178,7 +178,7 @@ copy some files or directories from the container to the host:
 task copyFiles(type: DcomposeCopyFileFromContainerTask) {
   container = dcompose.database     // Just reference the container from which the files should be copied
   containerPath = '/some/dir/or/file'
-  destinationDir = file(...)        // Default: "$buildDir/<TaskName>/"
+  destinationDir = file(...)        // Default: "$buildDir/<taskName>/"
   cleanDestinationDir = true|false  // Default: false. Will remove the entire destination dir! Use with caution!
 }
 ```
@@ -188,7 +188,7 @@ task copyFiles(type: DcomposeCopyFileFromContainerTask) {
 #### src/main/docker/Dockerfile
 
 ```
-FROM 'nginx'
+FROM 'nginx:latest'
 COPY index.html /www/
 ```
 
@@ -231,6 +231,5 @@ to re-run this build and everything, that needs to be recreated will be.
 
 # Limitations
 
-* As of now Multi-Project-Support has not been (fully) integrated yet.
-* Theoretically this plugin should have support for Gradle's continuous mode. However 
-this has not been tested.
+* As of now Multi-Project-Support has not been (fully) integrated yet. Apply the plugin only to a single project for
+now and use cross-project task dependencies like `dependsOn ':dockerproject:startDatabaseContainer'`.
