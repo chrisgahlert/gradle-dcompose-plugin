@@ -16,30 +16,7 @@ This plugin requires:
 
 # Apply plugin
 
-Start using this plugin with the help of Gradle's plugin mechanism introduced in Gradle 2.1:
-
-```
-plugins {
-  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.1.1"
-}
-```
-
-Alternatively you can also use the manual method:
-
-```
-buildscript {
-  repositories {
-    maven {
-      url "https://plugins.gradle.org/m2/"
-    }
-  }
-  dependencies {
-    classpath "gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.1.0"
-  }
-}
-
-apply plugin: "com.chrisgahlert.gradle-dcompose-plugin"
-```
+See https://plugins.gradle.org/plugin/com.chrisgahlert.gradle-dcompose-plugin
 
 # Usage
 
@@ -228,12 +205,13 @@ dcompose {
     volumesFrom = [dbData]
   }
   cache {
-    image = 'redis'
+    image = 'redis:latest'
   }
   web {
     baseDir = file("$buildDir/docker/")
     links = [db.link('mongo__db'), cache.link()]
     env = ['MONGO_HOST=mongo_db', 'REDIS_HOST=cache']
+    tag = 'someuser/mywebimage:latest'
   }
 }
 
