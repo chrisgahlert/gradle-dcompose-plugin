@@ -14,11 +14,11 @@ This plugin requires:
 * Gradle >= 2.0
 * Docker (host) >= 1.9.0
 
-# Apply plugin
-
-See https://plugins.gradle.org/plugin/com.chrisgahlert.gradle-dcompose-plugin
 
 # Usage
+
+To apply the plugin, see the Gradle plugin page:
+https://plugins.gradle.org/plugin/com.chrisgahlert.gradle-dcompose-plugin
 
 When running the build, it will automatically look for the following Docker environment 
 variables:
@@ -29,6 +29,9 @@ variables:
 
 You can easily set these variables with the help of this shell script (when using docker-machine): 
 `eval "$(docker-machine env default)"`
+
+For a complete documentation see the configuration options of the docker-java project:
+https://github.com/docker-java/docker-java#documentation
 
 After applying the plugin you can start by defining containers:
 
