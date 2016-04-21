@@ -16,7 +16,6 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.extension.Container
-import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
@@ -25,7 +24,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.GUtil
 
-@CompileStatic
+@TypeChecked
 class DcomposeContainerCreateTask extends AbstractDcomposeTask {
 
     DcomposeContainerCreateTask() {

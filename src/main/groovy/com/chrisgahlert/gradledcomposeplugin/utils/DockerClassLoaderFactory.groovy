@@ -15,10 +15,10 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.utils
 
-import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
 import org.gradle.api.artifacts.Configuration
 
-@CompileStatic
+@TypeChecked
 class DockerClassLoaderFactory {
 
     final private Configuration dockerConfiguration

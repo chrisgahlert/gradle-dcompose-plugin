@@ -18,7 +18,6 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 import com.chrisgahlert.gradledcomposeplugin.extension.Container
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import groovy.json.JsonBuilder
-import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
@@ -27,7 +26,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 
-@CompileStatic
+@TypeChecked
 class AbstractDcomposeTask extends DefaultTask {
 
     private Set<String> initializedOutputs = []

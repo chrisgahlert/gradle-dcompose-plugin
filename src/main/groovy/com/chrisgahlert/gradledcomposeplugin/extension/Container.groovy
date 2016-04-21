@@ -15,13 +15,12 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.extension
 
-import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
 import org.gradle.util.GUtil
 
-@CompileStatic
+@TypeChecked
 class Container {
     /**
      * The internal dcompose container name, e.g. "database"

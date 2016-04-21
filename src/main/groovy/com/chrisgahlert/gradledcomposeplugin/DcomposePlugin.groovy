@@ -18,13 +18,13 @@ package com.chrisgahlert.gradledcomposeplugin
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
 import com.chrisgahlert.gradledcomposeplugin.tasks.*
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
-import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 
-@CompileStatic
+@TypeChecked
 class DcomposePlugin implements Plugin<Project> {
 
     public static final String TASK_GROUP = "Dcompose Docker"

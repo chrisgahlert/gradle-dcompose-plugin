@@ -17,12 +17,12 @@ package com.chrisgahlert.gradledcomposeplugin.extension
 
 import com.chrisgahlert.gradledcomposeplugin.tasks.*
 import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
-import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.util.ConfigureUtil
 
-@CompileStatic
+@TypeChecked
 class DcomposeExtension {
     final private TaskContainer tasks
 

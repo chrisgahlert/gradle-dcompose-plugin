@@ -15,10 +15,10 @@
  */
 package com.chrisgahlert.gradledcomposeplugin
 
-import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
 import nebula.test.IntegrationSpec
 
-@CompileStatic
+@TypeChecked
 abstract class AbstractDcomposeSpec extends IntegrationSpec {
     protected static final String DEFAULT_IMAGE = 'busybox:1.24.2-musl'
     protected static final String ALTERNATE_IMAGE = 'busybox:1.24.2-glibc'

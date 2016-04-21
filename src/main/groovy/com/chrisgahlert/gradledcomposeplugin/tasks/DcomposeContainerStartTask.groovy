@@ -15,8 +15,6 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
-
-import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
@@ -24,7 +22,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
-@CompileStatic
+@TypeChecked
 class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
     int waitInterval = 1000

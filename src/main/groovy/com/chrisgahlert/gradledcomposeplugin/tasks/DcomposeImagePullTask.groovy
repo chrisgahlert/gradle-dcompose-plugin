@@ -15,14 +15,12 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
-
-import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 
-@CompileStatic
+@TypeChecked
 class DcomposeImagePullTask extends AbstractDcomposeTask {
 
     DcomposeImagePullTask() {
