@@ -97,9 +97,9 @@ class DcomposePlugin implements Plugin<Project> {
     private void injectOtherContainersIntoTasks(DcomposeExtension extension, Project project) {
         project.afterEvaluate {
             project.tasks.withType(AbstractDcomposeTask) { AbstractDcomposeTask task ->
-                task.otherContainers = extension.containers.findAll { otherContainer ->
+                task.otherContainers = new HashSet(extension.containers.findAll { otherContainer ->
                     otherContainer != task.container
-                }
+                })
             }
         }
     }
