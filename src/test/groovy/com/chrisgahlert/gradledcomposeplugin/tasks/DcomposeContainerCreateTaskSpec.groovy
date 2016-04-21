@@ -379,7 +379,6 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         then:
         result.wasExecuted(':createMainContainer')
         result.wasExecuted(':startMainContainer')
-        result.standardError.contains("Container command '/entry.sh' not found or does not exist")
     }
 
 }
