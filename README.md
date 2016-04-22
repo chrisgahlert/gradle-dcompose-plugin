@@ -238,7 +238,7 @@ dcompose {
   }
   web {
     baseDir = file("$buildDir/docker/")
-    links = [db.link('mongo__db'), cache.link()]
+    links = [db.link('mongo_db'), cache.link()]
     env = ['MONGO_HOST=mongo_db', 'REDIS_HOST=cache']
     tag = 'someuser/mywebimage:latest'
   }
