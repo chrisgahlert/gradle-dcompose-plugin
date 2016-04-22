@@ -362,6 +362,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
                 result.resolvConfPath = null
                 result.hostnamePath = null
                 result.networkSettings = null
+                result.hostPortBindings = null
 
                 result
             }
