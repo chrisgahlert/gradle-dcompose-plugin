@@ -373,6 +373,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     def getImageState() {
         runInDockerClasspath {
             def result = client.inspectImageCmd(image).exec()
+            result.repoTags = null
             toJson(result)
         }
     }

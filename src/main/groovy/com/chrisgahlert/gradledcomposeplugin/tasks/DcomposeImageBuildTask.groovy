@@ -135,7 +135,9 @@ class DcomposeImageBuildTask extends AbstractDcomposeTask {
     File getImageState() {
         dockerOutput('image-state') {
             ignoreDockerException('NotFoundException') {
-                client.inspectImageCmd(tag).exec()
+                def result = client.inspectImageCmd(tag).exec()
+                result.repoTags = null
+                result
             }
         }
     }
