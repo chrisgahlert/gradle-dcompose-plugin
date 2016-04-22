@@ -12,7 +12,7 @@ container should be recreated.
 
 This plugin requires: 
 * Gradle >= 2.0
-* Docker (host) >= 1.9.0
+* Docker (host) >= 1.8.1 (older versions possibly work but have not been tested)
 
 
 # Usage
