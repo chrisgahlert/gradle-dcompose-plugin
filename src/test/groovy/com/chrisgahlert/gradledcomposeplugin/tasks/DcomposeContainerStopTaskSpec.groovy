@@ -110,4 +110,72 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':stopUserContainer')
     }
 
+    def 'stop should work for linked cross project containers'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subServer', """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    exposedPorts = ['8000']
+                }
+            }
+        """
+        addSubproject 'subClient', """
+            dcompose {
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    links = [container(':subServer:server').link()]
+                }
+            }
+        """
+        addSubproject 'other'
+
+        runTasksSuccessfully 'startClientContainer'
+
+        when:
+        def result = runTasksSuccessfully 'stopServerContainer'
+
+        then:
+        result.wasExecuted(':subClient:stopClientContainer')
+        result.wasExecuted(':subServer:stopServerContainer')
+    }
+
+    def 'stop should work for cross project containers with volumes from'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subData', """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumes = ['/data']
+                }
+            }
+        """
+        addSubproject 'subUser', """
+            dcompose {
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumesFrom = [container(':subData:data')]
+                }
+            }
+        """
+        addSubproject 'other'
+
+        runTasksSuccessfully 'startDataContainer', 'startUserContainer'
+
+        when:
+        def result = runTasksSuccessfully 'stopUserContainer'
+
+        then:
+        !result.wasExecuted(':subData:stopDataContainer')
+        result.wasExecuted(':subUser:stopUserContainer')
+    }
+
 }

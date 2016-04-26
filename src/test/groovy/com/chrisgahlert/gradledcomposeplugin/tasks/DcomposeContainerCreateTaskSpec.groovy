@@ -317,6 +317,80 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         file('build/copy/content').text.trim() == 'test123'
     }
 
+    def 'create should work for linked cross project containers'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subServer', """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    exposedPorts = ['8000']
+                }
+            }
+        """
+        addSubproject 'subDatabase', """
+            dcompose {
+                db {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    exposedPorts = ['8001']
+                }
+            }
+        """
+        addSubproject 'subClient', """
+            dcompose {
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    links = [container(':subServer:server').link(), container(':subDatabase:db').link('alias')]
+                }
+            }
+        """
+        addSubproject 'other'
+
+        when:
+        def result = runTasksSuccessfully 'createClientContainer'
+
+        then:
+        result.wasExecuted(':subServer:createServerContainer')
+        result.wasExecuted(':subDatabase:createDbContainer')
+        result.wasExecuted(':subClient:createClientContainer')
+    }
+
+    def 'create should work for cross-project containers with volumes from'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subData', """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    volumes = ['/data']
+                }
+            }
+        """
+        addSubproject 'subUser', """
+            dcompose {
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    volumesFrom = [container(':subData:data')]
+                }
+            }
+        """
+        addSubproject 'other'
+
+        when:
+        def result = runTasksSuccessfully 'createUserContainer'
+
+        then:
+        result.wasExecuted(':subData:createDataContainer')
+        result.wasExecuted(':subUser:createUserContainer')
+    }
+
     def 'create should support all other optional properties'() {
         given:
         buildFile << """

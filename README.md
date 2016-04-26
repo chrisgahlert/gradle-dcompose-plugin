@@ -263,7 +263,46 @@ Launch the build by running `gradle startWebContainer`. This should automaticall
 pull/create/start all required containers. Whenever something changes, you just need 
 to re-run this build and everything, that needs to be recreated will be.
 
-# Limitations
+# Multi-project support
 
-* As of now Multi-Project-Support has not been (fully) integrated yet. Apply the plugin only to a single project for
-now and use cross-project task dependencies like `dependsOn ':dockerproject:startDatabaseContainer'`.
+The default syntax for referencing containers within a project is to reference them 
+with their name like ```dcompose.myContainer```. In order to also support Multi-project 
+setups, there is another syntax: ```dcompose.container(':project:myContainer')```. This
+allows to reference a container from another project. _FYI: Although this looks like a 
+Gradle task path it is actually referencing a container within that project._
+
+```gradle
+project(':prjA') {
+  apply plugin: 'com.chrisgahlert.gradle-dcompose-plugin'
+  
+  dcompose {
+    server {
+      image = '...'
+      exposedPorts = ['8080']
+      volumes = ['/var/log']
+    }
+  }
+}
+
+project(':prjB') {
+  apply plugin: 'com.chrisgahlert.gradle-dcompose-plugin'
+  
+  dcompose {
+    client {
+      image = '...'
+      links = [container(':prjA:server').link(), container(':prjA:server').link('alias')]
+      volumesFrom = container(':prjA:server')
+    }
+  }
+  
+  
+  task copyFiles(type: DcomposeCopyFileFromContainerTask) {
+    container = dcompose.container(':prjA:server')
+    containerPath = '/some/dir/or/file'
+  }
+}
+```
+
+*Please note:* It is not possible to use this plugin together with Gradle's 
+```--configure-on-demand```. This is due to the nature of how the container tasks 
+depend on each other.

@@ -32,6 +32,11 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
 
     """
 
+    public static final String DEFAULT_PLUGIN_INIT = '''
+        repositories { mavenCentral() }
+        apply plugin: "com.chrisgahlert.gradle-dcompose-plugin"
+    '''
+
     protected String cleanupTask = 'removeContainers'
 
     String copyTaskConfig(String containerName, String containerPath, String name = 'copy') {
@@ -44,14 +49,18 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
     }
 
     def setup() {
-        buildFile << """
-            repositories { mavenCentral() }
-            apply plugin: "com.chrisgahlert.gradle-dcompose-plugin"
-        """
+        buildFile << DEFAULT_PLUGIN_INIT
+    }
+
+    @Override
+    protected File addSubproject(String subprojectName, String subBuildGradleText) {
+        return super.addSubproject(subprojectName, """
+            $DEFAULT_PLUGIN_INIT
+            $subBuildGradleText
+        """)
     }
 
     def cleanup() {
         runTasks cleanupTask
     }
-
 }

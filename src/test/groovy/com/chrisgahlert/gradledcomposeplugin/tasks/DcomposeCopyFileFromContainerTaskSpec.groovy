@@ -31,9 +31,40 @@ class DcomposeCopyFileFromContainerTaskSpec extends AbstractDcomposeSpec {
         """
 
         when:
-        runTasksSuccessfully 'cp'
+        def result = runTasksSuccessfully 'cp'
 
         then:
+        result.wasExecuted(':createMainContainer')
+        file('build/cp/group').text.startsWith('root:x:0:')
+    }
+
+    def 'should support copying file from not running cross project container'() {
+        given:
+        buildFile << """
+            $DEFAULT_PLUGIN_INIT
+
+            task cp(type: DcomposeCopyFileFromContainerTask) {
+                container = dcompose.container(':sub:main')
+                containerPath = '/etc/group'
+            }
+        """
+
+        addSubproject 'sub', """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumes = ['/data']
+                }
+            }
+        """
+        addSubproject 'other'
+
+        when:
+        def result = runTasksSuccessfully 'cp'
+
+        then:
+        result.wasExecuted(':sub:createMainContainer')
         file('build/cp/group').text.startsWith('root:x:0:')
     }
 

@@ -91,8 +91,6 @@ class ContainerSpec extends AbstractDcomposeSpec {
 
         when:
         def result = runTasks 'findBindings'
-        println result.standardOutput
-        println result.standardError
 
         then:
         assert result.success == success

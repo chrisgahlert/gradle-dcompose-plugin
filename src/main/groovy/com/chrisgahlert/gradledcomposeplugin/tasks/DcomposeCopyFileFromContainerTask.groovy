@@ -34,7 +34,7 @@ class DcomposeCopyFileFromContainerTask extends AbstractDcomposeTask {
     void setContainer(Container container) {
         super.setContainer(container)
 
-        dependsOn container.createTaskName
+        dependsOn "$container.projectPath:$container.createTaskName"
     }
 
     File destinationDir

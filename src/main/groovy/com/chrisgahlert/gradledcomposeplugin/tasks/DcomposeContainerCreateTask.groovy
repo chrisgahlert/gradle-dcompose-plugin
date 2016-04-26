@@ -29,10 +29,10 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
 
     DcomposeContainerCreateTask() {
         dependsOn {
-            container.linkDependencies.collect { it.createTaskName }
+            container.linkDependencies.collect { "$it.projectPath:$it.createTaskName" }
         }
         dependsOn {
-            container.volumesFromDependencies.collect { it.createTaskName }
+            container.volumesFromDependencies.collect { "$it.projectPath:$it.createTaskName" }
         }
     }
 

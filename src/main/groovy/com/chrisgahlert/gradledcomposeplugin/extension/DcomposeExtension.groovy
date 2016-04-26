@@ -19,21 +19,22 @@ import com.chrisgahlert.gradledcomposeplugin.tasks.*
 import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import groovy.transform.TypeChecked
 import org.gradle.api.GradleException
-import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
+import org.gradle.util.GUtil
 
 @TypeChecked
 class DcomposeExtension {
-    final private TaskContainer tasks
+    final private Project project
 
-    final private Set<Container> containers = new HashSet<>()
+    final private Set<DefaultContainer> containers = new HashSet<>()
 
     String namePrefix
 
-    DcomposeExtension(TaskContainer tasks, File rootProjectDir) {
-        this.tasks = tasks
+    DcomposeExtension(Project project) {
+        this.project = project
 
-        String hash = DcomposeUtils.sha1Hash(rootProjectDir.canonicalPath)
+        String hash = DcomposeUtils.sha1Hash(project.rootDir.canonicalPath)
         def pathHash = hash.substring(0, 8)
         namePrefix = "dcompose_${pathHash}_"
     }
@@ -42,7 +43,7 @@ class DcomposeExtension {
         def container = findByName(name)
 
         if (container == null) {
-            container = new Container(name, { namePrefix })
+            container = new DefaultContainer(name, project.path, { namePrefix })
             ConfigureUtil.configure(config, container)
             container.validate()
 
@@ -55,40 +56,40 @@ class DcomposeExtension {
         return container
     }
 
-    private void createContainerTasks(Container container) {
+    private void createContainerTasks(DefaultContainer container) {
         def initImage;
         if (container.hasImage()) {
-            initImage = tasks.create(container.pullTaskName, DcomposeImagePullTask)
+            initImage = project.tasks.create(container.pullTaskName, DcomposeImagePullTask)
         } else {
-            initImage = tasks.create(container.buildTaskName, DcomposeImageBuildTask)
+            initImage = project.tasks.create(container.buildTaskName, DcomposeImageBuildTask)
         }
         initImage.container = container
 
-        def create = tasks.create(container.createTaskName, DcomposeContainerCreateTask)
+        def create = project.tasks.create(container.createTaskName, DcomposeContainerCreateTask)
         create.container = container
         create.dependsOn initImage
 
-        def start = tasks.create(container.startTaskName, DcomposeContainerStartTask)
+        def start = project.tasks.create(container.startTaskName, DcomposeContainerStartTask)
         start.container = container
         start.dependsOn create
 
-        def stop = tasks.create(container.stopTaskName, DcomposeContainerStopTask)
+        def stop = project.tasks.create(container.stopTaskName, DcomposeContainerStopTask)
         stop.container = container
 
-        def removeContainer = tasks.create(container.removeContainerTaskName, DcomposeContainerRemoveTask)
+        def removeContainer = project.tasks.create(container.removeContainerTaskName, DcomposeContainerRemoveTask)
         removeContainer.container = container
         removeContainer.dependsOn stop
 
-        def removeImage = tasks.create(container.removeImageTaskName, DcomposeImageRemoveTask)
+        def removeImage = project.tasks.create(container.removeImageTaskName, DcomposeImageRemoveTask)
         removeImage.container = container
         removeImage.dependsOn removeContainer
     }
 
-    Container findByName(String name) {
+    DefaultContainer findByName(String name) {
         return containers.find { it.name == name }
     }
 
-    Container getByName(String name) {
+    DefaultContainer getByName(String name) {
         def container = findByName(name)
 
         if (container == null) {
@@ -98,8 +99,25 @@ class DcomposeExtension {
         container
     }
 
-    Set<Container> getContainers() {
+    Set<DefaultContainer> getContainers() {
         containers
+    }
+
+    ContainerReference container(String path) {
+        def targetProject
+        if (!path.contains(Project.PATH_SEPARATOR)) {
+            targetProject = project
+        } else {
+            def projectPath = path.substring(0, path.lastIndexOf(Project.PATH_SEPARATOR));
+            targetProject = project.findProject(!GUtil.isTrue(projectPath) ? Project.PATH_SEPARATOR : projectPath)
+
+            if(targetProject == null) {
+                throw new GradleException("Could not find project with path '$projectPath'")
+            }
+        }
+
+        def name = path.tokenize(Project.PATH_SEPARATOR).last()
+        new ContainerReference(name, targetProject)
     }
 
     def methodMissing(String name, def args) {

@@ -108,4 +108,72 @@ class DcomposeContainerRemoveTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':removeUserContainer')
         result.wasExecuted(':removeDataContainer')
     }
+
+    def 'remove should work for linked cross project containers'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subServer', """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    exposedPorts = ['8000']
+                }
+            }
+        """
+        addSubproject 'subClient', """
+            dcompose {
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    links = [container(':subServer:server').link()]
+                }
+            }
+        """
+        addSubproject 'other'
+
+        runTasksSuccessfully 'createClientContainer'
+
+        when:
+        def result = runTasksSuccessfully 'removeServerContainer'
+
+        then:
+        result.wasExecuted(':subClient:removeClientContainer')
+        result.wasExecuted(':subServer:removeServerContainer')
+    }
+
+    def 'remove should work for cross project containers with volumes from'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subData', """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumes = ['/data']
+                }
+            }
+        """
+        addSubproject 'subUser', """
+            dcompose {
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumesFrom = [container(':subData:data')]
+                }
+            }
+        """
+        addSubproject 'other'
+
+        runTasksSuccessfully 'createUserContainer'
+
+        when:
+        def result = runTasksSuccessfully 'removeDataContainer'
+
+        then:
+        result.wasExecuted(':subUser:removeUserContainer')
+        result.wasExecuted(':subData:removeDataContainer')
+    }
 }

@@ -33,7 +33,7 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
             }
 
             (linkDeps + volFromDeps).collect { otherContainer ->
-                otherContainer.removeContainerTaskName
+                "$otherContainer.projectPath:$otherContainer.removeContainerTaskName"
             }
         }
 

@@ -15,7 +15,10 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
+import com.chrisgahlert.gradledcomposeplugin.DcomposePlugin
 import com.chrisgahlert.gradledcomposeplugin.extension.Container
+import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
+import com.chrisgahlert.gradledcomposeplugin.extension.DefaultContainer
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import groovy.json.JsonBuilder
 import groovy.transform.TypeChecked
@@ -42,8 +45,6 @@ class AbstractDcomposeTask extends DefaultTask {
     @Input
     @Optional
     String apiVersion
-
-    Set<Container> otherContainers
 
     private Container container
 
@@ -147,4 +148,17 @@ class AbstractDcomposeTask extends DefaultTask {
 
         outputFile
     }
+
+    protected Set<Container> getOtherContainers() {
+        Set<DefaultContainer> result = new HashSet<>()
+
+        project.rootProject.allprojects.each { prj ->
+            if(prj.plugins.hasPlugin(DcomposePlugin)) {
+                result.addAll prj.extensions.getByType(DcomposeExtension).containers
+            }
+        }
+
+        result.findAll { it != container }
+    }
+
 }

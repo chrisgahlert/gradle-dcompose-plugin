@@ -16,213 +16,55 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.TypeChecked
-import groovy.transform.TypeCheckingMode
-import org.gradle.api.GradleException
 import org.gradle.util.GUtil
 
 @TypeChecked
-class Container {
+abstract class Container {
     /**
      * The internal dcompose container name, e.g. "database"
      */
     final String name
 
     /**
-     * The prefix for the actual name used in Docker later, e.g. "dcompose_12345_"
+     * The path to the Gradle project where this container is defined
      */
-    final Closure<String> dockerPrefix
+    final String projectPath
 
-    /**
-     * The name of the pre-existing image that should be pulled and used for creating containers.
-     * Cannot be used in combination with baseDir (for building images).
-     */
-    private String image
-
-    /**
-     * Whether the "start<Name>Container" command should wait for the container to exit before continuing
-     */
-    boolean waitForCommand
-
-    /**
-     * How long should it wait for the command to exit
-     */
-    int waitTimeout = 0
-
-    /**
-     * Whether a containers volumes should be preserved between
-     */
-    boolean preserveVolumes = false
-
-    /**
-     * Create container specific properties. Properties are optional by default.
-     */
-    List<String> command
-    List<String> entrypoints
-    List<String> env
-    String workingDir
-    String user
-    Boolean readonlyRootfs
-    List<String> volumes
-    List<String> binds
-    List volumesFrom
-    List<String> exposedPorts
-    List<String> portBindings
-    Boolean publishAllPorts
-    List links
-    String hostName
-    List<String> dns
-    List<String> dnsSearch
-    List<String> extraHosts
-    String networkMode
-    Boolean attachStdin
-    Boolean attachStdout
-    Boolean attachStderr
-    Boolean privileged
-
-    /**
-     * Build image specific properties (can only be used when no image is defined). Properties are optional by default.
-     */
-    File baseDir          // Required
-    String dockerFilename // optional, Default: "Dockerfile"
-    String tag            // The image tag name, tag should be used
-    Long memory
-    Long memswap
-    String cpushares
-    String cpusetcpus
-    Map<String, String> buildArgs
-    Boolean forceRemoveImage
-    Boolean noPruneParentImages
-    Boolean buildNoCache
-    Boolean buildRemove
-    Boolean buildPull
-
-    /**
-     * Results populated after starting a container
-     */
-    Map hostPortBindings
-
-    Container(String name, Closure<String> dockerPrefix) {
+    Container(String name, String projectPath) {
         this.name = name
-        this.dockerPrefix = dockerPrefix
+        this.projectPath = projectPath
     }
-
-    String getContainerName() {
-        dockerPrefix() + name
-    }
-
-    def methodMissing(String name, def args) {
-        throw new MissingMethodException(name, Container, args as Object[])
-    }
-
 
     String getPullTaskName() {
-        "pull${taskLabel}Image"
+        "pull${getTaskLabel()}Image"
     }
 
     String getCreateTaskName() {
-        "create${taskLabel}Container"
+        "create${getTaskLabel()}Container"
     }
 
     String getStartTaskName() {
-        "start${taskLabel}Container"
+        "start${getTaskLabel()}Container"
     }
 
     String getStopTaskName() {
-        "stop${taskLabel}Container"
+        "stop${getTaskLabel()}Container"
     }
 
     String getRemoveContainerTaskName() {
-        "remove${taskLabel}Container"
+        "remove${getTaskLabel()}Container"
     }
 
     String getRemoveImageTaskName() {
-        "remove${taskLabel}Image"
+        "remove${getTaskLabel()}Image"
     }
 
     String getBuildTaskName() {
-        "build${taskLabel}Image"
+        "build${getTaskLabel()}Image"
     }
 
     private String getTaskLabel() {
         GUtil.toCamelCase(name)
-    }
-
-    String getTag() {
-        tag ?: (dockerPrefix() + '/' + name).replace('_', '')
-    }
-
-    String getImage() {
-        image ?: getTag()
-    }
-
-    ContainerDependency link(String alias = name) {
-        new ContainerDependency({ "$containerName:$alias" }, this)
-    }
-
-    Set<Container> getLinkDependencies() {
-        def result = new HashSet()
-
-        links?.each { link ->
-            if (link instanceof ContainerDependency) {
-                result << ((ContainerDependency) link).container
-            }
-        }
-
-        result
-    }
-
-    Set<Container> getVolumesFromDependencies() {
-        def result = new HashSet()
-
-        volumesFrom?.each { from ->
-            if (from instanceof Container) {
-                result << from
-            }
-        }
-
-        result
-    }
-
-    @TypeChecked(TypeCheckingMode.SKIP)
-    int findHostPort(Map<String, String> properties = [:], int containerPort) {
-        if(hostPortBindings == null) {
-            throw new GradleException("Host port bindings not available for $name - has it been started?")
-        }
-
-        def exposedPorts = hostPortBindings.findAll { exposedPort, bindings ->
-            if(exposedPort.port == containerPort) {
-                if(properties.protocol) {
-                    return exposedPort.protocol as String == properties.protocol.toLowerCase()
-                }
-
-                return true
-            }
-        }
-
-        if(exposedPorts.size() == 0) {
-            throw new GradleException("Could not find container port $containerPort for container $name")
-        }
-        if(exposedPorts.size() > 1) {
-            throw new GradleException("The port number for container port $containerPort is ambigous for container " +
-                    "$name - please specify a protocol with findHostPort(port, protocol: 'tcp or udp')")
-        }
-
-        def bindings = exposedPorts.values().first()?.findAll { binding ->
-            !properties.containsKey('hostIp') || binding.hostIp == properties.hostIp
-        }
-
-        if(!bindings) {
-            throw new GradleException("The container port $containerPort for container $name has not been bound to a host port")
-        }
-
-        def possibleIps = bindings.collect { it.hostIp }.unique()
-        if(bindings.size() > 1 && !properties.hostIp && possibleIps.size() > 1) {
-            throw new GradleException("The container port $containerPort for container $name has multiple host ports bound - " +
-                    "please specify a hostIp with findHostPort(port, hostIp: '127.0.0.1')! " +
-                    "Possible values: " + possibleIps)
-        }
-
-        bindings[0].hostPort
     }
 
     @Override
@@ -230,29 +72,100 @@ class Container {
         containerName
     }
 
-    boolean hasImage() {
-        image
-    }
+    abstract String getContainerName()
 
-    void validate() {
-        if (!(baseDir == null ^ image == null)) {
-            throw new GradleException("Either dockerFile or image must be provided for dcompose container '$name'")
-        }
+    abstract boolean isWaitForCommand()
 
-        if (baseDir == null) {
-            if (dockerFilename != null) {
-                throw new GradleException("Cannot set baseDir when image in use for dcompose container '$name'")
-            }
-            if (tag != null) {
-                throw new GradleException("Cannot set tag when image in use for dcompose container '$name'")
-            }
-        }
+    abstract int getWaitTimeout()
 
-        links?.each {
-            if (it instanceof Container) {
-                throw new GradleException("Invalid container link from $name to $it.name: Please use ${it.name}.link()")
-            }
-        }
+    abstract boolean isPreserveVolumes()
+
+    abstract List<String> getCommand()
+
+    abstract List<String> getEntrypoints()
+
+    abstract List<String> getEnv()
+
+    abstract String getWorkingDir()
+
+    abstract String getUser()
+
+    abstract Boolean getReadonlyRootfs()
+
+    abstract List<String> getVolumes()
+
+    abstract List<String> getBinds()
+
+    abstract List getVolumesFrom()
+
+    abstract List<String> getExposedPorts()
+
+    abstract List<String> getPortBindings()
+
+    abstract Boolean getPublishAllPorts()
+
+    abstract List getLinks()
+
+    abstract String getHostName()
+
+    abstract List<String> getDns()
+
+    abstract List<String> getDnsSearch()
+
+    abstract List<String> getExtraHosts()
+
+    abstract String getNetworkMode()
+
+    abstract Boolean getAttachStdin()
+
+    abstract Boolean getAttachStdout()
+
+    abstract Boolean getAttachStderr()
+
+    abstract Boolean getPrivileged()
+
+    abstract File getBaseDir()
+
+    abstract String getDockerFilename()
+
+    abstract Long getMemory()
+
+    abstract Long getMemswap()
+
+    abstract String getCpushares()
+
+    abstract String getCpusetcpus()
+
+    abstract Map<String, String> getBuildArgs()
+
+    abstract Boolean getForceRemoveImage()
+
+    abstract Boolean getNoPruneParentImages()
+
+    abstract Boolean getBuildNoCache()
+
+    abstract Boolean getBuildRemove()
+
+    abstract Boolean getBuildPull()
+
+    abstract void setHostPortBindings(Map hostPortBindings)
+
+    abstract int findHostPort(Map<String, String> properties, int containerPort)
+
+    abstract Set<Container> getLinkDependencies()
+
+    abstract Set<Container> getVolumesFromDependencies()
+
+    abstract String getTag()
+
+    abstract String getImage()
+
+    abstract boolean hasImage()
+
+    abstract void validate()
+
+    ContainerDependency link(String alias = null) {
+        new ContainerDependency({ "$containerName:${alias ?: name}" }, this)
     }
 
     static class ContainerDependency {
@@ -274,4 +187,18 @@ class Container {
         }
     }
 
+    @Override
+    boolean equals(Object obj) {
+        if(obj == null || !(obj instanceof Container)) {
+            return false
+        }
+
+        def other = (Container) obj
+        return Objects.equals(this.name, other.name) && Objects.equals(this.projectPath, other.projectPath)
+    }
+
+    @Override
+    int hashCode() {
+        return Objects.hash(name, projectPath)
+    }
 }

@@ -283,4 +283,194 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         !result.wasUpToDate(':createUserContainer')
         result.wasExecuted(':startUserContainer')
     }
+
+    def 'start should work for linked cross project containers'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subServer', """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                }
+            }
+        """
+        addSubproject 'subClient', """
+            dcompose {
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc server 8000 > /transfer']
+                    links = [container(':subServer:server').link()]
+                    waitForCommand = true
+                }
+            }
+
+            ${copyTaskConfig('client', '/transfer')}
+        """
+        addSubproject 'other'
+
+        when:
+        def result = runTasksSuccessfully 'startClientContainer', 'copy'
+
+        then:
+        result.wasExecuted(':subServer:startServerContainer')
+        result.wasExecuted(':subClient:startClientContainer')
+        file('subClient/build/copy/transfer').text.trim() == 'linkcool'
+    }
+
+    def 'start should work for linked cross project containers with alias'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subServer', """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                }
+            }
+        """
+        addSubproject 'subClient', """
+            dcompose {
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc alias 8000 > /transfer']
+                    links = [container(':subServer:server').link('alias')]
+                    waitForCommand = true
+                }
+            }
+
+            ${copyTaskConfig('client', '/transfer')}
+        """
+        addSubproject 'other'
+
+        when:
+        def result = runTasksSuccessfully 'startClientContainer', 'copy'
+
+        then:
+        result.wasExecuted(':subServer:startServerContainer')
+        result.wasExecuted(':subClient:startClientContainer')
+        file('subClient/build/copy/transfer').text.trim() == 'linkcool'
+    }
+
+    def 'start should work for cross project containers with volumes from'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subData', """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumes = ['/data']
+                }
+            }
+        """
+        addSubproject 'subUser', """
+            dcompose {
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    volumesFrom = [container(':subData:data')]
+                }
+            }
+        """
+        addSubproject 'other'
+
+        when:
+        def result = runTasksSuccessfully 'startUserContainer'
+
+        then:
+        result.wasExecuted(':subData:createDataContainer')
+        !result.wasExecuted(':subData:startDataContainer')
+        result.wasExecuted(':subUser:startUserContainer')
+    }
+
+    def 'start should work for linked cross project containers on update'() {
+        given:
+        buildFile.text = ''
+
+        def serverDir = addSubproject 'subServer', """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                }
+            }
+        """
+        def serverBuildFile = new File(serverDir, 'build.gradle')
+
+        addSubproject 'subClient', """
+            dcompose {
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc server 8000 > /transfer']
+                    links = [container(':subServer:server').link()]
+                    waitForCommand = true
+                }
+            }
+
+            ${copyTaskConfig('client', '/transfer')}
+        """
+        addSubproject 'other'
+
+        runTasksSuccessfully 'startClientContainer'
+        serverBuildFile.text = serverBuildFile.text.replace('linkcool', 'linkverycool')
+
+        when:
+        def result = runTasks 'startClientContainer', 'copy'
+
+        then:
+        result.wasExecuted(':subServer:createServerContainer')
+        !result.wasUpToDate(':subServer:createServerContainer')
+        result.wasExecuted(':subServer:startServerContainer')
+        result.wasExecuted(':subClient:createClientContainer')
+        !result.wasUpToDate(':subClient:createClientContainer')
+        result.wasExecuted(':subClient:startClientContainer')
+        file('subClient/build/copy/transfer').text.trim() == 'linkverycool'
+    }
+
+    def 'start should work for cross project containers with volumes from on update'() {
+        given:
+        buildFile.text = ''
+
+        def dataDir = addSubproject 'subData', """
+            dcompose {
+                data {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    volumes = ['/data']
+                }
+            }
+        """
+        def dataBuildFile = new File(dataDir, 'build.gradle')
+
+        addSubproject 'subUser', """
+            dcompose {
+                user {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    volumesFrom = [container(':subData:data')]
+                }
+            }
+        """
+        addSubproject 'other'
+
+        runTasksSuccessfully 'createUserContainer'
+        dataBuildFile << "dcompose.data.command = ['echo', 'def']"
+
+        when:
+        def result = runTasksSuccessfully 'startUserContainer'
+
+        then:
+        result.wasExecuted(':subData:createDataContainer')
+        !result.wasUpToDate(':subData:createDataContainer')
+        result.wasExecuted(':subUser:createUserContainer')
+        !result.wasUpToDate(':subUser:createUserContainer')
+        result.wasExecuted(':subUser:startUserContainer')
+    }
 }
