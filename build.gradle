@@ -79,7 +79,13 @@ test {
 
         def dockerPort = dcompose.dockerDaemon.findHostPort(2375)
 
-        jvmArgs "-DDOCKER_HOST=tcp://$dockerHost:$dockerPort", '-DDOCKER_TLS_VERIFY=0'
+        systemProperty 'DOCKER_HOST', "tcp://$dockerHost:$dockerPort"
+        systemProperty 'DOCKER_TLS_VERIFY', '0'
+    }
+
+    doLast {
+        systemProperties.remove 'DOCKER_HOST'
+        systemProperties.remove 'DOCKER_TLS_VERIFY'
     }
 
     dependsOn startDockerDaemonContainer

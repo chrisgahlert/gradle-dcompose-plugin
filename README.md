@@ -207,7 +207,12 @@ task runTestsAgainstDatabase(type: Test) {
     // The method findHostPort can only be called AFTER the container start task has executed. 
     // That's why it is wrapped in the doFirst block. This also has the advantage, that if the
     // dynamic port changes, it will not be influencing the test task's UP-TO-DATE check.
-    jvmArgs '-Dmysql_port=' + dcompose.database.findHostPort(3306)
+    systemProperty 'mysql.port', dcompose.database.findHostPort(3306)
+  }
+  doLast {
+    // For newer Gradle versions it is important to remove the "dynamic" system properties before
+    // task execution ends as they will be persisted for future UP-TO-DATE checks.
+    systemProperties.remove 'mysql.port
   }
 }
 ```
