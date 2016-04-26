@@ -81,6 +81,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         """
 
         runTasksSuccessfully 'startMainContainer'
+        Thread.sleep(5000)
 
         when:
         def result = runTasksSuccessfully 'startMainContainer'
