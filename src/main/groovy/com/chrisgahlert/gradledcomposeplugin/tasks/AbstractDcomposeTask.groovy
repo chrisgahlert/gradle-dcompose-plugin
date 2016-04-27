@@ -158,7 +158,7 @@ class AbstractDcomposeTask extends DefaultTask {
             }
         }
 
-        result.findAll { it != container }
+        new HashSet<>(result.findAll { it != container })
     }
 
 }
