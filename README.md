@@ -33,6 +33,8 @@ You can easily set these variables with the help of this shell script (when usin
 For a complete documentation see the configuration options of the docker-java project:
 https://github.com/docker-java/docker-java#documentation
 
+Please also make sure, that the Project has the Maven Central Repository or a mirror added. This is needed to download the Docker Java Client dependencies.
+
 After applying the plugin you can start by defining containers:
 
 ## Use existing image
@@ -290,8 +292,13 @@ project(':prjB') {
   dcompose {
     client {
       image = '...'
-      links = [container(':prjA:server').link(), container(':prjA:server').link('alias')]
-      volumesFrom = container(':prjA:server')
+      links = [
+        container(':prjA:server').link(),       // Container alias will default to 'server'
+        container(':prjA:server').link('alias') // Or you can manually define an alias
+      ]
+      volumesFrom = [
+        container(':prjA:server')
+      ]
     }
   }
   
