@@ -20,8 +20,9 @@ This plugin requires:
 To apply the plugin, see the Gradle plugin page:
 https://plugins.gradle.org/plugin/com.chrisgahlert.gradle-dcompose-plugin
 
-When running the build, it will automatically look for the following Docker environment 
-variables:
+When running the build, you will need to make sure, Docker is properly configured. The easiest way
+is to just use environment variables. The plugin will automatically look for the following Docker 
+environment variables:
 
 * DOCKER_HOST (e.g. `tcp://localhost:2376`)
 * DOCKER_TLS_VERIFY (e.g. `0`)
@@ -29,6 +30,28 @@ variables:
 
 You can easily set these variables with the help of this shell script (when using docker-machine): 
 `eval "$(docker-machine env default)"`
+
+In order to customise the Docker Client configuration programmatically, you can include the
+following configuration in your build script:
+
+```gradle
+dcompose {
+  dockerClientConfig = {
+    // Will delegate to the DockerClientConfigBuilder from
+    // https://github.com/docker-java/docker-java/blob/master/src/main/java/com/github/dockerjava/core/DockerClientConfig.java#L348
+    withDockerHost 'tcp://somehost:1234'
+    withTlsVerify false
+  }
+}
+```
+
+The evaluation order of properties will be (in descending order of precedence):
+
+1. The ```dockerClientConfig``` closure
+2. System properties (e.g. ```gradle startSomeContainer -DDOCKER_HOST=tcp://somehost:1234```)
+3. Environment variables (e.g. ```export DOCKER_HOST=tcp://somehost:1234; gradle startSomeContainer```
+4. A properties file in ```$HOME/.docker-java.properties```
+
 
 For a complete documentation see the configuration options of the docker-java project:
 https://github.com/docker-java/docker-java#documentation
@@ -311,5 +334,5 @@ project(':prjB') {
 ```
 
 *Please note:* It is not possible to use this plugin together with Gradle's 
-```--configure-on-demand```. This is due to the nature of how the container tasks 
-depend on each other.
+_Configuration on Demand_. This is due to the nature of the container tasks' 
+dependencies. 

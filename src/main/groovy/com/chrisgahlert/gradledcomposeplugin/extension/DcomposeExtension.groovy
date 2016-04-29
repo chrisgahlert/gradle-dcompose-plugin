@@ -31,6 +31,8 @@ class DcomposeExtension {
 
     String namePrefix
 
+    Closure dockerClientConfig
+
     DcomposeExtension(Project project) {
         this.project = project
 

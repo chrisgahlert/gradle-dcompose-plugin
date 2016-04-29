@@ -26,29 +26,24 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.Optional
+import org.gradle.util.ConfigureUtil
 
 @TypeChecked
 class AbstractDcomposeTask extends DefaultTask {
 
     private Set<String> initializedOutputs = []
 
-    @Input
-    @Optional
-    String host
-
-    @InputDirectory
-    @Optional
-    File certPath
-
-    @Input
-    @Optional
-    String apiVersion
-
     private Container container
 
     DockerClassLoaderFactory dockerClassLoaderFactory
+
+    @Input
+    def getDockerClientConfig() {
+        runInDockerClasspath {
+            def config = buildClientConfig()
+            toJson(config)
+        }
+    }
 
     void setContainer(Container container) {
         if (this.container != null) {
@@ -64,23 +59,23 @@ class AbstractDcomposeTask extends DefaultTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected def getClient() {
-        def ConfigClass = loadClass('com.github.dockerjava.core.DockerClientConfig')
-        def configBuilder = ConfigClass.getMethod('createDefaultConfigBuilder').invoke(null)
-
-        if (host) {
-            configBuilder.withDockerHost(host)
-        }
-
-        if (certPath) {
-            configBuilder.withDockerCertPath(certPath.canonicalPath)
-        }
-
-        if (apiVersion) {
-            configBuilder.withApiVersion(apiVersion)
-        }
-
+        def clientConfig = buildClientConfig()
         def clientBuilderClass = loadClass('com.github.dockerjava.core.DockerClientBuilder')
-        clientBuilderClass.getMethod('getInstance', ConfigClass).invoke(null, configBuilder.build()).build()
+        def getInstanceMethod = clientBuilderClass.getMethod('getInstance', clientConfig.class)
+        getInstanceMethod.invoke(null, clientConfig).build()
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected def buildClientConfig() {
+        def configClass = loadClass('com.github.dockerjava.core.DockerClientConfig')
+        def configBuilder = configClass.getMethod('createDefaultConfigBuilder').invoke(null)
+
+        def extension = project.extensions.getByType(DcomposeExtension)
+        if(extension.dockerClientConfig != null) {
+            ConfigureUtil.configure(extension.dockerClientConfig, configBuilder)
+        }
+
+        configBuilder.build()
     }
 
     protected Class loadClass(String name) {
