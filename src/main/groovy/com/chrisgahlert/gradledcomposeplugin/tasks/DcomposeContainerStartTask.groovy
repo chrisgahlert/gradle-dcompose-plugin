@@ -80,8 +80,10 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
             if(result.state.running) {
                 container.hostPortBindings = result?.networkSettings?.ports?.bindings
+                container.dockerHost = buildClientConfig().dockerHost
             } else {
                 container.hostPortBindings = null
+                container.dockerHost = null
             }
 
 

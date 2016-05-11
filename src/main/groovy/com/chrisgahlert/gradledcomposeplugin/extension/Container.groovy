@@ -152,6 +152,10 @@ abstract class Container {
 
     abstract int findHostPort(Map<String, String> properties, int containerPort)
 
+    abstract void setDockerHost(URI uri);
+
+    abstract String getDockerHost();
+
     abstract Set<Container> getLinkDependencies()
 
     abstract Set<Container> getVolumesFromDependencies()

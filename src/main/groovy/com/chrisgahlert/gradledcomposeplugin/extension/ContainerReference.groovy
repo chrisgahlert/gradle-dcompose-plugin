@@ -243,6 +243,16 @@ class ContainerReference extends Container {
     }
 
     @Override
+    void setDockerHost(URI uri) {
+        resolved.dockerHost = uri
+    }
+
+    @Override
+    String getDockerHost() {
+        resolved.dockerHost
+    }
+
+    @Override
     Set<Container> getLinkDependencies() {
         resolved.linkDependencies
     }

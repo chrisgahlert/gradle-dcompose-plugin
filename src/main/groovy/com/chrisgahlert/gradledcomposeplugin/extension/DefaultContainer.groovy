@@ -95,6 +95,7 @@ class DefaultContainer extends Container {
      * Results populated after starting a container
      */
     Map hostPortBindings
+    String dockerHost
 
     DefaultContainer(String name, String projectPath, Closure<String> dockerPrefix) {
         super(name, projectPath)
@@ -182,6 +183,26 @@ class DefaultContainer extends Container {
         }
 
         bindings[0].hostPort
+    }
+
+    @Override
+    String getDockerHost() {
+        if(!dockerHost) {
+            throw new GradleException("Docker hostname not available for container $name - has it been started?")
+        }
+
+        return dockerHost
+    }
+
+    @Override
+    void setDockerHost(URI uri) {
+        if(uri == null) {
+            dockerHost = null
+        } else if(uri.scheme == 'unix') {
+            dockerHost = 'localhost'
+        } else {
+            dockerHost = uri.host
+        }
     }
 
     @Override
