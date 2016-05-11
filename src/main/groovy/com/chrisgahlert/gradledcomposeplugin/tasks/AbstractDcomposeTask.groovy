@@ -25,6 +25,7 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.tasks.Input
 import org.gradle.util.ConfigureUtil
 
@@ -148,6 +149,8 @@ class AbstractDcomposeTask extends DefaultTask {
         Set<DefaultContainer> result = new HashSet<>()
 
         project.rootProject.allprojects.each { prj ->
+            ((ProjectInternal) prj).evaluate()
+
             if(prj.plugins.hasPlugin(DcomposePlugin)) {
                 result.addAll prj.extensions.getByType(DcomposeExtension).containers
             }

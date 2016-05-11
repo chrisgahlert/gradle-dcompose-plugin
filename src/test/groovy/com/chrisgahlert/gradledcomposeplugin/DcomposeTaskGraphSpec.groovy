@@ -115,4 +115,68 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
         'buildTaskName'           || 'buildMainImage'
     }
 
+    @Unroll
+    def 'executing #task should work with configuration-on-demand'() {
+        given:
+        buildFile.text = """
+            subprojects {
+                afterEvaluate {
+                    println "#eval \$it.name#"
+                }
+            }
+        """
+
+        addSubproject 'A', """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                }
+            }
+        """
+
+        addSubproject 'B', """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    links = [container(':C:main').link()]
+                }
+            }
+        """
+
+        addSubproject 'C', """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    links = [container(':A:main').link()]
+                }
+            }
+        """
+
+        addSubproject 'D'
+
+        when:
+        def result = runTasksSuccessfully task, '--configure-on-demand', '--dry-run'
+        println result.standardOutput
+        println result.standardError
+
+        then:
+        evalA == result.standardOutput.contains('#eval A#')
+        evalB == result.standardOutput.contains('#eval B#')
+        evalC == result.standardOutput.contains('#eval C#')
+        evalD == result.standardOutput.contains('#eval D#')
+
+        where:
+        task                    || evalA || evalB || evalC || evalD
+        ':A:startMainContainer' || true  || false || false || false
+        ':B:startMainContainer' || true  || true  || true  || false
+        ':C:startMainContainer' || true  || false || true  || false
+        ':A:stopMainContainer'  || true  || true  || true  || true
+        ':B:stopMainContainer'  || true  || true  || true  || true
+        ':C:stopMainContainer'  || true  || true  || true  || true
+        ':D:tasks'              || false || false || false || true
+    }
+
 }

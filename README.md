@@ -333,6 +333,5 @@ project(':prjB') {
 }
 ```
 
-*Please note:* It is not possible to use this plugin together with Gradle's 
-_Configuration on Demand_. This is due to the nature of the container tasks' 
-dependencies. 
+*Please note:* When using this plugin together with Gradle's _Configuration on Demand_, executing
+a destructive task like _stop\*_ or _remove\*_ will trigger the evaluation of all projects.
