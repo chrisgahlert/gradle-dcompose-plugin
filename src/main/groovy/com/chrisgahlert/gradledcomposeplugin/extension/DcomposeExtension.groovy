@@ -36,7 +36,7 @@ class DcomposeExtension {
     DcomposeExtension(Project project) {
         this.project = project
 
-        String hash = DcomposeUtils.sha1Hash(project.rootDir.canonicalPath)
+        String hash = DcomposeUtils.sha1Hash(project.projectDir.canonicalPath)
         def pathHash = hash.substring(0, 8)
         namePrefix = "dcompose_${pathHash}_"
     }
