@@ -121,7 +121,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
         buildFile.text = """
             subprojects {
                 afterEvaluate {
-                    println "#eval \$it.name#"
+                    logger.warn "#eval \$it.name#"
                 }
             }
         """
