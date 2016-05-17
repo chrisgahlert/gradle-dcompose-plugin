@@ -233,11 +233,17 @@ task runTestsAgainstDatabase(type: Test) {
     // That's why it is wrapped in the doFirst block. This also has the advantage, that if the
     // dynamic port changes, it will not be influencing the test task's UP-TO-DATE check.
     systemProperty 'mysql.port', dcompose.database.findHostPort(3306)
+    
+    // For convenience:
+    // If docker-host is using a linux socket, "localhost" will be assumed. Otherwise the hostname provided
+    // via "tcp://hostname:port" will be parsed an returned.
+    systemProperty 'mysql.host', dcompose.database.dockerHost
   }
   doLast {
     // For newer Gradle versions it is important to remove the "dynamic" system properties before
     // task execution ends as they will be persisted for future UP-TO-DATE checks.
-    systemProperties.remove 'mysql.port
+    systemProperties.remove 'mysql.port'
+    systemProperties.remove 'mysql.host'
   }
 }
 ```
