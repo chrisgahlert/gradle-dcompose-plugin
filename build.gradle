@@ -12,7 +12,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
-        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.2.2'
+        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.3.1'
     }
 }
 
@@ -70,13 +70,7 @@ test {
     maxParallelForks = Math.round(Runtime.runtime.availableProcessors() / 2)
 
     doFirst {
-        def dockerHost;
-        if(System.getenv('DOCKER_HOST') == null || System.getenv('DOCKER_HOST').startsWith('unix://')) {
-            dockerHost = 'localhost'
-        } else {
-            dockerHost = new URI(System.getenv('DOCKER_HOST')).host
-        }
-
+        def dockerHost = dcompose.dockerDaemon.dockerHost
         def dockerPort = dcompose.dockerDaemon.findHostPort(2375)
 
         systemProperty 'DOCKER_HOST', "tcp://$dockerHost:$dockerPort"
