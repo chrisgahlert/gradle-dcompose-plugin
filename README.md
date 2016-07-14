@@ -163,9 +163,9 @@ dcompose {
 | dnsSearch | List&lt;String&gt; | A list of DNS search domains.<br><br> *Sample:* `['mydomain1', 'mydomain2', ...]`
 | extraHosts | List&lt;String&gt; | A list of other hosts that will be made available through `/etc/hosts`. <br><br> *Sample:* `['hostname:1.2.3.4', ...]`
 | networkMode | String | The network mode passed to Docker. <br><br> *Samples:* <br>`'bridge'`<br>`'none`<br>`'host`
-| attachStdin | Boolean<br> *Default: null* | *See Docker documentation*
-| attachStdout | Boolean<br> *Default: null* | *See Docker documentation*
-| attachStderr | Boolean<br> *Default: null* | *See Docker documentation*
+| attachStdin | Boolean<br> *Default: null* | Whether the containers' stdin should be attached. Actually providing a stream is currently not support by the Docker library.
+| attachStdout | Boolean<br> *Default: null* | Whether the containers' stdout should be attached. If used in combination with `waitForCommand` it will redirect stdout to `System.out` by default.
+| attachStderr | Boolean<br> *Default: null* | Whether the containers' stderr should be attached. If used in combination with `waitForCommand` it will redirect stderr to `System.err` by default.
 | privileged | Boolean<br> *Default: null* | Whether this container should be started in privileged mode. This will give the container almost the same rights as the host itself. This is useful e.g. for running "Docker in Docker".
 
 
@@ -244,6 +244,33 @@ task runTestsAgainstDatabase(type: Test) {
     // task execution ends as they will be persisted for future UP-TO-DATE checks.
     systemProperties.remove 'mysql.port'
     systemProperties.remove 'mysql.host'
+  }
+}
+```
+
+## Redirecting stdout/stderr
+
+It is possible to redirect a container's stdout/stderr to custom streams:
+
+```gradle
+dcompose {
+  cmdApp {
+    image = 'ubuntu:latest'
+    command = 'echo hello from stdout'
+    waitForCommand = true // This is required
+    attachStdout = true
+    attachStderr = true
+  }
+}
+
+startCmdAppContainer {
+  // Defining outputs is not necessary as "waitForCommand" causes this task to run always
+  doFirst {
+    stdOut = new FileOutputStream(file("$buildDir/out.txt"))
+    stdErr = System.err // default
+  }
+  doLast {
+    stdOut.close()
   }
 }
 ```

@@ -19,13 +19,23 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.internal.impldep.com.google.common.base.Throwables
+
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import java.util.concurrent.CountDownLatch
 
 @TypeChecked
 class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
     int waitInterval = 1000
+    InputStream stdIn = System.in
+    OutputStream stdOut = System.out
+    OutputStream stdErr = System.err
 
     DcomposeContainerStartTask() {
         outputs.upToDateWhen {
@@ -42,18 +52,40 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         container.containerName
     }
 
+    @Input
+    @Optional
+    Boolean getAttachStdout() {
+        container.attachStdout
+    }
+
+    @Input
+    @Optional
+    Boolean getAttachStdin() {
+        container.attachStdin
+    }
+
+    @Input
+    @Optional
+    Boolean getAttachStderr() {
+        container.attachStderr
+    }
+
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void startContainer() {
         runInDockerClasspath {
+            def start = System.currentTimeMillis()
+
             ignoreDockerException('NotModifiedException') {
-                def result = client.startContainerCmd(containerName).exec()
+                client.startContainerCmd(containerName).exec()
                 logger.quiet("Started Docker container with name $containerName")
+
+                if(attachStdin || attachStdout || attachStderr) {
+                    attachStreams()
+                }
             }
 
             if (container.waitForCommand) {
-                def start = System.currentTimeMillis()
-
                 while (container.waitTimeout <= 0 || start + 1000L * container.waitTimeout > System.currentTimeMillis()) {
                     def inspectResult = client.inspectContainerCmd(containerName).exec()
                     if (!inspectResult.state.running) {
@@ -68,6 +100,55 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 throw new GradleException("Timed out waiting for command to finish after ${System.currentTimeMillis() - start} ms")
             }
         }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected void attachStreams() {
+        def logCmd = client.logContainerCmd(containerName)
+                .withFollowStream(container.waitForCommand)
+
+        if (attachStdout) {
+            logCmd.withStdOut(attachStdout)
+        }
+        if (attachStdin) {
+            logger.warn("Attaching stdIn to a running container is currently not supported by the docker library")
+        }
+        if (attachStderr) {
+            logCmd.withStdErr(attachStderr)
+        }
+
+        def outHandler = new StreamOutputHandler()
+
+        def proxy = Proxy.newProxyInstance(
+                dockerClassLoaderFactory.getDefaultInstance(),
+                [loadClass('com.github.dockerjava.api.async.ResultCallback')] as Class[],
+                new InvocationHandler() {
+                    @Override
+                    Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        outHandler.invokeMethod(method.name, args)
+                    }
+                }
+        )
+
+        logCmd.exec(proxy)
+        outHandler.awaitCompletion()
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected def getStreamHandlerCallback(InputStream stdin, OutputStream stdout, OutputStream stderr) {
+        def callbackInterface = loadClass('com.github.dockerjava.api.async.ResultCallback')
+        def handler = new StreamOutputHandler(stdin, stdout, stderr)
+
+        Proxy.newProxyInstance(
+                dockerClassLoaderFactory.getDefaultInstance(),
+                [callbackInterface] as Class[],
+                new InvocationHandler() {
+                    @Override
+                    Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        handler.invokeMethod(method.name, args)
+                    }
+                }
+        )
     }
 
     @OutputFile
@@ -88,6 +169,66 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
 
             result
+        }
+    }
+
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    private class StreamOutputHandler {
+        def stream
+        Throwable firstError
+        CountDownLatch completed = new CountDownLatch(1)
+        boolean closed
+
+        def onStart(stream) {
+            this.stream = stream
+        }
+
+        def onNext(item) {
+            switch (item.streamType.name()) {
+                case 'STDOUT':
+                    stdOut.write(item.payload as byte[])
+                    break;
+
+                case 'STDERR':
+                    stdErr.write(item.payload as byte[])
+                    break;
+
+                default:
+                    throw new UnsupportedOperationException("Stream type $item.streamType is not supported")
+            }
+        }
+
+        def onError(e) {
+            if(firstError == null) {
+                firstError = e
+            }
+
+            logger.error("Error receiving stream data from container $containerName", e)
+            close()
+        }
+
+        def onComplete() {
+            close()
+        }
+
+        def close() {
+            if(!closed) {
+                closed = true
+                completed.countDown()
+                stream.close()
+            }
+
+            stdOut?.flush()
+            stdErr?.flush()
+        }
+
+        void awaitCompletion() {
+            completed.await()
+
+            if(firstError != null) {
+                Throwables.propagate(firstError)
+            }
         }
     }
 

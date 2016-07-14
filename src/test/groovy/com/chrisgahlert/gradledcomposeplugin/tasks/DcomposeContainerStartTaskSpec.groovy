@@ -16,6 +16,9 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
+import spock.lang.Ignore
+import spock.lang.IgnoreRest
+import spock.lang.Unroll
 
 class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
@@ -472,5 +475,90 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':subUser:createUserContainer')
         !result.wasUpToDate(':subUser:createUserContainer')
         result.wasExecuted(':subUser:startUserContainer')
+    }
+
+    @Unroll
+    def 'should #outText attach to stdout and should #errText attach to stderr'() {
+        given:
+        buildFile << """
+            dcompose {
+                app {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo rid && (echo kicksass 1>&2) && sleep 1 && echo dick']
+                    waitForCommand = true
+                    attachStdout = $stdout
+                    attachStderr = $stderr
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startAppContainer'
+
+        then:
+        stdout == result.standardOutput.contains('rid\ndick')
+        stderr == result.standardError.contains('kicksass')
+
+        where:
+        stderr || stdout
+        true   || false
+        true   || true
+        false  || true
+        false  || false
+
+        outText = stdout ? '' : ' NOT'
+        errText = stderr ? '' : ' NOT'
+    }
+
+    def 'should support reading large file from stdout'() {
+        given:
+        def size = 16 * 1024 * 1024
+        buildFile << """
+            dcompose {
+                app {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'cat /dev/urandom | tr -dc A-Za-z0-9 | head -c $size']
+                    waitForCommand = true
+                    attachStdout = true
+                }
+            }
+
+            startAppContainer {
+                doFirst { stdOut = new FileOutputStream(file('out.txt')) }
+                doLast { stdOut.close() }
+            }
+        """
+
+        when:
+        def outFile = file('out.txt')
+        runTasksSuccessfully 'startAppContainer'
+
+        then:
+        outFile.size() == size + 1 // size + LF
+    }
+
+    @Ignore("Not yet supported by docker library")
+    def 'should attach to stdin'() {
+        given:
+        buildFile << """
+            dcompose {
+                app {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'read \$input && echo \$input > /test.txt']
+                    waitForCommand = true
+                    attachStdin = true
+                }
+            }
+
+            startAppContainer.stdIn = new ByteArrayInputStream("walter white\\n".bytes)
+
+            ${copyTaskConfig('app', '/text.txt')}
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startAppContainer'
+
+        then:
+        file('build/copy/test.txt').text == 'walter white'
     }
 }
