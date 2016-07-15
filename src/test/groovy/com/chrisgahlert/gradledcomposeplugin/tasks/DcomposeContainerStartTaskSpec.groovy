@@ -510,9 +510,10 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         errText = stderr ? '' : ' NOT'
     }
 
+    @IgnoreRest
     def 'should support reading large file from stdout'() {
         given:
-        def size = 16 * 1024 * 1024
+        def size = 2 * 1024 * 1024
         buildFile << """
             dcompose {
                 app {
