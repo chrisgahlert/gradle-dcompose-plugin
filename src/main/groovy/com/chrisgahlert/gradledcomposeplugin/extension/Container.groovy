@@ -150,7 +150,7 @@ abstract class Container {
 
     abstract void setHostPortBindings(Map hostPortBindings)
 
-    abstract int findHostPort(Map<String, String> properties, int containerPort)
+    abstract def findHostPort(Map<String, String> properties, int containerPort)
 
     abstract void setDockerHost(URI uri);
 
