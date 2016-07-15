@@ -144,7 +144,7 @@ class DefaultContainer extends Container {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    int findHostPort(Map<String, String> properties = [:], int containerPort) {
+    def findHostPort(Map<String, String> properties = [:], int containerPort) {
         if(hostPortBindings == null) {
             throw new GradleException("Host port bindings not available for $name - has it been started?")
         }
@@ -182,7 +182,7 @@ class DefaultContainer extends Container {
                     "Possible values: " + possibleIps)
         }
 
-        bindings[0].hostPort
+        bindings[0].hostPortSpec
     }
 
     @Override

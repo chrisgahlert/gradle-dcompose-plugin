@@ -238,7 +238,7 @@ class ContainerReference extends Container {
     }
 
     @Override
-    int findHostPort(Map<String, String> properties, int containerPort) {
+    def findHostPort(Map<String, String> properties, int containerPort) {
         resolved.findHostPort(properties, containerPort)
     }
 
