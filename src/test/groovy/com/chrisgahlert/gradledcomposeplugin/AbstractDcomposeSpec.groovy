@@ -17,6 +17,7 @@ package com.chrisgahlert.gradledcomposeplugin
 
 import groovy.transform.TypeChecked
 import nebula.test.IntegrationSpec
+import nebula.test.functional.ExecutionResult
 
 @TypeChecked
 abstract class AbstractDcomposeSpec extends IntegrationSpec {
@@ -39,6 +40,8 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
 
     protected String cleanupTask = 'removeContainers'
 
+    protected int logCounter = 1
+
     String copyTaskConfig(String containerName, String containerPath, String name = 'copy') {
         """
             task $name(type: com.chrisgahlert.gradledcomposeplugin.tasks.DcomposeCopyFileFromContainerTask) {
@@ -58,6 +61,26 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
             $DEFAULT_PLUGIN_INIT
             $subBuildGradleText
         """)
+    }
+
+    @Override
+    protected ExecutionResult runTasks(String... tasks) {
+        def result = super.runTasks(tasks)
+
+        file("build-${logCounter++}.log").text = """\
+Running: $tasks
+#####################################
+
+$result.standardOutput
+
+#####################################
+############### STDERR ##############
+#####################################
+
+$result.standardError
+        """
+
+        result
     }
 
     def cleanup() {
