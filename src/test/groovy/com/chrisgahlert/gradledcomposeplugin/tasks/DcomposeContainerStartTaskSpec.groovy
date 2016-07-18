@@ -525,15 +525,19 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
             startAppContainer {
                 doFirst { stdOut = new FileOutputStream(file('out.txt')) }
                 doLast { stdOut.close() }
+                doLast {
+                    println "#received: \$startAppContainer.exitCode#"
+                }
             }
         """
 
         when:
         def outFile = file('out.txt')
-        runTasksSuccessfully 'startAppContainer'
+        def result = runTasksSuccessfully 'startAppContainer'
 
         then:
         outFile.size() == size + 1 // size + LF
+        result.standardOutput.contains("#received: 0#")
     }
 
     @Ignore("Not yet supported by docker library")
@@ -579,4 +583,32 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         then:
         result.standardError.contains("did non return with a '0' exit code")
     }
+
+    def 'should not react to return code when ignored'() {
+        given:
+        buildFile << """
+            dcompose {
+                app {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'exit 7']
+                    waitForCommand = true
+                    ignoreExitCode = true
+                }
+            }
+
+            task validateExitCode {
+                dependsOn startAppContainer
+                doFirst {
+                    println "#received: \$startAppContainer.exitCode#"
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'validateExitCode'
+
+        then:
+        result.standardOutput.contains("#received: 7#")
+    }
+
 }
