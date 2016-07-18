@@ -53,6 +53,11 @@ class ContainerReference extends Container {
     }
 
     @Override
+    boolean isIgnoreExitCode() {
+        resolved.ignoreExitCode
+    }
+
+    @Override
     int getWaitTimeout() {
         resolved.waitTimeout
     }

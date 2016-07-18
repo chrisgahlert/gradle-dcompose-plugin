@@ -76,6 +76,8 @@ abstract class Container {
 
     abstract boolean isWaitForCommand()
 
+    abstract boolean isIgnoreExitCode()
+
     abstract int getWaitTimeout()
 
     abstract boolean isPreserveVolumes()

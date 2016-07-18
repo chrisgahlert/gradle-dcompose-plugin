@@ -69,6 +69,11 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         container.attachStderr
     }
 
+    @Input
+    boolean isIgnoreExitCode() {
+        container.ignoreExitCode
+    }
+
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void startContainer() {
@@ -89,6 +94,15 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                     def inspectResult = client.inspectContainerCmd(containerName).exec()
                     if (!inspectResult.state.running) {
                         logger.info("Docker container with name $containerName is not running anymore")
+
+                        extensions.exitCode = inspectResult.state.exitCode
+                        logger.info("Docker container with name $containerName returned with a " +
+                                "'$extensions.exitCode' exit code")
+
+                        if (extensions.exitCode != 0 && !ignoreExitCode) {
+                            throw new GradleException("Container $containerName did non return with a '0' exit code. " +
+                                    "(Use dcompose.${containerName}.ignoreExitCode = true to disable this check!)")
+                        }
                         return
                     }
 

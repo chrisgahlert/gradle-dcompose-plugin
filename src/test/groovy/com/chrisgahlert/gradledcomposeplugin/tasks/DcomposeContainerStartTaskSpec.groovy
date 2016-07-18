@@ -17,7 +17,6 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 import spock.lang.Ignore
-import spock.lang.IgnoreRest
 import spock.lang.Unroll
 
 class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
@@ -510,7 +509,6 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         errText = stderr ? '' : ' NOT'
     }
 
-    @IgnoreRest
     def 'should support reading large file from stdout'() {
         given:
         def size = 2 * 1024 * 1024
@@ -561,5 +559,24 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
         then:
         file('build/copy/test.txt').text == 'walter white'
+    }
+
+    def 'should react to return code when waiting for command'() {
+        given:
+        buildFile << """
+            dcompose {
+                app {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'exit 1']
+                    waitForCommand = true
+                }
+            }
+        """
+
+        when:
+        def result = runTasksWithFailure 'startAppContainer'
+
+        then:
+        result.standardError.contains("did non return with a '0' exit code")
     }
 }

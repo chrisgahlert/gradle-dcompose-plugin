@@ -39,6 +39,11 @@ class DefaultContainer extends Container {
     boolean waitForCommand
 
     /**
+     * Whether the exit code will be checked after running the container. (Only applies if waitForCommand is true.)
+     */
+    boolean ignoreExitCode
+
+    /**
      * How long should it wait for the command to exit
      */
     int waitTimeout = 0

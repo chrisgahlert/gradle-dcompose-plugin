@@ -144,6 +144,7 @@ dcompose {
 | --- | --- | --- |
 | waitForCommand | boolean<br> *Default: false* | Whether the `start<Name>Container` task should wait until the container is not running anymore.
 | waitTimeout | int<br> *Default: 0* | How long should we wait for the command to finish before failing. <br> &lt;=0 *Wait forever*<br> &gt;0 *Timeout in seconds*
+| ignoreExitCode | boolean<br> *Default: false* | Whether the exit code will be checked after running the container. (Only applies if `waitForCommand` is enabled.)
 | preserveVolumes | boolean<br> *Default: false* | Whether the container's volumes should be preserved when removing/recreating the container. All volumes will be named in the format "`<dockerPrefix><containerName>__<PathToUpperCase>`".
 | command | List&lt;String&gt; | A list of command parts that should be executed when starting the container.<br><br> *Samples:* <br>`['echo', 'hello']`<br>`['sh', '-c', 'echo $ENV']`
 | entrypoints | List&lt;String&gt; | A list of entrypoints.<br><br> *Sample:* `['/entrypoint.sh', ...]`
