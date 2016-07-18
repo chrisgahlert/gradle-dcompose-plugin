@@ -22,7 +22,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.internal.impldep.com.google.common.base.Throwables
 
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
@@ -80,7 +79,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 client.startContainerCmd(containerName).exec()
                 logger.quiet("Started Docker container with name $containerName")
 
-                if(attachStdin || attachStdout || attachStderr) {
+                if (attachStdin || attachStdout || attachStderr) {
                     attachStreams()
                 }
             }
@@ -134,23 +133,6 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         outHandler.awaitCompletion()
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
-    protected def getStreamHandlerCallback(InputStream stdin, OutputStream stdout, OutputStream stderr) {
-        def callbackInterface = loadClass('com.github.dockerjava.api.async.ResultCallback')
-        def handler = new StreamOutputHandler(stdin, stdout, stderr)
-
-        Proxy.newProxyInstance(
-                dockerClassLoaderFactory.getDefaultInstance(),
-                [callbackInterface] as Class[],
-                new InvocationHandler() {
-                    @Override
-                    Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        handler.invokeMethod(method.name, args)
-                    }
-                }
-        )
-    }
-
     @OutputFile
     @TypeChecked(TypeCheckingMode.SKIP)
     File getContainerState() {
@@ -159,7 +141,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 client.inspectContainerCmd(containerName).exec()
             }
 
-            if(result.state.running) {
+            if (result.state.running) {
                 container.hostPortBindings = result?.networkSettings?.ports?.bindings
                 container.dockerHost = buildClientConfig().dockerHost
             } else {
@@ -200,7 +182,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         }
 
         def onError(e) {
-            if(firstError == null) {
+            if (firstError == null) {
                 firstError = e
             }
 
@@ -213,7 +195,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         }
 
         def close() {
-            if(!closed) {
+            if (!closed) {
                 closed = true
                 completed.countDown()
                 stream.close()
@@ -226,8 +208,8 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         void awaitCompletion() {
             completed.await()
 
-            if(firstError != null) {
-                Throwables.propagate(firstError)
+            if (firstError != null) {
+                loadClass('com.google.common.base.Throwables').invokeMethod('propagate', [firstError] as Object[])
             }
         }
     }
