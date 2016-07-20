@@ -397,8 +397,9 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
             dcompose {
                 main {
                     image = '$DEFAULT_IMAGE'
-                    command = ['sh', '-c', 'echo "\$TESTENV\\n\$(pwd)" > /data/result && echo abc > /etc/hosts']
+                    command = ['sh', '-c', 'echo "\$TESTENV\\n\$(pwd)" > /data/result && echo abc > /etc/test']
                     waitForCommand = true
+                    ignoreExitCode = true
 
                     env = ['TESTENV=yes']
                     workingDir = '/somewhere'
@@ -411,7 +412,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                     dnsSearch = ['somedomain']
                     extraHosts = ['test:1.4.7.8']
                     networkMode = 'bridge'
-                    attachStdin = true
+                    attachStdin = false
                     attachStdout = true
                     attachStderr = true
                     privileged = true
@@ -428,6 +429,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         then:
         result.wasExecuted(':createMainContainer')
         result.wasExecuted(':startMainContainer')
+        result.standardError.contains("sh: can't create /etc/test: Read-only file system")
         file('build/copyResult/result').text.trim() == "yes\n/somewhere"
         file('build/copy/hostname').text.trim() == 'yeehaw'
         file('build/copy/resolv.conf').text.contains('search somedomain')
