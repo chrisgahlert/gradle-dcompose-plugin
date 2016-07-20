@@ -100,7 +100,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                                 "'$extensions.exitCode' exit code")
 
                         if (extensions.exitCode != 0 && !ignoreExitCode) {
-                            throw new GradleException("Container $containerName did non return with a '0' exit code. " +
+                            throw new GradleException("Container $containerName did not return with a '0' exit code. " +
                                     "(Use dcompose.${containerName}.ignoreExitCode = true to disable this check!)")
                         }
                         return

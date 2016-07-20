@@ -581,7 +581,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'startAppContainer'
 
         then:
-        result.standardError.contains("did non return with a '0' exit code")
+        result.standardError.contains("did not return with a '0' exit code")
     }
 
     def 'should not react to return code when ignored'() {
