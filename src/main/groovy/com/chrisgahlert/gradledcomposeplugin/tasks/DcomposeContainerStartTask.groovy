@@ -81,12 +81,15 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
             def start = System.currentTimeMillis()
 
             ignoreDockerException('NotModifiedException') {
+                def outHandler
+                if (container.waitForCommand && (attachStdin || attachStdout || attachStderr)) {
+                    outHandler = attachStreams()
+                }
+
                 client.startContainerCmd(containerName).exec()
                 logger.quiet("Started Docker container with name $containerName")
 
-                if (attachStdin || attachStdout || attachStderr) {
-                    attachStreams()
-                }
+                outHandler?.awaitCompletion()
             }
 
             if (container.waitForCommand) {
@@ -116,18 +119,18 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    protected void attachStreams() {
-        def logCmd = client.logContainerCmd(containerName)
-                .withFollowStream(container.waitForCommand)
+    protected StreamOutputHandler attachStreams() {
+        def attachCmd = client.attachContainerCmd(containerName)
+                .withFollowStream(true)
 
         if (attachStdout) {
-            logCmd.withStdOut(attachStdout)
+            attachCmd.withStdOut(attachStdout)
         }
         if (attachStdin) {
             logger.warn("Attaching stdIn to a running container is currently not supported by the docker library")
         }
         if (attachStderr) {
-            logCmd.withStdErr(attachStderr)
+            attachCmd.withStdErr(attachStderr)
         }
 
         def outHandler = new StreamOutputHandler()
@@ -143,8 +146,8 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 }
         )
 
-        logCmd.exec(proxy)
-        outHandler.awaitCompletion()
+        attachCmd.exec(proxy)
+        outHandler
     }
 
     @OutputFile
