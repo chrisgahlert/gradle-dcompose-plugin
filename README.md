@@ -37,8 +37,8 @@ following configuration in your build script:
 ```gradle
 dcompose {
   dockerClientConfig = {
-    // Will delegate to the DockerClientConfigBuilder from
-    // https://github.com/docker-java/docker-java/blob/master/src/main/java/com/github/dockerjava/core/DockerClientConfig.java#L348
+    // Will delegate to the Builder from
+    // https://github.com/docker-java/docker-java/blob/master/src/main/java/com/github/dockerjava/core/DefaultDockerClientConfig.java#L317
     withDockerHost 'tcp://somehost:1234'
     withTlsVerify false
   }
