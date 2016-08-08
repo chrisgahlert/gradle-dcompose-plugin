@@ -61,15 +61,16 @@ class AbstractDcomposeTask extends DefaultTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     protected def getClient() {
         def clientConfig = buildClientConfig()
+        def clientConfigClass = loadClass('com.github.dockerjava.core.DockerClientConfig')
         def clientBuilderClass = loadClass('com.github.dockerjava.core.DockerClientBuilder')
-        def getInstanceMethod = clientBuilderClass.getMethod('getInstance', clientConfig.class)
+        def getInstanceMethod = clientBuilderClass.getMethod('getInstance', clientConfigClass)
         getInstanceMethod.invoke(null, clientConfig).build()
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected def buildClientConfig() {
-        def configClass = loadClass('com.github.dockerjava.core.DockerClientConfig')
-        def configBuilder = configClass.getMethod('createDefaultConfigBuilder').invoke(null)
+        def configBuilderClass = loadClass('com.github.dockerjava.core.DefaultDockerClientConfig')
+        def configBuilder = configBuilderClass.getMethod('createDefaultConfigBuilder').invoke(null)
 
         def extension = project.extensions.getByType(DcomposeExtension)
         if(extension.dockerClientConfig != null) {
