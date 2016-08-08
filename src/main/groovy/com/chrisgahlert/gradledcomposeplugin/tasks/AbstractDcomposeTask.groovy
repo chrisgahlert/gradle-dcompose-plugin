@@ -71,6 +71,7 @@ class AbstractDcomposeTask extends DefaultTask {
     protected def buildClientConfig() {
         def configBuilderClass = loadClass('com.github.dockerjava.core.DefaultDockerClientConfig')
         def configBuilder = configBuilderClass.getMethod('createDefaultConfigBuilder').invoke(null)
+        configBuilder.withApiVersion("1.18")
 
         def extension = project.extensions.getByType(DcomposeExtension)
         if(extension.dockerClientConfig != null) {
