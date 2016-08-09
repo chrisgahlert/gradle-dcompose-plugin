@@ -41,8 +41,7 @@ class AbstractDcomposeTask extends DefaultTask {
     @Input
     def getDockerClientConfig() {
         runInDockerClasspath {
-            def config = buildClientConfig()
-            toJson(config)
+            buildClientConfig().toString()
         }
     }
 
