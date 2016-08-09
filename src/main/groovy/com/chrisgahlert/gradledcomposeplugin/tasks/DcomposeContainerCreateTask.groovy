@@ -365,7 +365,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
                 if(!result.hostConfig.networkMode) {
                     result.hostConfig.networkMode = 'default'
                 }
-                result.mounts = result.mounts.sort { it.destination.path }
+                result.mounts = result.mounts?.sort { it.destination?.path }
 
                 result
             }

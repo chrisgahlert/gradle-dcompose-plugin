@@ -173,7 +173,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 container.dockerHost = null
             }
 
-            result.mounts = result.mounts.sort { it.destination.path }
+            result.mounts = result.mounts?.sort { it.destination?.path }
 
 
             result

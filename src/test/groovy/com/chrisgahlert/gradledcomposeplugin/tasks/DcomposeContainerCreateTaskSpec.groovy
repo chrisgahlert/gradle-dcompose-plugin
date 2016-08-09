@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
+import org.gradle.util.GradleVersion
 import spock.lang.IgnoreIf
 
 class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {

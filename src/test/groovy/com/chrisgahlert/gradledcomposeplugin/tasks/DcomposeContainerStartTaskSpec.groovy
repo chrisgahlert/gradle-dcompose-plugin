@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
+import org.gradle.util.GradleVersion
 import spock.lang.Ignore
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
