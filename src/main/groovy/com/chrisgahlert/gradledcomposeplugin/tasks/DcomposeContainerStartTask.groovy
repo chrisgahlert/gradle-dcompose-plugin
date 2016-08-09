@@ -129,6 +129,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
         def attachCmd = client.attachContainerCmd(containerName)
                 .withFollowStream(true)
+                .withLogs(true)
 
         if (attachStdout) {
             attachCmd.withStdOut(attachStdout)
