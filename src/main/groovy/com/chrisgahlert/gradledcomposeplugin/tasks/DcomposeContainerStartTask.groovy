@@ -22,6 +22,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.util.GradleVersion
 
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
@@ -120,6 +121,12 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected StreamOutputHandler attachStreams() {
+        if(GradleVersion.current().compareTo(GradleVersion.version('2.5')) <= 0) {
+            logger.warn('Output to StdOut/StdErr seems to be broken in Gradle Versions <= 2.5. If you need to use it ' +
+                    'anyway, think about redirecting it through a ByteArrayOutputStream and using the Gradle logger ' +
+                    'in an doLast action!')
+        }
+
         def attachCmd = client.attachContainerCmd(containerName)
                 .withFollowStream(true)
 
@@ -127,7 +134,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
             attachCmd.withStdOut(attachStdout)
         }
         if (attachStdin) {
-            logger.warn("Attaching stdIn to a running container is currently not supported by the docker library")
+            logger.warn('Attaching stdIn to a running container is currently not supported by the docker library')
         }
         if (attachStderr) {
             attachCmd.withStdErr(attachStderr)
