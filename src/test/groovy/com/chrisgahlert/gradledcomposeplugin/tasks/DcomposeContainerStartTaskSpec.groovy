@@ -16,9 +16,8 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
-import org.gradle.util.GradleVersion
 import spock.lang.Ignore
-import spock.lang.IgnoreIf
+import spock.lang.IgnoreRest
 import spock.lang.Unroll
 
 class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
@@ -479,7 +478,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
     }
 
     @Unroll
-    @IgnoreIf({ GradleVersion.current().compareTo(GradleVersion.version('2.5')) <= 0 })
+    @IgnoreRest
     def 'should #outText attach to stdout and should #errText attach to stderr'() {
         given:
         buildFile << """
@@ -529,7 +528,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                 doFirst { stdOut = new FileOutputStream(file('out.txt')) }
                 doLast { stdOut.close() }
                 doLast {
-                    println "#received: \$startAppContainer.exitCode#"
+                    logger.warn "#received: \$startAppContainer.exitCode#"
                 }
             }
         """
@@ -602,7 +601,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
             task validateExitCode {
                 dependsOn startAppContainer
                 doFirst {
-                    println "#received: \$startAppContainer.exitCode#"
+                    logger.warn "#received: \$startAppContainer.exitCode#"
                 }
             }
         """
