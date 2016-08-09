@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
+import spock.lang.IgnoreIf
 
 class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
 
@@ -391,6 +392,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':subUser:createUserContainer')
     }
 
+    @IgnoreIf({ GradleVersion.current().compareTo(GradleVersion.version('2.5')) <= 0 })
     def 'create should support all other optional properties'() {
         given:
         buildFile << """
