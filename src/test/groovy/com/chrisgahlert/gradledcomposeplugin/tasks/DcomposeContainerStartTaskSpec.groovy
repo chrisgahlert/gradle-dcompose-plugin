@@ -498,7 +498,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksSuccessfully 'startAppContainer'
 
         then:
-        stdout == result.standardOutput.contains('rid\ndick')
+        stdout == (result.standardOutput ==~ /(?ms).*^rid.+^dick.*/)
         stderr == result.standardError.contains('kicksass')
 
         where:

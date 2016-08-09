@@ -87,8 +87,8 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                     outHandler = attachStreams()
                 }
 
+                logger.quiet("Starting Docker container with name $containerName")
                 client.startContainerCmd(containerName).exec()
-                logger.quiet("Started Docker container with name $containerName")
 
                 outHandler?.awaitCompletion()
             }
