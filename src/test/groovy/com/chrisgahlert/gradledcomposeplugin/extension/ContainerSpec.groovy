@@ -107,7 +107,9 @@ class ContainerSpec extends AbstractDcomposeSpec {
         then:
         assert result.success == success
 
-        if (expectedPort) {
+        if (expectedPort == 'any') {
+            assert file('result').text.toInteger() > 0
+        } else if (expectedPort) {
             assert file('result').text == "$expectedPort"
         } else if (success) {
             assert file('result').text.isInteger()
@@ -118,10 +120,10 @@ class ContainerSpec extends AbstractDcomposeSpec {
 
         where:
         find                        || success || expectedPort || errorMessage
-        1001                        || true    || 10001        || null
+        1001                        || true    || 'any'        || null
         1002                        || false   || null         || 'container server has multiple host ports bound'
         "1002, hostIp: '127.0.0.2'" || true    || 10002        || null
-        "1002, hostIp: '127.0.0.1'" || true    || null         || null
+        "1002, hostIp: '127.0.0.1'" || true    || 'any'         || null
         "1002, hostIp: '0.0.0.0'"   || true    || 9002         || null
         1003                        || true    || 10003        || null
         1004                        || false   || null         || 'has not been bound to a host port'
