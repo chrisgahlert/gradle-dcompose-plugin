@@ -539,7 +539,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksSuccessfully 'startAppContainer'
 
         then:
-        outFile.size() == size
+        outFile.size() == size + 1 // +1 for LF
         result.standardOutput.contains("#received: 0#")
     }
 
