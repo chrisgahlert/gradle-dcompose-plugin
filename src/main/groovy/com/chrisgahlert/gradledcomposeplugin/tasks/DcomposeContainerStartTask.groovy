@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 @TypeChecked
 class DcomposeContainerStartTask extends AbstractDcomposeTask {
@@ -90,11 +91,11 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 logger.quiet("Starting Docker container with name $containerName")
                 client.startContainerCmd(containerName).exec()
 
-                outHandler?.awaitCompletion()
+                outHandler?.awaitCompletion(container.waitTimeout)
             }
 
             if (container.waitForCommand) {
-                while (container.waitTimeout <= 0 || start + 1000L * container.waitTimeout > System.currentTimeMillis()) {
+                while(true) {
                     def inspectResult = client.inspectContainerCmd(containerName).exec()
                     if (!inspectResult.state.running) {
                         logger.info("Docker container with name $containerName is not running anymore")
@@ -107,14 +108,20 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                             throw new GradleException("Container $containerName did not return with a '0' exit code. " +
                                     "(Use dcompose.${containerName}.ignoreExitCode = true to disable this check!)")
                         }
+
+                        // finished successfully
                         return
                     }
 
+                    if(container.waitTimeout > 0 && start + 1000L * container.waitTimeout < System.currentTimeMillis()) {
+                        // timeout exceeded -> fail
+                        throw new GradleException("Timed out waiting for command to finish after ${System.currentTimeMillis() - start} ms")
+                    }
+
+                    // continue waiting
                     logger.debug("Waiting for Docker container with name $containerName to stop running")
                     Thread.sleep(waitInterval)
                 }
-
-                throw new GradleException("Timed out waiting for command to finish after ${System.currentTimeMillis() - start} ms")
             }
         }
     }
@@ -231,8 +238,12 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
             stdErr?.flush()
         }
 
-        void awaitCompletion() {
-            completed.await()
+        void awaitCompletion(long timeoutMs) {
+            if(timeoutMs > 0) {
+                completed.await(timeoutMs, TimeUnit.MILLISECONDS)
+            } else {
+                completed.await()
+            }
 
             if (firstError != null) {
                 loadClass('com.google.common.base.Throwables').invokeMethod('propagate', [firstError] as Object[])
