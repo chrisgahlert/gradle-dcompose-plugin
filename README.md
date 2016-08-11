@@ -15,6 +15,10 @@ This plugin requires:
 * Docker (host) >= 1.8.1 (older versions possibly work but have not been tested) 
 * **Please note:** Docker for Mac (native) is currently not supported, due to a [bug in the docker-java library](https://github.com/docker-java/docker-java/issues/537)
 
+# Example
+
+An example project says more than a thousand words:
+https://github.com/chrisgahlert/gradle-dcompose-sample
 
 # Usage
 
