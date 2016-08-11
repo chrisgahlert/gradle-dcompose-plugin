@@ -153,7 +153,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 }
         )
 
-        attachCmd.exec(proxy).awaitCompletion()
+        attachCmd.exec(proxy)
         outHandler
     }
 
