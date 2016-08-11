@@ -12,7 +12,8 @@ container should be recreated.
 
 This plugin requires: 
 * Gradle >= 2.0
-* Docker (host) >= 1.8.1 (older versions possibly work but have not been tested)
+* Docker (host) >= 1.8.1 (older versions possibly work but have not been tested) 
+* **Please note:** Docker for Mac (native) is currently not supported, due to a [bug in the docker-java library](https://github.com/docker-java/docker-java/issues/537)
 
 
 # Usage
