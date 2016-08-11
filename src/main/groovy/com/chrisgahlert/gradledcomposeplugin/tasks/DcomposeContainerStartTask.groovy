@@ -129,7 +129,6 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
         def attachCmd = client.attachContainerCmd(containerName)
                 .withFollowStream(true)
-                .withLogs(true)
 
         if (attachStdout) {
             attachCmd.withStdOut(attachStdout)
@@ -155,6 +154,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         )
 
         attachCmd.exec(proxy)
+        outHandler.awaitStart()
         outHandler
     }
 
@@ -187,10 +187,12 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         def stream
         Throwable firstError
         CountDownLatch completed = new CountDownLatch(1)
+        CountDownLatch started = new CountDownLatch(1)
         boolean closed
 
         def onStart(stream) {
             this.stream = stream
+            started.countDown()
         }
 
         def onNext(item) {
@@ -225,6 +227,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
             if (!closed) {
                 closed = true
                 completed.countDown()
+                started.countDown()
                 stream.close()
             }
 
@@ -238,6 +241,10 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
             if (firstError != null) {
                 loadClass('com.google.common.base.Throwables').invokeMethod('propagate', [firstError] as Object[])
             }
+        }
+
+        void awaitStart() {
+            started.await()
         }
     }
 
