@@ -39,4 +39,48 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         then:
         result.standardError.contains 'Unsupported protocol scheme found: \'ftp://abc'
     }
+
+    def 'should be able to reference parent properties'() {
+        given:
+        buildFile << """
+            def test = 'helllo'
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', "\${test}1", "\$project.buildDir"]
+                    waitForCommand = true
+                    attachStdout = true
+                }
+                println "\${test}2"
+                println buildDir
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startMainContainer'
+
+        then:
+        result.standardOutput.contains 'helllo1'
+        result.standardOutput.contains 'helllo2'
+    }
+
+    def 'should be able to reference containers by property name'() {
+        given:
+        buildFile << """
+            dcompose {
+                check {
+                    image = 'foobar'
+                }
+            }
+
+            println dcompose.check.image
+
+        """
+
+        when:
+        def result = runTasksSuccessfully 'help'
+
+        then:
+        result.standardOutput.contains 'foobar'
+    }
 }

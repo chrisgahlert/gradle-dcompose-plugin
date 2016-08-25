@@ -133,7 +133,11 @@ class DcomposeExtension {
     }
 
     def propertyMissing(String name) {
-        getByName(name)
+        def container = findByName(name)
+        if(container == null) {
+            throw new MissingPropertyException(name, getClass())
+        }
+        container
     }
 
 }
