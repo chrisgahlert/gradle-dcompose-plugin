@@ -172,7 +172,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 client.inspectContainerCmd(containerName).exec()
             }
 
-            if (result.state.running) {
+            if (result?.state?.running) {
                 container.hostPortBindings = result?.networkSettings?.ports?.bindings
                 container.dockerHost = buildClientConfig().dockerHost
             } else {
@@ -180,7 +180,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 container.dockerHost = null
             }
 
-            result.mounts = result.mounts?.sort { it.destination?.path }
+            result?.mounts = result?.mounts?.sort { it.destination?.path }
 
 
             result
