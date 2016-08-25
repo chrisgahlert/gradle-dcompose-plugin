@@ -203,7 +203,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
             }
 
             if (command) {
-                cmd.withCmd(command)
+                cmd.withCmd(command as String[])
             }
 
             if (volumes) {
@@ -241,7 +241,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
             }
 
             if (extraHosts) {
-                cmd.withExtraHosts(extraHosts)
+                cmd.withExtraHosts(extraHosts as String[])
             }
 
             if (workingDir) {
@@ -249,11 +249,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
             }
 
             if (dns) {
-                cmd.withDns(dns)
+                cmd.withDns(dns as String[])
             }
 
             if (dnsSearch) {
-                cmd.withDnsSearch(dnsSearch)
+                cmd.withDnsSearch(dnsSearch as String[])
             }
 
             if (hostName) {
@@ -261,11 +261,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
             }
 
             if (entrypoints) {
-                cmd.withEntrypoint(entrypoints)
+                cmd.withEntrypoint(entrypoints as String[])
             }
 
             if (env) {
-                cmd.withEnv(env)
+                cmd.withEnv(env as String[])
             }
 
             if (user) {
