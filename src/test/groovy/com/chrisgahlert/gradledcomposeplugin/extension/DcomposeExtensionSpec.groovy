@@ -49,10 +49,10 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', "echo '\${test}1' > /test.txt"]
                     waitForCommand = true
-                    logger.warn project.buildDir
+                    logger.warn "\$project.buildDir"
                 }
                 logger.warn "\${test}2"
-                logger.warn buildDir
+                logger.warn "\$buildDir"
             }
             
             ${copyTaskConfig('main', '/test.txt')}
