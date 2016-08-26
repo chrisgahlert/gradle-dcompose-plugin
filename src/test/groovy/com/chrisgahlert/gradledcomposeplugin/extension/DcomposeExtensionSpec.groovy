@@ -47,20 +47,22 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
             dcompose {
                 main {
                     image = '$DEFAULT_IMAGE'
-                    command = ['echo', "\${test}1", "\$project.buildDir"]
+                    command = ['sh', '-c', "echo '\${test}1' > /test.txt"]
                     waitForCommand = true
-                    attachStdout = true
+                    logger.warn project.buildDir
                 }
-                println "\${test}2"
-                println buildDir
+                logger.warn "\${test}2"
+                logger.warn buildDir
             }
+            
+            ${copyTaskConfig('main', '/test.txt')}
         """
 
         when:
-        def result = runTasksSuccessfully 'startMainContainer'
+        def result = runTasksSuccessfully 'copy'
 
         then:
-        result.standardOutput.contains 'helllo1'
+        file('build/copy/test.txt').text.contains 'helllo1'
         result.standardOutput.contains 'helllo2'
     }
 
@@ -73,7 +75,7 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
                 }
             }
 
-            println dcompose.check.image
+            logger.warn dcompose.check.image
 
         """
 
