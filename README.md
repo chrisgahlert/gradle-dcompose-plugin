@@ -281,24 +281,6 @@ startCmdAppContainer {
 }
 ```
 
-**Warning:** Output to StdOut/StdErr seems to be broken in Gradle Versions <= 2.5. If you 
-need to use it anyway, think about redirecting it through a `ByteArrayOutputStream` and 
-using the Gradle logger in an `doLast` action:
-
-```gradle
-startCmdAppContainer {
-  // Defining outputs is not necessary as "waitForCommand" causes this task to run always
-  doFirst {
-    stdOut = new ByteArrayOutputStream()
-    stdErr = new ByteArrayOutputStream()
-  }
-  doLast {
-    logger.warn stdOut.toString()
-    logger.error stdErr.toString()
-  }
-}
-```
-
 # Advanced example (not tested)
 
 #### src/main/docker/Dockerfile
