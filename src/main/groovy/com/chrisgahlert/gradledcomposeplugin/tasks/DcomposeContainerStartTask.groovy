@@ -161,6 +161,11 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         )
 
         attachCmd.exec(proxy)
+        
+        // Temporary fix to reduce likelihood of problem documented here:
+        // https://github.com/docker-java/docker-java/issues/661
+        Thread.sleep(2000)
+        
         outHandler
     }
 
