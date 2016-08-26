@@ -59,7 +59,7 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         """
 
         when:
-        def result = runTasksSuccessfully 'copy'
+        def result = runTasksSuccessfully 'startMainContainer', 'copy'
 
         then:
         file('build/copy/test.txt').text.contains 'helllo1'
