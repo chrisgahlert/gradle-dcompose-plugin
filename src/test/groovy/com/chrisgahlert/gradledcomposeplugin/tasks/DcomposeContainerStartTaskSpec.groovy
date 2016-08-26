@@ -16,8 +16,6 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
-import org.gradle.util.GradleVersion
-import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
 class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
@@ -478,9 +476,10 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
     }
 
     @Unroll
-    @IgnoreIf({ GradleVersion.current().compareTo(GradleVersion.version('2.5')) <= 0 })
     def 'should #outText attach to stdout and should #errText attach to stderr'() {
         given:
+        fork = true
+
         buildFile << """
             dcompose {
                 app {
