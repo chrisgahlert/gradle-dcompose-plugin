@@ -17,7 +17,6 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 import org.gradle.util.GradleVersion
-import spock.lang.Ignore
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
@@ -543,29 +542,28 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         result.standardOutput.contains("#received: 0#")
     }
 
-    @Ignore("Not yet supported by docker library")
     def 'should attach to stdin'() {
         given:
         buildFile << """
             dcompose {
                 app {
                     image = '$DEFAULT_IMAGE'
-                    command = ['sh', '-c', 'read \$input && echo \$input > /test.txt']
+                    command = ['sh', '-c', 'echo `wc -w` words > /test.txt']
                     waitForCommand = true
                     attachStdin = true
                 }
             }
 
-            startAppContainer.stdIn = new ByteArrayInputStream("walter white\\n".bytes)
+            startAppContainer.stdIn = new ByteArrayInputStream("walter white".bytes)
 
-            ${copyTaskConfig('app', '/text.txt')}
+            ${copyTaskConfig('app', '/test.txt')}
         """
 
         when:
-        def result = runTasksSuccessfully 'startAppContainer'
+        def result = runTasksSuccessfully 'startAppContainer', 'copy'
 
         then:
-        file('build/copy/test.txt').text == 'walter white'
+        file('build/copy/test.txt').text.trim() == '2 words'
     }
 
     def 'should react to return code when waiting for command'() {

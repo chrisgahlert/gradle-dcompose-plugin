@@ -169,7 +169,7 @@ dcompose {
 | dnsSearch | List&lt;String&gt; | A list of DNS search domains.<br><br> *Sample:* `['mydomain1', 'mydomain2', ...]`
 | extraHosts | List&lt;String&gt; | A list of other hosts that will be made available through `/etc/hosts`. <br><br> *Sample:* `['hostname:1.2.3.4', ...]`
 | networkMode | String | The network mode passed to Docker. <br><br> *Samples:* <br>`'bridge'`<br>`'none`<br>`'host`
-| attachStdin | Boolean<br> *Default: null* | Whether the containers' stdin should be attached. Actually providing a stream is currently not support by the Docker library.
+| attachStdin | Boolean<br> *Default: null* | Whether the containers' stdin should be attached. If used in combination with `waitForCommand` it will redirect stdin to `System.in` by default.
 | attachStdout | Boolean<br> *Default: null* | Whether the containers' stdout should be attached. If used in combination with `waitForCommand` it will redirect stdout to `System.out` by default.
 | attachStderr | Boolean<br> *Default: null* | Whether the containers' stderr should be attached. If used in combination with `waitForCommand` it will redirect stderr to `System.err` by default.
 | privileged | Boolean<br> *Default: null* | Whether this container should be started in privileged mode. This will give the container almost the same rights as the host itself. This is useful e.g. for running "Docker in Docker".
@@ -254,29 +254,32 @@ task runTestsAgainstDatabase(type: Test) {
 }
 ```
 
-## Redirecting stdout/stderr
+## Redirecting standard streams
 
-It is possible to redirect a container's stdout/stderr to custom streams:
+It is possible to redirect a container's stdin/stdout/stderr to custom streams:
 
 ```gradle
 dcompose {
   cmdApp {
     image = 'ubuntu:latest'
-    command = 'echo hello from stdout'
+    command = ['sh', '-c', 'echo `wc -w` words']
     waitForCommand = true // This is required
     attachStdout = true
     attachStderr = true
+    attachStdin = true
   }
 }
 
 startCmdAppContainer {
   // Defining outputs is not necessary as "waitForCommand" causes this task to run always
   doFirst {
-    stdOut = new FileOutputStream(file("$buildDir/out.txt"))
-    stdErr = System.err // default
+    stdIn = new ByteArrayInputStream("Hello world".bytes)    // default: System.in
+    stdOut = new FileOutputStream(file("$buildDir/out.txt")) // default: System.out
+    stdErr = new FileOutputStream(file("$buildDir/err.txt")) // default: System.err
   }
   doLast {
     stdOut.close()
+    stdErr.close()
   }
 }
 ```

@@ -86,6 +86,9 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 def outHandler
                 if (container.waitForCommand && (attachStdin || attachStdout || attachStderr)) {
                     outHandler = attachStreams()
+                    if(!outHandler.awaitStart(container.waitTimeout)) {
+                        throw new GradleException("Could not attach streams to container $containerName")
+                    }
                 }
 
                 logger.quiet("Starting Docker container with name $containerName")
@@ -134,14 +137,14 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                     'in an doLast action!')
         }
 
-        def attachCmd = client.attachContainerCmd(containerName)
+        def attachCmd = getClient(useNetty: true).attachContainerCmd(containerName)
                 .withFollowStream(true)
 
         if (attachStdout) {
             attachCmd.withStdOut(attachStdout)
         }
         if (attachStdin) {
-            logger.warn('Attaching stdIn to a running container is currently not supported by the docker library')
+            attachCmd.withStdIn(stdIn)
         }
         if (attachStderr) {
             attachCmd.withStdErr(attachStderr)
@@ -161,11 +164,6 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
         )
 
         attachCmd.exec(proxy)
-        
-        // Temporary fix to reduce likelihood of problem documented here:
-        // https://github.com/docker-java/docker-java/issues/661
-        Thread.sleep(2000)
-        
         outHandler
     }
 
@@ -197,11 +195,13 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
     private class StreamOutputHandler {
         def stream
         Throwable firstError
+        CountDownLatch started = new CountDownLatch(1)
         CountDownLatch completed = new CountDownLatch(1)
         boolean closed
 
         def onStart(stream) {
             this.stream = stream
+            started.countDown()
         }
 
         def onNext(item) {
@@ -243,15 +243,24 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
             stdErr?.flush()
         }
 
-        void awaitCompletion(long timeoutMs) {
-            if(timeoutMs > 0) {
-                completed.await(timeoutMs, TimeUnit.MILLISECONDS)
+        void awaitCompletion(long timeout) {
+            if(timeout > 0) {
+                completed.await(timeout, TimeUnit.SECONDS)
             } else {
                 completed.await()
             }
 
             if (firstError != null) {
                 loadClass('com.google.common.base.Throwables').invokeMethod('propagate', [firstError] as Object[])
+            }
+        }
+
+        boolean awaitStart(long timeout) {
+            if(timeout > 0) {
+                started.await(timeout, TimeUnit.SECONDS)
+            } else {
+                started.await()
+                true
             }
         }
     }

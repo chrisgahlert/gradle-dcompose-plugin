@@ -187,6 +187,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
         container.networkMode
     }
 
+    @Input
+    boolean isStdinOpen() {
+        attachStdin && container.waitForCommand
+    }
+
     // TODO: add cpu/mem options
 
     @TaskAction
@@ -282,6 +287,10 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
 
             if (attachStdin != null) {
                 cmd.withAttachStdin(attachStdin)
+            }
+
+            if(stdinOpen) {
+                cmd.withStdInOnce(stdinOpen).withStdinOpen(stdinOpen)
             }
 
             if (attachStdout != null) {

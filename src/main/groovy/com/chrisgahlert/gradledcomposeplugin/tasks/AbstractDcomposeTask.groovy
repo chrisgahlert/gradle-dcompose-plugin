@@ -58,12 +58,22 @@ class AbstractDcomposeTask extends DefaultTask {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    protected def getClient() {
+    protected def getClient(def properties = [:]) {
         def clientConfig = buildClientConfig()
         def clientConfigClass = loadClass('com.github.dockerjava.core.DockerClientConfig')
         def clientBuilderClass = loadClass('com.github.dockerjava.core.DockerClientBuilder')
         def getInstanceMethod = clientBuilderClass.getMethod('getInstance', clientConfigClass)
-        getInstanceMethod.invoke(null, clientConfig).build()
+        def clientBuilder = getInstanceMethod.invoke(null, clientConfig)
+
+        def execFactory
+        if(properties.useNetty) {
+            execFactory = loadClass('com.github.dockerjava.netty.NettyDockerCmdExecFactory').newInstance()
+        } else {
+            execFactory = clientBuilder.getDefaultDockerCmdExecFactory()
+        }
+        clientBuilder.withDockerCmdExecFactory(execFactory)
+
+        clientBuilder.build()
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
