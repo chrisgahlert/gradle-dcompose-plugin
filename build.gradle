@@ -60,7 +60,7 @@ artifacts {
 
 dcompose {
     dockerDaemon {
-        image = 'docker:1.12.0-dind'
+        image = 'docker:1.12.1-dind'
         privileged = true
         portBindings = ['2375']
     }
