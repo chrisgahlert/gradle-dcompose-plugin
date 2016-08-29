@@ -13,68 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chrisgahlert.gradledcomposeplugin.tasks
+package com.chrisgahlert.gradledcomposeplugin.tasks.image
 
-
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
-class DcomposeImageRemoveTask extends AbstractDcomposeTask {
+@TypeChecked
+class DcomposeImagePullTask extends AbstractDcomposeTask {
 
-    DcomposeImageRemoveTask() {
+    DcomposeImagePullTask() {
         onlyIf {
-            doesExist()
+            imageNotExists()
         }
     }
 
     @Input
     String getImage() {
-        container.image
-    }
-
-    @Input
-    @Optional
-    Boolean getForce() {
-        container.forceRemoveImage
-    }
-
-    @Input
-    @Optional
-    Boolean getNoPrune() {
-        container.noPruneParentImages
+        service.image
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    boolean doesExist() {
-        runInDockerClasspath {
+    boolean imageNotExists() {
+        def exists = runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
                 client.inspectImageCmd(image).exec()
                 true
             }
         }
+
+        !exists
     }
 
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
-    void removeImage() {
+    void pullImage() {
         runInDockerClasspath {
-            ignoreDockerException('NotFoundException') {
-                def cmd = client.removeImageCmd(image)
-
-                if (force != null) {
-                    cmd.withForce(force)
-                }
-
-                if (noPrune != null) {
-                    cmd.withNoPrune(noPrune)
-                }
-
-                cmd.exec()
-                logger.quiet("Successfully removed image $image")
-            }
+            def callback = loadClass('com.github.dockerjava.core.command.PullImageResultCallback').newInstance()
+            def result = client.pullImageCmd(image).exec(callback)
+            result.awaitCompletion()
+            logger.quiet("Successfully pulled image $image")
         }
     }
 }

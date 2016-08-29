@@ -20,7 +20,7 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
 
 @TypeChecked
-class DefaultContainer extends Container {
+class DefaultService extends Service {
 
     /**
      * The prefix for the actual name used in Docker later, e.g. "dcompose_12345_"
@@ -102,7 +102,7 @@ class DefaultContainer extends Container {
     Map hostPortBindings
     String dockerHost
 
-    DefaultContainer(String name, String projectPath, Closure<String> dockerPrefix) {
+    DefaultService(String name, String projectPath, Closure<String> dockerPrefix) {
         super(name, projectPath)
         this.dockerPrefix = dockerPrefix
     }
@@ -123,12 +123,12 @@ class DefaultContainer extends Container {
     }
 
     @Override
-    Set<Container> getLinkDependencies() {
+    Set<Service> getLinkDependencies() {
         def result = new HashSet()
 
         links?.each { link ->
-            if (link instanceof ContainerDependency) {
-                result << ((ContainerDependency) link).container
+            if (link instanceof ServiceDependency) {
+                result << ((ServiceDependency) link).service
             }
         }
 
@@ -136,11 +136,11 @@ class DefaultContainer extends Container {
     }
 
     @Override
-    Set<Container> getVolumesFromDependencies() {
+    Set<Service> getVolumesFromDependencies() {
         def result = new HashSet()
 
         volumesFrom?.each { from ->
-            if (from instanceof Container) {
+            if (from instanceof Service) {
                 result << from
             }
         }
@@ -165,10 +165,10 @@ class DefaultContainer extends Container {
         }
 
         if(exposedPorts.size() == 0) {
-            throw new GradleException("Could not find container port $containerPort for container $name")
+            throw new GradleException("Could not find container port $containerPort for service $name")
         }
         if(exposedPorts.size() > 1) {
-            throw new GradleException("The port number for container port $containerPort is ambigous for container " +
+            throw new GradleException("The port number for container port $containerPort is ambigous for service " +
                     "$name - please specify a protocol with findHostPort(port, protocol: 'tcp or udp')")
         }
 
@@ -177,12 +177,12 @@ class DefaultContainer extends Container {
         }
 
         if(!bindings) {
-            throw new GradleException("The container port $containerPort for container $name has not been bound to a host port")
+            throw new GradleException("The container port $containerPort for service $name has not been bound to a host port")
         }
 
         def possibleIps = bindings.collect { it.hostIp }.unique()
         if(bindings.size() > 1 && !properties.hostIp && possibleIps.size() > 1) {
-            throw new GradleException("The container port $containerPort for container $name has multiple host ports bound - " +
+            throw new GradleException("The container port $containerPort for service $name has multiple host ports bound - " +
                     "please specify a hostIp with findHostPort(port, hostIp: '127.0.0.1')! " +
                     "Possible values: " + possibleIps)
         }
@@ -193,7 +193,7 @@ class DefaultContainer extends Container {
     @Override
     String getDockerHost() {
         if(!dockerHost) {
-            throw new GradleException("Docker hostname not available for container $name - has it been started?")
+            throw new GradleException("Docker hostname not available for service $name - has it been started?")
         }
 
         return dockerHost
@@ -218,21 +218,21 @@ class DefaultContainer extends Container {
     @Override
     void validate() {
         if (!(baseDir == null ^ image == null)) {
-            throw new GradleException("Either dockerFile or image must be provided for dcompose container '$name'")
+            throw new GradleException("Either dockerFile or image must be provided for dcompose service '$name'")
         }
 
         if (baseDir == null) {
             if (dockerFilename != null) {
-                throw new GradleException("Cannot set baseDir when image in use for dcompose container '$name'")
+                throw new GradleException("Cannot set baseDir when image in use for dcompose service '$name'")
             }
             if (tag != null) {
-                throw new GradleException("Cannot set tag when image in use for dcompose container '$name'")
+                throw new GradleException("Cannot set tag when image in use for dcompose service '$name'")
             }
         }
 
         links?.each {
-            if (it instanceof Container) {
-                throw new GradleException("Invalid container link from $name to $it.name: Please use ${it.name}.link()")
+            if (it instanceof Service) {
+                throw new GradleException("Invalid service link from $name to $it.name: Please use ${it.name}.link()")
             }
         }
     }

@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chrisgahlert.gradledcomposeplugin.tasks
+package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
-import com.chrisgahlert.gradledcomposeplugin.extension.Container
+import com.chrisgahlert.gradledcomposeplugin.extension.Service
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
@@ -29,62 +30,62 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
 
     DcomposeContainerCreateTask() {
         dependsOn {
-            container.linkDependencies.collect { "$it.projectPath:$it.createTaskName" }
+            service.linkDependencies.collect { "$it.projectPath:$it.createContainerTaskName" }
         }
         dependsOn {
-            container.volumesFromDependencies.collect { "$it.projectPath:$it.createTaskName" }
+            service.volumesFromDependencies.collect { "$it.projectPath:$it.createContainerTaskName" }
         }
     }
 
     @Input
     String getImage() {
-        container.image
+        service.image
     }
 
     @Input
     String getContainerName() {
-        container.containerName
+        service.containerName
     }
 
     @Input
     @Optional
     List<String> getPortBindings() {
-        container.portBindings
+        service.portBindings
     }
 
     @Input
     @Optional
     List<String> getExposedPorts() {
-        container.exposedPorts
+        service.exposedPorts
     }
 
     @Input
     @Optional
     List<String> getCommand() {
-        container.command
+        service.command
     }
 
     @Input
     @Optional
     List<String> getBinds() {
-        container.binds
+        service.binds
     }
 
     @Input
     @Optional
     List<String> getVolumes() {
-        container.volumes
+        service.volumes
     }
 
     @Input
     boolean isPreserveVolumes() {
-        container.preserveVolumes
+        service.preserveVolumes
     }
 
     @Input
     @Optional
     List<String> getLinks() {
-        container.links?.collect {
+        service.links?.collect {
             it as String
         }
     }
@@ -92,7 +93,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     @Input
     @Optional
     List<String> getVolumesFrom() {
-        container.volumesFrom?.collect {
+        service.volumesFrom?.collect {
             it as String
         }
     }
@@ -100,96 +101,96 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     @Input
     @Optional
     List<String> getExtraHosts() {
-        container.extraHosts
+        service.extraHosts
     }
 
     @Input
     @Optional
     String getWorkingDir() {
-        container.workingDir
+        service.workingDir
     }
 
     @Input
     @Optional
     List<String> getDns() {
-        container.dns
+        service.dns
     }
 
     @Input
     @Optional
     List<String> getDnsSearch() {
-        container.dnsSearch
+        service.dnsSearch
     }
 
     @Input
     @Optional
     String getHostName() {
-        container.hostName
+        service.hostName
     }
 
     @Input
     @Optional
     List<String> getEntrypoints() {
-        container.entrypoints
+        service.entrypoints
     }
 
     @Input
     @Optional
     List<String> getEnv() {
-        container.env
+        service.env
     }
 
     @Input
     @Optional
     String getUser() {
-        container.user
+        service.user
     }
 
     @Input
     @Optional
     Boolean getPublishAllPorts() {
-        container.publishAllPorts
+        service.publishAllPorts
     }
 
     @Input
     @Optional
     Boolean getReadonlyRootfs() {
-        container.readonlyRootfs
+        service.readonlyRootfs
     }
 
     @Input
     @Optional
     Boolean getAttachStdin() {
-        container.attachStdin
+        service.attachStdin
     }
 
     @Input
     @Optional
     Boolean getAttachStdout() {
-        container.attachStdout
+        service.attachStdout
     }
 
     @Input
     @Optional
     Boolean getAttachStderr() {
-        container.attachStderr
+        service.attachStderr
     }
 
     @Input
     @Optional
     Boolean getPrivileged() {
-        container.privileged
+        service.privileged
     }
 
     @Input
     @Optional
     String getNetworkMode() {
-        container.networkMode
+        service.networkMode
     }
 
     @Input
     boolean isStdinOpen() {
-        attachStdin && container.waitForCommand
+        attachStdin && service.waitForCommand
     }
 
     // TODO: add cpu/mem options
@@ -198,7 +199,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     void createNewContainer() {
         runInDockerClasspath {
-            removeOldContainer(container)
+            removeOldContainer(service)
 
             def cmd = client.createContainerCmd(image)
 
@@ -339,11 +340,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeTask {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    protected void removeOldContainer(Container oldContainer, Container linkedFromContainer = null) {
+    protected void removeOldContainer(Service oldContainer, Service linkedFromContainer = null) {
         ignoreDockerException('NotFoundException') {
             def result = client.inspectContainerCmd(oldContainer.containerName).exec()
 
-            otherContainers.each {
+            otherServices.each {
                 if (it.linkDependencies.contains(oldContainer) || it.volumesFromDependencies.contains(oldContainer)) {
                     removeOldContainer(it, oldContainer)
                 }

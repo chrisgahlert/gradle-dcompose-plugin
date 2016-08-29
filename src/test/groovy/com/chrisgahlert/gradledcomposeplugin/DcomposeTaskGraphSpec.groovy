@@ -76,10 +76,10 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
 
         where:
         taskNameProperty          || taskName
-        'pullTaskName'            || 'pullMainImage'
-        'createTaskName'          || 'createMainContainer'
-        'startTaskName'           || 'startMainContainer'
-        'stopTaskName'            || 'stopMainContainer'
+        'pullImageTaskName'       || 'pullMainImage'
+        'createContainerTaskName' || 'createMainContainer'
+        'startContainerTaskName'  || 'startMainContainer'
+        'stopContainerTaskName'   || 'stopMainContainer'
         'removeContainerTaskName' || 'removeMainContainer'
         'removeImageTaskName'     || 'removeMainImage'
     }
@@ -107,12 +107,12 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
 
         where:
         taskNameProperty          || taskName
-        'createTaskName'          || 'createMainContainer'
-        'startTaskName'           || 'startMainContainer'
-        'stopTaskName'            || 'stopMainContainer'
+        'createContainerTaskName' || 'createMainContainer'
+        'startContainerTaskName'  || 'startMainContainer'
+        'stopContainerTaskName'   || 'stopMainContainer'
         'removeContainerTaskName' || 'removeMainContainer'
         'removeImageTaskName'     || 'removeMainImage'
-        'buildTaskName'           || 'buildMainImage'
+        'buildImageTaskName'      || 'buildMainImage'
     }
 
     @Unroll
@@ -140,7 +140,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                 main {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
-                    links = [container(':C:main').link()]
+                    links = [service(':C:main').link()]
                 }
             }
         """
@@ -150,7 +150,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                 main {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
-                    links = [container(':A:main').link()]
+                    links = [service(':A:main').link()]
                 }
             }
         """

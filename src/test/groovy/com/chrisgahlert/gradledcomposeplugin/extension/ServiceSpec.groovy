@@ -18,7 +18,7 @@ package com.chrisgahlert.gradledcomposeplugin.extension
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 import spock.lang.Unroll
 
-class ContainerSpec extends AbstractDcomposeSpec {
+class ServiceSpec extends AbstractDcomposeSpec {
 
     def 'should validate correctly on missing defintion'() {
         given:
@@ -33,7 +33,7 @@ class ContainerSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardError.contains("Either dockerFile or image must be provided for dcompose container 'main'")
+        result.standardError.contains("Either dockerFile or image must be provided for dcompose service 'main'")
     }
 
     def 'should validate correctly on duplicate defintion'() {
@@ -51,7 +51,7 @@ class ContainerSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardError.contains("Either dockerFile or image must be provided for dcompose container 'main'")
+        result.standardError.contains("Either dockerFile or image must be provided for dcompose service 'main'")
     }
 
     def 'should validate direct container link'() {
@@ -72,7 +72,7 @@ class ContainerSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardError.contains("Invalid container link from client to server")
+        result.standardError.contains("Invalid service link from client to server")
     }
 
     @Unroll
@@ -96,7 +96,7 @@ class ContainerSpec extends AbstractDcomposeSpec {
               }
             }
 
-            task findBindings(dependsOn: dcompose.server.startTaskName) << {
+            task findBindings(dependsOn: dcompose.server.startContainerTaskName) << {
                 file('result').text = dcompose.server.findHostPort($find)
             }
         """
@@ -121,7 +121,7 @@ class ContainerSpec extends AbstractDcomposeSpec {
         where:
         find                        || success || expectedPort || errorMessage
         1001                        || true    || 'any'        || null
-        1002                        || false   || null         || 'container server has multiple host ports bound'
+        1002                        || false   || null         || 'server has multiple host ports bound'
         "1002, hostIp: '127.0.0.2'" || true    || 10002        || null
         "1002, hostIp: '127.0.0.1'" || true    || 'any'         || null
         "1002, hostIp: '0.0.0.0'"   || true    || 9002         || null

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chrisgahlert.gradledcomposeplugin.tasks
+package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
@@ -128,7 +128,7 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
-                    links = [container(':subServer:server').link()]
+                    links = [service(':subServer:server').link()]
                 }
             }
         """
@@ -162,7 +162,7 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                 user {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
-                    volumesFrom = [container(':subData:data')]
+                    volumesFrom = [service(':subData:data')]
                 }
             }
         """

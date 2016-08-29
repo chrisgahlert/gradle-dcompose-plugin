@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chrisgahlert.gradledcomposeplugin.tasks
+package com.chrisgahlert.gradledcomposeplugin.tasks.image
 
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.*
@@ -24,64 +25,64 @@ class DcomposeImageBuildTask extends AbstractDcomposeTask {
     @Input
     @Optional
     Boolean getNoCache() {
-        container.buildNoCache
+        service.buildNoCache
     }
 
     @Input
     @Optional
     Boolean getPull() {
-        container.buildPull
+        service.buildPull
     }
 
     @Input
     @Optional
     Boolean getRemove() {
-        container.buildRemove
+        service.buildRemove
     }
 
     @Input
     String getTag() {
-        container.tag
+        service.tag
     }
 
     @Input
     @Optional
     Long getMemory() {
-        container.memory
+        service.memory
     }
 
     @Input
     @Optional
     Long getMemswap() {
-        container.memswap
+        service.memswap
     }
 
     @Input
     @Optional
     String getCpushares() {
-        container.cpushares
+        service.cpushares
     }
 
     @Input
     @Optional
     String getCpusetcpus() {
-        container.cpusetcpus
+        service.cpusetcpus
     }
 
     @InputDirectory
     File getBaseDir() {
-        container.baseDir
+        service.baseDir
     }
 
     @InputFile
     File getDockerFile() {
-        new File(baseDir, container.dockerFilename ?: 'Dockerfile')
+        new File(baseDir, service.dockerFilename ?: 'Dockerfile')
     }
 
     @Input
     @Optional
     Map<String, String> getBuildArgs() {
-        container.buildArgs
+        service.buildArgs
     }
 
     @TaskAction

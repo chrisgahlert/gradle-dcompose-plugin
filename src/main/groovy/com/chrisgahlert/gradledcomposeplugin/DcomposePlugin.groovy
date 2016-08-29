@@ -16,7 +16,15 @@
 package com.chrisgahlert.gradledcomposeplugin
 
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
-import com.chrisgahlert.gradledcomposeplugin.tasks.*
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.DcomposeCopyFileFromContainerTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerCreateTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerRemoveTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerStartTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerStopTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageBuildTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImagePullTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageRemoveTask
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import groovy.transform.TypeChecked
 import org.gradle.api.Plugin
@@ -29,7 +37,7 @@ class DcomposePlugin implements Plugin<Project> {
 
     public static final String TASK_GROUP = "Dcompose Docker"
     public static final String TASK_GROUP_ALL = "$TASK_GROUP (all)"
-    public static final String TASK_GROUP_CONTAINER_TEMPLATE = "$TASK_GROUP '%s' container"
+    public static final String TASK_GROUP_CONTAINER_TEMPLATE = "$TASK_GROUP '%s' service"
     public static final String CONFIGURATION_NAME = "dcompose"
     public static final String EXTENSION_NAME = "dcompose"
     public static final String DOCKER_DEPENDENCY = 'com.github.docker-java:docker-java:3.0.5'
@@ -88,7 +96,7 @@ class DcomposePlugin implements Plugin<Project> {
     private void updateTaskGroups(Project project) {
         project.afterEvaluate {
             project.tasks.withType(AbstractDcomposeTask) { AbstractDcomposeTask task ->
-                task.group = String.format(TASK_GROUP_CONTAINER_TEMPLATE, task.container.name)
+                task.group = String.format(TASK_GROUP_CONTAINER_TEMPLATE, task.service.name)
             }
         }
     }
@@ -102,7 +110,7 @@ class DcomposePlugin implements Plugin<Project> {
 
     private void validateContainers(Project project, DcomposeExtension extension) {
         project.afterEvaluate {
-            extension.containers.each { it.validate() }
+            extension.services.each { it.validate() }
         }
     }
 }

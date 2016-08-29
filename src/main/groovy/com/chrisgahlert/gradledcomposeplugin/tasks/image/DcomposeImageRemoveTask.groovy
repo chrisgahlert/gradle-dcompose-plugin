@@ -13,51 +13,67 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chrisgahlert.gradledcomposeplugin.tasks
+package com.chrisgahlert.gradledcomposeplugin.tasks.image
 
-
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
-public class DcomposeContainerStopTask extends AbstractDcomposeTask {
+class DcomposeImageRemoveTask extends AbstractDcomposeTask {
 
-    DcomposeContainerStopTask() {
-        dependsOn {
-            otherContainers.findAll { otherContainer ->
-                otherContainer.linkDependencies.contains(container)
-            }.collect { otherContainer ->
-                "$otherContainer.projectPath:$otherContainer.stopTaskName"
-            }
-        }
-
+    DcomposeImageRemoveTask() {
         onlyIf {
-            containerRunning()
+            doesExist()
         }
     }
 
     @Input
-    String getContainerName() {
-        container.containerName
+    String getImage() {
+        service.image
+    }
+
+    @Input
+    @Optional
+    Boolean getForce() {
+        service.forceRemoveImage
+    }
+
+    @Input
+    @Optional
+    Boolean getNoPrune() {
+        service.noPruneParentImages
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    boolean containerRunning() {
+    boolean doesExist() {
         runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectContainerCmd(containerName).exec().state.running
+                client.inspectImageCmd(image).exec()
+                true
             }
         }
     }
 
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
-    void stopContainer() {
+    void removeImage() {
         runInDockerClasspath {
-            ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
-                client.stopContainerCmd(containerName).exec()
-                logger.quiet("Stopped Docker container named $containerName")
+            ignoreDockerException('NotFoundException') {
+                def cmd = client.removeImageCmd(image)
+
+                if (force != null) {
+                    cmd.withForce(force)
+                }
+
+                if (noPrune != null) {
+                    cmd.withNoPrune(noPrune)
+                }
+
+                cmd.exec()
+                logger.quiet("Successfully removed image $image")
             }
         }
     }

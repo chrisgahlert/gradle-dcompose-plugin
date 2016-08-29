@@ -15,7 +15,7 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
-import com.chrisgahlert.gradledcomposeplugin.extension.Container
+import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
@@ -28,13 +28,13 @@ class DcomposeCopyFileFromContainerTask extends AbstractDcomposeTask {
 
     DcomposeCopyFileFromContainerTask() {
         outputs.upToDateWhen { false }
-    }
+        dependsOn {
+            if(!service) {
+                throw new GradleException("The task $path is missing the 'service' property")
+            }
 
-    @Override
-    void setContainer(Container container) {
-        super.setContainer(container)
-
-        dependsOn "$container.projectPath:$container.createTaskName"
+            "$service.projectPath:$service.createContainerTaskName"
+        }
     }
 
     File destinationDir
@@ -45,9 +45,16 @@ class DcomposeCopyFileFromContainerTask extends AbstractDcomposeTask {
     @Input
     boolean cleanDestinationDir = false
 
+    @Deprecated
+    public void setContainer(Service service) {
+        this.service = service
+
+        logger.warn 'Deprecation warning: Please use the service property instead of the container property'
+    }
+
     @Input
     String getContainerName() {
-        container.containerName
+        service.containerName
     }
 
     @OutputDirectory

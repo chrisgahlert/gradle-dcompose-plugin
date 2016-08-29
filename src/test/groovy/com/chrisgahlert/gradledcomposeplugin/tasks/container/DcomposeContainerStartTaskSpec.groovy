@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chrisgahlert.gradledcomposeplugin.tasks
+package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 import spock.lang.Unroll
@@ -303,7 +303,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'nc server 8000 > /transfer']
-                    links = [container(':subServer:server').link()]
+                    links = [service(':subServer:server').link()]
                     waitForCommand = true
                 }
             }
@@ -339,7 +339,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'nc alias 8000 > /transfer']
-                    links = [container(':subServer:server').link('alias')]
+                    links = [service(':subServer:server').link('alias')]
                     waitForCommand = true
                 }
             }
@@ -375,7 +375,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                 user {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
-                    volumesFrom = [container(':subData:data')]
+                    volumesFrom = [service(':subData:data')]
                 }
             }
         """
@@ -410,7 +410,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'nc server 8000 > /transfer']
-                    links = [container(':subServer:server').link()]
+                    links = [service(':subServer:server').link()]
                     waitForCommand = true
                 }
             }
@@ -455,7 +455,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                 user {
                     image = '$DEFAULT_IMAGE'
                     command = ['echo', 'abc']
-                    volumesFrom = [container(':subData:data')]
+                    volumesFrom = [service(':subData:data')]
                 }
             }
         """

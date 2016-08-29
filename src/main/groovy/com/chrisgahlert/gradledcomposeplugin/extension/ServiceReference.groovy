@@ -20,16 +20,16 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 
 @TypeChecked
-class ContainerReference extends Container {
+class ServiceReference extends Service {
     private final Project targetProject
-    private Container resolvedContainer
+    private Service resolvedContainer
 
-    ContainerReference(String name, Project targetProject) {
+    ServiceReference(String name, Project targetProject) {
         super(name, targetProject.path)
         this.targetProject = targetProject
     }
 
-    Container getResolved() {
+    Service getResolved() {
         if (resolvedContainer == null) {
             def extension = targetProject.extensions.findByType(DcomposeExtension)
             if (extension == null) {
@@ -258,12 +258,12 @@ class ContainerReference extends Container {
     }
 
     @Override
-    Set<Container> getLinkDependencies() {
+    Set<Service> getLinkDependencies() {
         resolved.linkDependencies
     }
 
     @Override
-    Set<Container> getVolumesFromDependencies() {
+    Set<Service> getVolumesFromDependencies() {
         resolved.volumesFromDependencies
     }
 

@@ -16,9 +16,9 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.DcomposePlugin
-import com.chrisgahlert.gradledcomposeplugin.extension.Container
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
-import com.chrisgahlert.gradledcomposeplugin.extension.DefaultContainer
+import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
+import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import groovy.json.JsonBuilder
 import groovy.transform.TypeChecked
@@ -34,7 +34,7 @@ class AbstractDcomposeTask extends DefaultTask {
 
     private Set<String> initializedOutputs = []
 
-    private Container container
+    private Service service
 
     DockerClassLoaderFactory dockerClassLoaderFactory
 
@@ -45,16 +45,22 @@ class AbstractDcomposeTask extends DefaultTask {
         }
     }
 
-    void setContainer(Container container) {
-        if (this.container != null) {
-            throw new ReadOnlyPropertyException("container", this.class)
+    void setService(Service service) {
+        if (this.service != null) {
+            throw new ReadOnlyPropertyException("service", this.class)
         }
 
-        this.container = container
+        this.service = service
     }
 
-    Container getContainer() {
-        return container
+    Service getService() {
+        return service
+    }
+
+    @Deprecated
+    public Service getContainer() {
+        logger.warn 'Deprecation warning: Please use the service property instead of the container property'
+        service
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -156,18 +162,18 @@ class AbstractDcomposeTask extends DefaultTask {
         outputFile
     }
 
-    protected Set<Container> getOtherContainers() {
-        Set<DefaultContainer> result = new HashSet<>()
+    protected Set<Service> getOtherServices() {
+        Set<DefaultService> result = new HashSet<>()
 
         project.rootProject.allprojects.each { prj ->
             ((ProjectInternal) prj).evaluate()
 
             if(prj.plugins.hasPlugin(DcomposePlugin)) {
-                result.addAll prj.extensions.getByType(DcomposeExtension).containers
+                result.addAll prj.extensions.getByType(DcomposeExtension).services
             }
         }
 
-        new HashSet<>(result.findAll { it != container })
+        new HashSet<>(result.findAll { it != service })
     }
 
 }

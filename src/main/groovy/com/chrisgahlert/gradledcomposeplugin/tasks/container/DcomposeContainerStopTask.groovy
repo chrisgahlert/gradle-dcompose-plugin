@@ -13,47 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chrisgahlert.gradledcomposeplugin.tasks
+package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 
-@TypeChecked
-class DcomposeImagePullTask extends AbstractDcomposeTask {
+public class DcomposeContainerStopTask extends AbstractDcomposeTask {
 
-    DcomposeImagePullTask() {
+    DcomposeContainerStopTask() {
+        dependsOn {
+            otherServices.findAll { otherContainer ->
+                otherContainer.linkDependencies.contains(service)
+            }.collect { otherContainer ->
+                "$otherContainer.projectPath:$otherContainer.stopContainerTaskName"
+            }
+        }
+
         onlyIf {
-            imageNotExists()
+            containerRunning()
         }
     }
 
     @Input
-    String getImage() {
-        container.image
+    String getContainerName() {
+        service.containerName
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    boolean imageNotExists() {
-        def exists = runInDockerClasspath {
+    boolean containerRunning() {
+        runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectImageCmd(image).exec()
-                true
+                client.inspectContainerCmd(containerName).exec().state.running
             }
         }
-
-        !exists
     }
 
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
-    void pullImage() {
+    void stopContainer() {
         runInDockerClasspath {
-            def callback = loadClass('com.github.dockerjava.core.command.PullImageResultCallback').newInstance()
-            def result = client.pullImageCmd(image).exec(callback)
-            result.awaitCompletion()
-            logger.quiet("Successfully pulled image $image")
+            ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
+                client.stopContainerCmd(containerName).exec()
+                logger.quiet("Stopped Docker container named $containerName")
+            }
         }
     }
 }

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chrisgahlert.gradledcomposeplugin.tasks
+package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
@@ -40,40 +41,40 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
     DcomposeContainerStartTask() {
         outputs.upToDateWhen {
-            !container.waitForCommand
+            !service.waitForCommand
         }
 
         dependsOn {
-            container.linkDependencies.collect { "$it.projectPath:$it.startTaskName" }
+            service.linkDependencies.collect { "$it.projectPath:$it.startContainerTaskName" }
         }
     }
 
     @Input
     String getContainerName() {
-        container.containerName
+        service.containerName
     }
 
     @Input
     @Optional
     Boolean getAttachStdout() {
-        container.attachStdout
+        service.attachStdout
     }
 
     @Input
     @Optional
     Boolean getAttachStdin() {
-        container.attachStdin
+        service.attachStdin
     }
 
     @Input
     @Optional
     Boolean getAttachStderr() {
-        container.attachStderr
+        service.attachStderr
     }
 
     @Input
     boolean isIgnoreExitCode() {
-        container.ignoreExitCode
+        service.ignoreExitCode
     }
 
     @TaskAction
@@ -84,9 +85,9 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
             ignoreDockerException('NotModifiedException') {
                 def outHandler
-                if (container.waitForCommand && (attachStdin || attachStdout || attachStderr)) {
+                if (service.waitForCommand && (attachStdin || attachStdout || attachStderr)) {
                     outHandler = attachStreams()
-                    if(!outHandler.awaitStart(container.waitTimeout)) {
+                    if(!outHandler.awaitStart(service.waitTimeout)) {
                         throw new GradleException("Could not attach streams to container $containerName")
                     }
                 }
@@ -94,10 +95,10 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                 logger.quiet("Starting Docker container with name $containerName")
                 client.startContainerCmd(containerName).exec()
 
-                outHandler?.awaitCompletion(container.waitTimeout)
+                outHandler?.awaitCompletion(service.waitTimeout)
             }
 
-            if (container.waitForCommand) {
+            if (service.waitForCommand) {
                 while(true) {
                     def inspectResult = client.inspectContainerCmd(containerName).exec()
                     if (!inspectResult.state.running) {
@@ -116,7 +117,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
                         return
                     }
 
-                    if(container.waitTimeout > 0 && start + 1000L * container.waitTimeout < System.currentTimeMillis()) {
+                    if(service.waitTimeout > 0 && start + 1000L * service.waitTimeout < System.currentTimeMillis()) {
                         // timeout exceeded -> fail
                         throw new GradleException("Timed out waiting for command to finish after ${System.currentTimeMillis() - start} ms")
                     }
@@ -176,11 +177,11 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
             }
 
             if (result?.state?.running) {
-                container.hostPortBindings = result?.networkSettings?.ports?.bindings
-                container.dockerHost = buildClientConfig().dockerHost
+                service.hostPortBindings = result?.networkSettings?.ports?.bindings
+                service.dockerHost = buildClientConfig().dockerHost
             } else {
-                container.hostPortBindings = null
-                container.dockerHost = null
+                service.hostPortBindings = null
+                service.dockerHost = null
             }
 
             result?.mounts = result?.mounts?.sort { it.destination?.path }

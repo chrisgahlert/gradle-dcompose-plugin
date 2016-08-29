@@ -19,36 +19,56 @@ import groovy.transform.TypeChecked
 import org.gradle.util.GUtil
 
 @TypeChecked
-abstract class Container {
+abstract class Service {
     /**
-     * The internal dcompose container name, e.g. "database"
+     * The internal dcompose service name, e.g. "database"
      */
     final String name
 
     /**
-     * The path to the Gradle project where this container is defined
+     * The path to the Gradle project where this service is defined
      */
     final String projectPath
 
-    Container(String name, String projectPath) {
+    Service(String name, String projectPath) {
         this.name = name
         this.projectPath = projectPath
     }
 
-    String getPullTaskName() {
+    String getPullImageTaskName() {
         "pull${getTaskLabel()}Image"
     }
 
-    String getCreateTaskName() {
+    @Deprecated
+    String getPullTaskName() {
+        pullImageTaskName
+    }
+
+    String getCreateContainerTaskName() {
         "create${getTaskLabel()}Container"
     }
 
-    String getStartTaskName() {
+    @Deprecated
+    String getCreateTaskName() {
+        createContainerTaskName
+    }
+
+    String getStartContainerTaskName() {
         "start${getTaskLabel()}Container"
     }
 
-    String getStopTaskName() {
+    @Deprecated
+    String getStartTaskName() {
+        startContainerTaskName
+    }
+
+    String getStopContainerTaskName() {
         "stop${getTaskLabel()}Container"
+    }
+
+    @Deprecated
+    String getStopTaskName() {
+        stopContainerTaskName
     }
 
     String getRemoveContainerTaskName() {
@@ -59,8 +79,13 @@ abstract class Container {
         "remove${getTaskLabel()}Image"
     }
 
-    String getBuildTaskName() {
+    String getBuildImageTaskName() {
         "build${getTaskLabel()}Image"
+    }
+
+    @Deprecated
+    String getBuildTaskName() {
+        buildImageTaskName
     }
 
     private String getTaskLabel() {
@@ -158,9 +183,9 @@ abstract class Container {
 
     abstract String getDockerHost();
 
-    abstract Set<Container> getLinkDependencies()
+    abstract Set<Service> getLinkDependencies()
 
-    abstract Set<Container> getVolumesFromDependencies()
+    abstract Set<Service> getVolumesFromDependencies()
 
     abstract String getTag()
 
@@ -170,16 +195,16 @@ abstract class Container {
 
     abstract void validate()
 
-    ContainerDependency link(String alias = null) {
-        new ContainerDependency({ "$containerName:${alias ?: name}" }, this)
+    ServiceDependency link(String alias = null) {
+        new ServiceDependency({ "$containerName:${alias ?: name}" }, this)
     }
 
-    static class ContainerDependency {
-        final Container container
+    static class ServiceDependency {
+        final Service service
         final private Closure definitionAction
 
-        ContainerDependency(Closure definitionAction, Container container = null) {
-            this.container = container
+        ServiceDependency(Closure definitionAction, Service service = null) {
+            this.service = service
             this.definitionAction = definitionAction
         }
 
@@ -195,11 +220,11 @@ abstract class Container {
 
     @Override
     boolean equals(Object obj) {
-        if(obj == null || !(obj instanceof Container)) {
+        if(obj == null || !(obj instanceof Service)) {
             return false
         }
 
-        def other = (Container) obj
+        def other = (Service) obj
         return Objects.equals(this.name, other.name) && Objects.equals(this.projectPath, other.projectPath)
     }
 

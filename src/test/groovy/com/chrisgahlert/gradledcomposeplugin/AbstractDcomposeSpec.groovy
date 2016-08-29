@@ -45,7 +45,7 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
     String copyTaskConfig(String containerName, String containerPath, String name = 'copy') {
         """
             task $name(type: com.chrisgahlert.gradledcomposeplugin.tasks.DcomposeCopyFileFromContainerTask) {
-                container = dcompose.$containerName
+                service = dcompose.$containerName
                 containerPath = '$containerPath'
             }
         """

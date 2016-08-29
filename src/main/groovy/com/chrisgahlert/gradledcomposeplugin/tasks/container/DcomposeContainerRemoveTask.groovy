@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chrisgahlert.gradledcomposeplugin.tasks
+package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
-
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
@@ -25,11 +25,11 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
 
     DcomposeContainerRemoveTask() {
         dependsOn {
-            def linkDeps = otherContainers.findAll { otherContainer ->
-                otherContainer.linkDependencies.contains(container)
+            def linkDeps = otherServices.findAll { otherContainer ->
+                otherContainer.linkDependencies.contains(service)
             }
-            def volFromDeps = otherContainers.findAll { otherContainer ->
-                otherContainer.volumesFromDependencies.contains(container)
+            def volFromDeps = otherServices.findAll { otherContainer ->
+                otherContainer.volumesFromDependencies.contains(service)
             }
 
             (linkDeps + volFromDeps).collect { otherContainer ->
@@ -44,12 +44,12 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
 
     @Input
     boolean isPreserveVolumes() {
-        container.preserveVolumes
+        service.preserveVolumes
     }
 
     @Input
     String getContainerName() {
-        container.containerName
+        service.containerName
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)

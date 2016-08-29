@@ -15,7 +15,13 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.extension
 
-import com.chrisgahlert.gradledcomposeplugin.tasks.*
+import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerCreateTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerRemoveTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerStartTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerStopTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageBuildTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImagePullTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageRemoveTask
 import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import groovy.transform.TypeChecked
 import org.gradle.api.GradleException
@@ -27,7 +33,7 @@ import org.gradle.util.GUtil
 class DcomposeExtension {
     final private Project project
 
-    final private Set<DefaultContainer> containers = new HashSet<>()
+    final private Set<DefaultService> services = new HashSet<>()
 
     String namePrefix
 
@@ -41,16 +47,16 @@ class DcomposeExtension {
         namePrefix = "dcompose_${pathHash}_"
     }
 
-    Container getByNameOrCreate(String name, Closure config) {
+    Service getByNameOrCreate(String name, Closure config) {
         def container = findByName(name)
 
         if (container == null) {
-            container = new DefaultContainer(name, project.path, { namePrefix })
+            container = new DefaultService(name, project.path, { namePrefix })
             ConfigureUtil.configure(config, container)
             container.validate()
 
             createContainerTasks(container)
-            containers << container
+            services << container
         } else {
             ConfigureUtil.configure(config, container)
         }
@@ -58,54 +64,60 @@ class DcomposeExtension {
         return container
     }
 
-    private void createContainerTasks(DefaultContainer container) {
+    private void createContainerTasks(DefaultService service) {
         def initImage;
-        if (container.hasImage()) {
-            initImage = project.tasks.create(container.pullTaskName, DcomposeImagePullTask)
+        if (service.hasImage()) {
+            initImage = project.tasks.create(service.pullImageTaskName, DcomposeImagePullTask)
         } else {
-            initImage = project.tasks.create(container.buildTaskName, DcomposeImageBuildTask)
+            initImage = project.tasks.create(service.buildImageTaskName, DcomposeImageBuildTask)
         }
-        initImage.container = container
+        initImage.service = service
 
-        def create = project.tasks.create(container.createTaskName, DcomposeContainerCreateTask)
-        create.container = container
+        def create = project.tasks.create(service.createContainerTaskName, DcomposeContainerCreateTask)
+        create.service = service
         create.dependsOn initImage
 
-        def start = project.tasks.create(container.startTaskName, DcomposeContainerStartTask)
-        start.container = container
+        def start = project.tasks.create(service.startContainerTaskName, DcomposeContainerStartTask)
+        start.service = service
         start.dependsOn create
 
-        def stop = project.tasks.create(container.stopTaskName, DcomposeContainerStopTask)
-        stop.container = container
+        def stop = project.tasks.create(service.stopContainerTaskName, DcomposeContainerStopTask)
+        stop.service = service
 
-        def removeContainer = project.tasks.create(container.removeContainerTaskName, DcomposeContainerRemoveTask)
-        removeContainer.container = container
+        def removeContainer = project.tasks.create(service.removeContainerTaskName, DcomposeContainerRemoveTask)
+        removeContainer.service = service
         removeContainer.dependsOn stop
 
-        def removeImage = project.tasks.create(container.removeImageTaskName, DcomposeImageRemoveTask)
-        removeImage.container = container
+        def removeImage = project.tasks.create(service.removeImageTaskName, DcomposeImageRemoveTask)
+        removeImage.service = service
         removeImage.dependsOn removeContainer
     }
 
-    DefaultContainer findByName(String name) {
-        return containers.find { it.name == name }
+    DefaultService findByName(String name) {
+        return services.find { it.name == name }
     }
 
-    DefaultContainer getByName(String name) {
+    DefaultService getByName(String name) {
         def container = findByName(name)
 
         if (container == null) {
-            throw new GradleException("dcompose container with name '$name' not found")
+            throw new GradleException("dcompose service with name '$name' not found")
         }
 
         container
     }
 
-    Set<DefaultContainer> getContainers() {
-        containers
+    Set<DefaultService> getServices() {
+        services
     }
 
-    ContainerReference container(String path) {
+    @Deprecated
+    Set<DefaultService> getContainers() {
+        project?.logger.warn 'Deprecation warning: Please use the services property instead of the containers property'
+        services
+    }
+
+    ServiceReference service(String path) {
         def targetProject
         if (!path.contains(Project.PATH_SEPARATOR)) {
             targetProject = project
@@ -119,7 +131,13 @@ class DcomposeExtension {
         }
 
         def name = path.tokenize(Project.PATH_SEPARATOR).last()
-        new ContainerReference(name, targetProject)
+        new ServiceReference(name, targetProject)
+    }
+
+    @Deprecated
+    ServiceReference container(String path) {
+        project?.logger.warn 'Deprecation warning: Please use the service method instead of the container method'
+        service(path)
     }
 
     def methodMissing(String name, def args) {

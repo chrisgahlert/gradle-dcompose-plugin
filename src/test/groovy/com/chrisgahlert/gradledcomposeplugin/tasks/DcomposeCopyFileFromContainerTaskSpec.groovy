@@ -25,7 +25,7 @@ class DcomposeCopyFileFromContainerTaskSpec extends AbstractDcomposeSpec {
             $DEFAULT_BUILD_FILE
 
             task cp(type: DcomposeCopyFileFromContainerTask) {
-                container = dcompose.main
+                service = dcompose.main
                 containerPath = '/etc/group'
             }
         """
@@ -44,7 +44,7 @@ class DcomposeCopyFileFromContainerTaskSpec extends AbstractDcomposeSpec {
             $DEFAULT_PLUGIN_INIT
 
             task cp(type: DcomposeCopyFileFromContainerTask) {
-                container = dcompose.container(':sub:main')
+                service = dcompose.service(':sub:main')
                 containerPath = '/etc/group'
             }
         """
@@ -74,7 +74,7 @@ class DcomposeCopyFileFromContainerTaskSpec extends AbstractDcomposeSpec {
             $DEFAULT_BUILD_FILE
 
             task cp(type: DcomposeCopyFileFromContainerTask) {
-                container = dcompose.main
+                service = dcompose.main
                 containerPath = '/nonexisting'
             }
         """
@@ -102,7 +102,7 @@ class DcomposeCopyFileFromContainerTaskSpec extends AbstractDcomposeSpec {
                     Thread.sleep(2000)
                 }
 
-                container = dcompose.writer
+                service = dcompose.writer
                 containerPath = '/test/'
             }
         """
@@ -131,7 +131,7 @@ class DcomposeCopyFileFromContainerTaskSpec extends AbstractDcomposeSpec {
                     Thread.sleep(2000)
                 }
 
-                container = dcompose.writer
+                service = dcompose.writer
                 containerPath = 'test'
             }
         """
@@ -160,7 +160,7 @@ class DcomposeCopyFileFromContainerTaskSpec extends AbstractDcomposeSpec {
                     Thread.sleep(2000)
                 }
 
-                container = dcompose.writer
+                service = dcompose.writer
                 containerPath = 'test/abc'
             }
         """
@@ -178,7 +178,7 @@ class DcomposeCopyFileFromContainerTaskSpec extends AbstractDcomposeSpec {
             $DEFAULT_BUILD_FILE
 
             task copyCustom(type: DcomposeCopyFileFromContainerTask) {
-                container = dcompose.main
+                service = dcompose.main
                 containerPath = '/etc/group'
                 destinationDir = file('otherdir')
             }

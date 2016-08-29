@@ -210,7 +210,7 @@ copy some files or directories from the container to the host:
 
 ```gradle
 task copyFiles(type: DcomposeCopyFileFromContainerTask) {
-  container = dcompose.database     // Just reference the container from which the files should be copied
+  service = dcompose.database       // Just reference the container from which the files should be copied
   containerPath = '/some/dir/or/file'
   destinationDir = file(...)        // Default: "$buildDir/<taskName>/"
   cleanDestinationDir = true|false  // Default: false. Will remove the entire destination dir! Use with caution!
@@ -332,11 +332,11 @@ to re-run this build and everything, that needs to be recreated will be.
 
 # Multi-project support
 
-The default syntax for referencing containers within a project is to reference them 
-with their name like ```dcompose.myContainer```. In order to also support Multi-project 
-setups, there is another syntax: ```dcompose.container(':project:myContainer')```. This
-allows to reference a container from another project. _FYI: Although this looks like a 
-Gradle task path it is actually referencing a container within that project._
+The default syntax for referencing services within a project is to reference them 
+with their name like ```dcompose.myService```. In order to also support Multi-project 
+setups, there is another syntax: ```dcompose.service(':project:myService')```. This
+allows to reference a service from another project. _FYI: Although this looks like a 
+Gradle task path it is actually referencing a service within that project._
 
 ```gradle
 project(':prjA') {
@@ -358,18 +358,18 @@ project(':prjB') {
     client {
       image = '...'
       links = [
-        container(':prjA:server').link(),       // Container alias will default to 'server'
-        container(':prjA:server').link('alias') // Or you can manually define an alias
+        service(':prjA:server').link(),       // Container alias will default to 'server'
+        service(':prjA:server').link('alias') // Or you can manually define an alias
       ]
       volumesFrom = [
-        container(':prjA:server')
+        service(':prjA:server')
       ]
     }
   }
   
   
   task copyFiles(type: DcomposeCopyFileFromContainerTask) {
-    container = dcompose.container(':prjA:server')
+    service = dcompose.service(':prjA:server')
     containerPath = '/some/dir/or/file'
   }
 }
