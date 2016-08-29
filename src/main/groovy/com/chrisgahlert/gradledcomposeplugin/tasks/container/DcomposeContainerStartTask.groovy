@@ -15,7 +15,7 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
-import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
@@ -32,7 +32,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 @TypeChecked
-class DcomposeContainerStartTask extends AbstractDcomposeTask {
+class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
 
     int waitInterval = 1000
     InputStream stdIn = System.in
@@ -46,6 +46,10 @@ class DcomposeContainerStartTask extends AbstractDcomposeTask {
 
         dependsOn {
             service.linkDependencies.collect { "$it.projectPath:$it.startContainerTaskName" }
+        }
+
+        dependsOn {
+            service.createContainerTaskName
         }
     }
 

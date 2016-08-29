@@ -15,12 +15,16 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks.image
 
-import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.*
 
-class DcomposeImageBuildTask extends AbstractDcomposeTask {
+class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
+
+    DcomposeImageBuildTask() {
+        enabled = { !service.hasImage() }
+    }
 
     @Input
     @Optional
@@ -76,7 +80,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeTask {
 
     @InputFile
     File getDockerFile() {
-        new File(baseDir, service.dockerFilename ?: 'Dockerfile')
+        new File(baseDir as File, service.dockerFilename)
     }
 
     @Input

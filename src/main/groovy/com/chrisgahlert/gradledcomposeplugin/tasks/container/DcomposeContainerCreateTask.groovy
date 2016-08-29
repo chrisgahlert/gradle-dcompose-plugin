@@ -16,7 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
-import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
@@ -26,14 +26,23 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.util.GUtil
 
 @TypeChecked
-class DcomposeContainerCreateTask extends AbstractDcomposeTask {
+class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
     DcomposeContainerCreateTask() {
         dependsOn {
             service.linkDependencies.collect { "$it.projectPath:$it.createContainerTaskName" }
         }
+
         dependsOn {
             service.volumesFromDependencies.collect { "$it.projectPath:$it.createContainerTaskName" }
+        }
+
+        dependsOn {
+            if (service.hasImage()) {
+                service.pullImageTaskName
+            } else {
+                service.buildImageTaskName
+            }
         }
     }
 

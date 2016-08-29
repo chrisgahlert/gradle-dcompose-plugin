@@ -15,17 +15,13 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
-import com.chrisgahlert.gradledcomposeplugin.DcomposePlugin
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
-import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
-import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import groovy.json.JsonBuilder
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.tasks.Input
 import org.gradle.util.ConfigureUtil
 
@@ -34,8 +30,6 @@ class AbstractDcomposeTask extends DefaultTask {
 
     private Set<String> initializedOutputs = []
 
-    private Service service
-
     DockerClassLoaderFactory dockerClassLoaderFactory
 
     @Input
@@ -43,24 +37,6 @@ class AbstractDcomposeTask extends DefaultTask {
         runInDockerClasspath {
             buildClientConfig().toString()
         }
-    }
-
-    void setService(Service service) {
-        if (this.service != null) {
-            throw new ReadOnlyPropertyException("service", this.class)
-        }
-
-        this.service = service
-    }
-
-    Service getService() {
-        return service
-    }
-
-    @Deprecated
-    public Service getContainer() {
-        logger.warn 'Deprecation warning: Please use the service property instead of the container property'
-        service
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -72,7 +48,7 @@ class AbstractDcomposeTask extends DefaultTask {
         def clientBuilder = getInstanceMethod.invoke(null, clientConfig)
 
         def execFactory
-        if(properties.useNetty) {
+        if (properties.useNetty) {
             execFactory = loadClass('com.github.dockerjava.netty.NettyDockerCmdExecFactory').newInstance()
         } else {
             execFactory = clientBuilder.getDefaultDockerCmdExecFactory()
@@ -89,7 +65,7 @@ class AbstractDcomposeTask extends DefaultTask {
         configBuilder.withApiVersion("1.18")
 
         def extension = project.extensions.getByType(DcomposeExtension)
-        if(extension.dockerClientConfig != null) {
+        if (extension.dockerClientConfig != null) {
             ConfigureUtil.configure(extension.dockerClientConfig, configBuilder)
         }
 
@@ -160,20 +136,6 @@ class AbstractDcomposeTask extends DefaultTask {
         }
 
         outputFile
-    }
-
-    protected Set<Service> getOtherServices() {
-        Set<DefaultService> result = new HashSet<>()
-
-        project.rootProject.allprojects.each { prj ->
-            ((ProjectInternal) prj).evaluate()
-
-            if(prj.plugins.hasPlugin(DcomposePlugin)) {
-                result.addAll prj.extensions.getByType(DcomposeExtension).services
-            }
-        }
-
-        new HashSet<>(result.findAll { it != service })
     }
 
 }

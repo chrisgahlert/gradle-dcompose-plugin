@@ -15,26 +15,33 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
-import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 
-class DcomposeContainerRemoveTask extends AbstractDcomposeTask {
+class DcomposeContainerRemoveTask extends AbstractDcomposeServiceTask {
 
     DcomposeContainerRemoveTask() {
         dependsOn {
-            def linkDeps = otherServices.findAll { otherContainer ->
-                otherContainer.linkDependencies.contains(service)
+            otherServices.findAll { otherService ->
+                otherService.linkDependencies.contains(service)
+            }.collect { otherService ->
+                "$otherService.projectPath:$otherService.removeContainerTaskName"
             }
-            def volFromDeps = otherServices.findAll { otherContainer ->
-                otherContainer.volumesFromDependencies.contains(service)
-            }
+        }
 
-            (linkDeps + volFromDeps).collect { otherContainer ->
-                "$otherContainer.projectPath:$otherContainer.removeContainerTaskName"
+        dependsOn {
+            otherServices.findAll { otherService ->
+                otherService.volumesFromDependencies.contains(service)
+            }.collect { otherService ->
+                "$otherService.projectPath:$otherService.removeContainerTaskName"
             }
+        }
+
+        dependsOn {
+            service.stopContainerTaskName
         }
 
         onlyIf {

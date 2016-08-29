@@ -24,7 +24,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
 @TypeChecked
-class DcomposeCopyFileFromContainerTask extends AbstractDcomposeTask {
+class DcomposeCopyFileFromContainerTask extends AbstractDcomposeServiceTask {
 
     DcomposeCopyFileFromContainerTask() {
         outputs.upToDateWhen { false }

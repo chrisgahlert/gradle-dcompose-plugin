@@ -15,25 +15,19 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.extension
 
-import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerCreateTask
-import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerRemoveTask
-import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerStartTask
-import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerStopTask
-import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageBuildTask
-import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImagePullTask
-import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageRemoveTask
 import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import groovy.transform.TypeChecked
 import org.gradle.api.GradleException
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
-import org.gradle.util.ConfigureUtil
 import org.gradle.util.GUtil
 
 @TypeChecked
-class DcomposeExtension {
+class DcomposeExtension implements NamedDomainObjectFactory<DefaultService> {
     final private Project project
 
-    final private Set<DefaultService> services = new HashSet<>()
+    final private NamedDomainObjectContainer<DefaultService> services
 
     String namePrefix
 
@@ -41,73 +35,35 @@ class DcomposeExtension {
 
     DcomposeExtension(Project project) {
         this.project = project
+        services = project.container(DefaultService, this)
 
         String hash = DcomposeUtils.sha1Hash(project.projectDir.canonicalPath)
         def pathHash = hash.substring(0, 8)
         namePrefix = "dcompose_${pathHash}_"
     }
 
+    @Override
+    DefaultService create(String name) {
+        new DefaultService(name, project.path, { namePrefix })
+    }
+
+    @Deprecated
     Service getByNameOrCreate(String name, Closure config) {
-        def container = findByName(name)
-
-        if (container == null) {
-            container = new DefaultService(name, project.path, { namePrefix })
-            ConfigureUtil.configure(config, container)
-            container.validate()
-
-            createContainerTasks(container)
-            services << container
-        } else {
-            ConfigureUtil.configure(config, container)
-        }
-
-        return container
+        services.maybeCreate(name)
+        services.getByName(name, config)
     }
 
-    private void createContainerTasks(DefaultService service) {
-        def initImage;
-        if (service.hasImage()) {
-            initImage = project.tasks.create(service.pullImageTaskName, DcomposeImagePullTask)
-        } else {
-            initImage = project.tasks.create(service.buildImageTaskName, DcomposeImageBuildTask)
-        }
-        initImage.service = service
-
-        def create = project.tasks.create(service.createContainerTaskName, DcomposeContainerCreateTask)
-        create.service = service
-        create.dependsOn initImage
-
-        def start = project.tasks.create(service.startContainerTaskName, DcomposeContainerStartTask)
-        start.service = service
-        start.dependsOn create
-
-        def stop = project.tasks.create(service.stopContainerTaskName, DcomposeContainerStopTask)
-        stop.service = service
-
-        def removeContainer = project.tasks.create(service.removeContainerTaskName, DcomposeContainerRemoveTask)
-        removeContainer.service = service
-        removeContainer.dependsOn stop
-
-        def removeImage = project.tasks.create(service.removeImageTaskName, DcomposeImageRemoveTask)
-        removeImage.service = service
-        removeImage.dependsOn removeContainer
-    }
-
+    @Deprecated
     DefaultService findByName(String name) {
-        return services.find { it.name == name }
+        services.findByName(name)
     }
 
+    @Deprecated
     DefaultService getByName(String name) {
-        def container = findByName(name)
-
-        if (container == null) {
-            throw new GradleException("dcompose service with name '$name' not found")
-        }
-
-        container
+        services.getByName(name)
     }
 
-    Set<DefaultService> getServices() {
+    NamedDomainObjectContainer<DefaultService> getServices() {
         services
     }
 
@@ -147,15 +103,15 @@ class DcomposeExtension {
             throw new MissingMethodException(name, DcomposeExtension, argsAr)
         }
 
-        getByNameOrCreate(name, argsAr[0] as Closure)
+        services.maybeCreate(name)
+        services.getByName(name, argsAr[0] as Closure)
     }
 
     def propertyMissing(String name) {
-        def container = findByName(name)
-        if(container == null) {
+        def service = services.findByName(name)
+        if(service == null) {
             throw new MissingPropertyException(name, getClass())
         }
-        container
+        service
     }
-
 }

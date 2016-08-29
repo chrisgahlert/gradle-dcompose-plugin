@@ -237,4 +237,7 @@ class DefaultService extends Service {
         }
     }
 
+    String getDockerFilename() {
+        dockerFilename ?: 'Dockerfile'
+    }
 }

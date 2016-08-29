@@ -16,6 +16,8 @@
 package com.chrisgahlert.gradledcomposeplugin
 
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
+import com.chrisgahlert.gradledcomposeplugin.extension.Service
+import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.DcomposeCopyFileFromContainerTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerCreateTask
@@ -37,7 +39,7 @@ class DcomposePlugin implements Plugin<Project> {
 
     public static final String TASK_GROUP = "Dcompose Docker"
     public static final String TASK_GROUP_ALL = "$TASK_GROUP (all)"
-    public static final String TASK_GROUP_CONTAINER_TEMPLATE = "$TASK_GROUP '%s' service"
+    public static final String TASK_GROUP_SERVICE_TEMPLATE = "$TASK_GROUP '%s' service"
     public static final String CONFIGURATION_NAME = "dcompose"
     public static final String EXTENSION_NAME = "dcompose"
     public static final String DOCKER_DEPENDENCY = 'com.github.docker-java:docker-java:3.0.5'
@@ -51,6 +53,7 @@ class DcomposePlugin implements Plugin<Project> {
         updateTaskGroups(project)
         injectExtraProperties(project)
         validateContainers(project, extension)
+        addServiceTasks(project, extension)
     }
 
     private DcomposeExtension createExtension(Project project) {
@@ -94,10 +97,8 @@ class DcomposePlugin implements Plugin<Project> {
     }
 
     private void updateTaskGroups(Project project) {
-        project.afterEvaluate {
-            project.tasks.withType(AbstractDcomposeTask) { AbstractDcomposeTask task ->
-                task.group = String.format(TASK_GROUP_CONTAINER_TEMPLATE, task.service.name)
-            }
+        project.tasks.withType(AbstractDcomposeServiceTask) { AbstractDcomposeServiceTask task ->
+            task.group = { String.format(TASK_GROUP_SERVICE_TEMPLATE, task.service.name) }
         }
     }
 
@@ -109,8 +110,22 @@ class DcomposePlugin implements Plugin<Project> {
     }
 
     private void validateContainers(Project project, DcomposeExtension extension) {
-        project.afterEvaluate {
-            extension.services.each { it.validate() }
+        project.gradle.taskGraph.whenReady {
+            extension.services.all { Service service ->
+                service.validate()
+            }
+        }
+    }
+
+    private void addServiceTasks(Project project, DcomposeExtension extension) {
+        extension.services.all { Service service ->
+            project.tasks.create(service.pullImageTaskName, DcomposeImagePullTask).service = service
+            project.tasks.create(service.buildImageTaskName, DcomposeImageBuildTask).service = service
+            project.tasks.create(service.createContainerTaskName, DcomposeContainerCreateTask).service = service
+            project.tasks.create(service.startContainerTaskName, DcomposeContainerStartTask).service = service
+            project.tasks.create(service.stopContainerTaskName, DcomposeContainerStopTask).service = service
+            project.tasks.create(service.removeContainerTaskName, DcomposeContainerRemoveTask).service = service
+            project.tasks.create(service.removeImageTaskName, DcomposeImageRemoveTask).service = service
         }
     }
 }
