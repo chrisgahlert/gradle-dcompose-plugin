@@ -23,7 +23,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.util.GradleVersion
 
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
@@ -34,7 +33,6 @@ import java.util.concurrent.TimeUnit
 @TypeChecked
 class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
 
-    int waitInterval = 1000
     InputStream stdIn = System.in
     OutputStream stdOut = System.out
     OutputStream stdErr = System.err
@@ -91,57 +89,44 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
                 def outHandler
                 if (service.waitForCommand && (attachStdin || attachStdout || attachStderr)) {
                     outHandler = attachStreams()
-                    if(!outHandler.awaitStart(service.waitTimeout)) {
+                    if (!outHandler.awaitStart(service.waitTimeout)) {
                         throw new GradleException("Could not attach streams to container $containerName")
                     }
                 }
 
-                logger.quiet("Starting Docker container with name $containerName")
+                logger.quiet "Starting Docker container with name $containerName"
                 client.startContainerCmd(containerName).exec()
 
                 outHandler?.awaitCompletion(service.waitTimeout)
             }
 
             if (service.waitForCommand) {
-                while(true) {
-                    def inspectResult = client.inspectContainerCmd(containerName).exec()
-                    if (!inspectResult.state.running) {
-                        logger.info("Docker container with name $containerName is not running anymore")
+                extensions.exitCode = waitForExitCode(start)
+                logger.info "Docker container with name $containerName returned with a '$extensions.exitCode' exit code"
 
-                        extensions.exitCode = inspectResult.state.exitCode
-                        logger.info("Docker container with name $containerName returned with a " +
-                                "'$extensions.exitCode' exit code")
-
-                        if (extensions.exitCode != 0 && !ignoreExitCode) {
-                            throw new GradleException("Container $containerName did not return with a '0' exit code. " +
-                                    "(Use dcompose.${containerName}.ignoreExitCode = true to disable this check!)")
-                        }
-
-                        // finished successfully
-                        return
-                    }
-
-                    if(service.waitTimeout > 0 && start + 1000L * service.waitTimeout < System.currentTimeMillis()) {
-                        // timeout exceeded -> fail
-                        throw new GradleException("Timed out waiting for command to finish after ${System.currentTimeMillis() - start} ms")
-                    }
-
-                    // continue waiting
-                    logger.debug("Waiting for Docker container with name $containerName to stop running")
-                    Thread.sleep(waitInterval)
+                if (extensions.exitCode != 0 && !ignoreExitCode) {
+                    throw new GradleException("Container $containerName did not return with a '0' exit code. " +
+                            "(Use dcompose.${containerName}.ignoreExitCode = true to disable this check!)")
                 }
             }
         }
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    protected StreamOutputHandler attachStreams() {
-        if(GradleVersion.current().compareTo(GradleVersion.version('2.5')) <= 0) {
-            logger.warn('Output to StdOut/StdErr seems to be broken in Gradle Versions <= 2.5. If you need to use it ' +
-                    'anyway, think about redirecting it through a ByteArrayOutputStream and using the Gradle logger ' +
-                    'in an doLast action!')
-        }
+    protected Integer waitForExitCode(long startTime) {
+        def callbackClass = loadClass('com.github.dockerjava.core.command.WaitContainerResultCallback')
+        def callback = client.waitContainerCmd(containerName).exec(callbackClass.newInstance())
 
+        if (service.waitTimeout > 0) {
+            def timeout = service.waitTimeout * 1000L - System.currentTimeMillis() + startTime
+            callback.awaitStatusCode(timeout, TimeUnit.MILLISECONDS)
+        } else {
+            callback.awaitStatusCode()
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected StreamOutputHandler attachStreams() {
         def attachCmd = getClient(useNetty: true).attachContainerCmd(containerName)
                 .withFollowStream(true)
 
@@ -249,7 +234,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
         }
 
         void awaitCompletion(long timeout) {
-            if(timeout > 0) {
+            if (timeout > 0) {
                 completed.await(timeout, TimeUnit.SECONDS)
             } else {
                 completed.await()
@@ -261,7 +246,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
         }
 
         boolean awaitStart(long timeout) {
-            if(timeout > 0) {
+            if (timeout > 0) {
                 started.await(timeout, TimeUnit.SECONDS)
             } else {
                 started.await()
