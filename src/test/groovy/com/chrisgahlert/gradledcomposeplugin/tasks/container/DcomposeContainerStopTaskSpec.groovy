@@ -64,11 +64,13 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     exposedPorts = ['8000']
+                    stopTimeout = 0
                 }
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     links = [server.link()]
+                    stopTimeout = 0
                 }
             }
         """
@@ -91,11 +93,13 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     volumes = ['/data']
+                    stopTimeout = 0
                 }
                 user {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     volumesFrom = [data]
+                    stopTimeout = 0
                 }
             }
         """
@@ -120,6 +124,7 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     exposedPorts = ['8000']
+                    stopTimeout = 0
                 }
             }
         """
@@ -129,6 +134,7 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     links = [service(':subServer:server').link()]
+                    stopTimeout = 0
                 }
             }
         """
@@ -154,6 +160,7 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     volumes = ['/data']
+                    stopTimeout = 0
                 }
             }
         """
@@ -163,6 +170,7 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     volumesFrom = [service(':subData:data')]
+                    stopTimeout = 0
                 }
             }
         """

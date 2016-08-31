@@ -28,6 +28,7 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
             main {
                 image = '$DEFAULT_IMAGE'
                 command = ['/bin/sleep', '300']
+                stopTimeout = 0
             }
         }
 
@@ -84,6 +85,16 @@ $result.standardError
     }
 
     def cleanup() {
+        buildFile << """
+            allprojects {
+                plugins.withType(${DcomposePlugin.class.canonicalName}) {
+                    dcompose.services.all {
+                        stopTimeout = 0
+                    }
+                }
+            }
+        """
+
         runTasks cleanupTasks
     }
 }
