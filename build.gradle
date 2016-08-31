@@ -11,16 +11,23 @@ buildscript {
         }
     }
     dependencies {
+        classpath "com.gradle:build-scan-plugin:1.0"
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
         classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.4.0'
     }
 }
 
+apply plugin: 'com.gradle.build-scan'
 apply plugin: 'com.gradle.plugin-publish'
 apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'com.chrisgahlert.gradle-dcompose-plugin'
+
+buildScan {
+    licenseAgreementUrl = 'https://gradle.com/terms-of-service'
+    licenseAgree = 'yes'
+}
 
 repositories {
     mavenCentral()
