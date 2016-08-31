@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin
 
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
+import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
@@ -27,6 +28,9 @@ import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerSt
 import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageBuildTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImagePullTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageRemoveTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.network.DcomposeNetworkCreateTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.network.DcomposeNetworkRemoveTask
+import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import groovy.transform.TypeChecked
 import org.gradle.api.Plugin
@@ -53,11 +57,16 @@ class DcomposePlugin implements Plugin<Project> {
         updateTaskGroups(project)
         injectExtraProperties(project)
         validateContainers(project, extension)
-        addServiceTasks(project, extension)
+        createServiceTasks(project, extension)
+        createNetworkTasks(project, extension)
     }
 
     private DcomposeExtension createExtension(Project project) {
-        project.extensions.create(EXTENSION_NAME, DcomposeExtension, project)
+        String dirHash = DcomposeUtils.sha1Hash(project.projectDir.canonicalPath)
+        def instanceHash = dirHash.substring(0, 8)
+        def namePrefix = "dcompose_${instanceHash}_"
+
+        project.extensions.create(EXTENSION_NAME, DcomposeExtension, project, namePrefix as String)
     }
 
     private void createDockerConfiguration(Project project) {
@@ -84,6 +93,8 @@ class DcomposePlugin implements Plugin<Project> {
                 'removeImages'    : DcomposeImageRemoveTask,
                 'buildImages'     : DcomposeImageBuildTask,
                 'pullImages'      : DcomposeImagePullTask,
+                'createNetworks'  : DcomposeNetworkCreateTask,
+                'removeNetworks'  : DcomposeNetworkRemoveTask,
         ]
 
         allTaskGroups.each { name, taskClass ->
@@ -117,7 +128,7 @@ class DcomposePlugin implements Plugin<Project> {
         }
     }
 
-    private void addServiceTasks(Project project, DcomposeExtension extension) {
+    private void createServiceTasks(Project project, DcomposeExtension extension) {
         extension.services.all { Service service ->
             project.tasks.create(service.pullImageTaskName, DcomposeImagePullTask).service = service
             project.tasks.create(service.buildImageTaskName, DcomposeImageBuildTask).service = service
@@ -126,6 +137,13 @@ class DcomposePlugin implements Plugin<Project> {
             project.tasks.create(service.stopContainerTaskName, DcomposeContainerStopTask).service = service
             project.tasks.create(service.removeContainerTaskName, DcomposeContainerRemoveTask).service = service
             project.tasks.create(service.removeImageTaskName, DcomposeImageRemoveTask).service = service
+        }
+    }
+
+    private void createNetworkTasks(Project project, DcomposeExtension extension) {
+        extension.networks.all { Network network ->
+            project.tasks.create(network.createTaskName, DcomposeNetworkCreateTask).network = network
+            project.tasks.create(network.removeTaskName, DcomposeNetworkRemoveTask).network = network
         }
     }
 }

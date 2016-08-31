@@ -49,6 +49,11 @@ class DefaultService extends Service {
     int waitTimeout = 0
 
     /**
+     * How long should it wait for the command to exit
+     */
+    Integer stopTimeout
+
+    /**
      * Whether a containers volumes should be preserved between
      */
     boolean preserveVolumes = false
@@ -78,6 +83,8 @@ class DefaultService extends Service {
     Boolean attachStdout
     Boolean attachStderr
     Boolean privileged
+    List<? extends Network> networks
+    List<String> aliases
 
     /**
      * Build image specific properties (can only be used when no image is defined). Properties are optional by default.

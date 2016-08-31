@@ -15,36 +15,41 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.extension
 
-import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import groovy.transform.TypeChecked
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
 import org.gradle.util.GUtil
 
 @TypeChecked
-class DcomposeExtension implements NamedDomainObjectFactory<DefaultService> {
+class DcomposeExtension {
     final private Project project
 
     final private NamedDomainObjectContainer<DefaultService> services
+
+    final private NamedDomainObjectContainer<DefaultNetwork> networks
 
     String namePrefix
 
     Closure dockerClientConfig
 
-    DcomposeExtension(Project project) {
+    DcomposeExtension(Project project, String namePrefix) {
         this.project = project
-        services = project.container(DefaultService, this)
+        this.namePrefix = namePrefix
 
-        String hash = DcomposeUtils.sha1Hash(project.projectDir.canonicalPath)
-        def pathHash = hash.substring(0, 8)
-        namePrefix = "dcompose_${pathHash}_"
-    }
+        services = project.container(DefaultService, { String name ->
+            def service = new DefaultService(name, project.path, { namePrefix })
+            def defaultNetwork = networks.findByName(Network.DEFAULT_NAME)
+            if (defaultNetwork) {
+                service.networks = [defaultNetwork]
+            }
+            service
+        })
 
-    @Override
-    DefaultService create(String name) {
-        new DefaultService(name, project.path, { namePrefix })
+        networks = project.container(DefaultNetwork, { String name ->
+            new DefaultNetwork(name, project.path, { namePrefix })
+        })
+        networks.create(Network.DEFAULT_NAME)
     }
 
     @Deprecated
@@ -67,6 +72,10 @@ class DcomposeExtension implements NamedDomainObjectFactory<DefaultService> {
         services
     }
 
+    NamedDomainObjectContainer<DefaultService> services(Closure config) {
+        services.configure config
+    }
+
     @Deprecated
     Set<DefaultService> getContainers() {
         project?.logger.warn 'Deprecation warning: Please use the services property instead of the containers property'
@@ -74,6 +83,11 @@ class DcomposeExtension implements NamedDomainObjectFactory<DefaultService> {
     }
 
     ServiceReference service(String path) {
+        def name = path.tokenize(Project.PATH_SEPARATOR).last()
+        new ServiceReference(name, parseProjectPath(path))
+    }
+
+    private Project parseProjectPath(String path) {
         def targetProject
         if (!path.contains(Project.PATH_SEPARATOR)) {
             targetProject = project
@@ -81,19 +95,30 @@ class DcomposeExtension implements NamedDomainObjectFactory<DefaultService> {
             def projectPath = path.substring(0, path.lastIndexOf(Project.PATH_SEPARATOR));
             targetProject = project.findProject(!GUtil.isTrue(projectPath) ? Project.PATH_SEPARATOR : projectPath)
 
-            if(targetProject == null) {
+            if (targetProject == null) {
                 throw new GradleException("Could not find project with path '$projectPath'")
             }
         }
-
-        def name = path.tokenize(Project.PATH_SEPARATOR).last()
-        new ServiceReference(name, targetProject)
+        targetProject
     }
 
     @Deprecated
     ServiceReference container(String path) {
         project?.logger.warn 'Deprecation warning: Please use the service method instead of the container method'
         service(path)
+    }
+
+    NamedDomainObjectContainer<DefaultNetwork> getNetworks() {
+        networks
+    }
+
+    NamedDomainObjectContainer<DefaultNetwork> networks(Closure config) {
+        networks.configure config
+    }
+
+    Network network(String path) {
+        def name = path.tokenize(Project.PATH_SEPARATOR).last()
+        new NetworkReference(name, parseProjectPath(path))
     }
 
     def methodMissing(String name, def args) {
@@ -109,7 +134,7 @@ class DcomposeExtension implements NamedDomainObjectFactory<DefaultService> {
 
     def propertyMissing(String name) {
         def service = services.findByName(name)
-        if(service == null) {
+        if (service == null) {
             throw new MissingPropertyException(name, getClass())
         }
         service

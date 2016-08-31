@@ -418,6 +418,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                     attachStdout = true
                     attachStderr = true
                     privileged = true
+                    networks = null
                 }
             }
 

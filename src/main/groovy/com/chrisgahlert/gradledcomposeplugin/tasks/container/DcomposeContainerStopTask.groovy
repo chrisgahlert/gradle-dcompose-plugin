@@ -19,6 +19,7 @@ import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
 public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
@@ -42,6 +43,12 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
         service.containerName
     }
 
+    @Input
+    @Optional
+    Integer getStopTimeout() {
+        service.stopTimeout
+    }
+
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean containerRunning() {
         runInDockerClasspath {
@@ -56,7 +63,13 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
     void stopContainer() {
         runInDockerClasspath {
             ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
-                client.stopContainerCmd(containerName).exec()
+                def cmd = client.stopContainerCmd(containerName)
+
+                if (stopTimeout != null) {
+                    cmd.withTimeout(stopTimeout)
+                }
+
+                cmd.exec()
                 logger.quiet("Stopped Docker container named $containerName")
             }
         }

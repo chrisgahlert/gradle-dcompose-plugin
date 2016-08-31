@@ -23,7 +23,7 @@ class DcomposeImagePullTaskSpec extends AbstractDcomposeSpec {
     private static final String PULL_ALTERNATE_IMAGE = 'busybox:1.24.1-uclibc'
 
     def setup() {
-        cleanupTask = 'removeImages'
+        cleanupTasks = ['removeImages', 'removeNetworks']
     }
 
     def 'pull should work'() {
@@ -36,7 +36,7 @@ class DcomposeImagePullTaskSpec extends AbstractDcomposeSpec {
             }
         """
 
-        runTasks cleanupTask
+        runTasks cleanupTasks
 
         when:
         def result = runTasksSuccessfully 'pullDbImage'

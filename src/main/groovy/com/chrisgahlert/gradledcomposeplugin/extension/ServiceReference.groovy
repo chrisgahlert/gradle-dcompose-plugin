@@ -286,4 +286,19 @@ class ServiceReference extends Service {
     void validate() {
         resolved.validate()
     }
+
+    @Override
+    List<Network> getNetworks() {
+        resolved.networks
+    }
+
+    @Override
+    List<String> getAliases() {
+        resolved.aliases
+    }
+
+    @Override
+    Integer getStopTimeout() {
+        resolved.stopTimeout
+    }
 }

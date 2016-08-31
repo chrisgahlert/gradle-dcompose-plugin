@@ -15,6 +15,7 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
+import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import groovy.transform.TypeChecked
@@ -43,6 +44,10 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             } else {
                 service.buildImageTaskName
             }
+        }
+
+        dependsOn {
+            service.networks.collect { "$it.projectPath:$it.createTaskName" }
         }
     }
 
@@ -202,6 +207,18 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         attachStdin && service.waitForCommand
     }
 
+    @Input
+    @Optional
+    List<String> getNetworkNames() {
+        service.networks.collect { it.networkName }
+    }
+
+    @Input
+    @Optional
+    List<String> getAliases() {
+        service.aliases
+    }
+
     // TODO: add cpu/mem options
 
     @TaskAction
@@ -321,6 +338,23 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
             def result = cmd.withName(containerName).exec()
             logger.quiet("Created new container with id $result.id ($containerName)")
+
+            if (service.networks) {
+                service.networks.each { Network network ->
+                    def aliases = service.aliases ?: []
+                    aliases << service.name
+
+                    def containerNetwork = loadClass('com.github.dockerjava.api.model.ContainerNetwork').newInstance()
+
+                    client.connectToNetworkCmd()
+                            .withNetworkId(network.networkName)
+                            .withContainerId(containerName)
+                            .withContainerNetwork(containerNetwork.withAliases(aliases.collect { it as String }))
+                            .exec()
+
+                    logger.quiet("Connected container $containerName to network $network")
+                }
+            }
         }
     }
 
@@ -380,13 +414,18 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 result.hostsPath = null
                 result.resolvConfPath = null
                 result.hostnamePath = null
+
+                def networkData = result.networkSettings?.networks?.collect { name, props ->
+                    [name, props.aliases]
+                }
                 result.networkSettings = null
+
                 if(!result.hostConfig?.networkMode) {
                     result.hostConfig?.networkMode = 'default'
                 }
                 result.mounts = result.mounts?.sort { it.destination?.path }
 
-                result
+                [result, networkData]
             }
         }
     }

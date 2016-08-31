@@ -20,7 +20,7 @@ import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
 
     def setup() {
-        cleanupTask = 'removeImages'
+        cleanupTasks = ['removeImages', 'removeNetworks']
     }
 
     def 'should be able to build image'() {

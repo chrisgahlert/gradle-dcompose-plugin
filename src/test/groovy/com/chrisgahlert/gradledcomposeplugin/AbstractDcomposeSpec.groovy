@@ -38,7 +38,7 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
         apply plugin: "com.chrisgahlert.gradle-dcompose-plugin"
     '''
 
-    protected String cleanupTask = 'removeContainers'
+    protected String[] cleanupTasks = ['removeContainers', 'removeNetworks']
 
     protected int logCounter = 1
 
@@ -84,6 +84,6 @@ $result.standardError
     }
 
     def cleanup() {
-        runTasks cleanupTask
+        runTasks cleanupTasks
     }
 }

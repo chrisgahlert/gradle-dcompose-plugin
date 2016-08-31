@@ -141,6 +141,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     links = [service(':C:main').link()]
+                    networks = [ network(':C:default') ]
                 }
             }
         """
@@ -169,14 +170,15 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
         evalD == result.standardOutput.contains('#eval D#')
 
         where:
-        task                    || evalA || evalB || evalC || evalD
-        ':A:startMainContainer' || true  || false || false || false
-        ':B:startMainContainer' || true  || true  || true  || false
-        ':C:startMainContainer' || true  || false || true  || false
-        ':A:stopMainContainer'  || true  || true  || true  || true
-        ':B:stopMainContainer'  || true  || true  || true  || true
-        ':C:stopMainContainer'  || true  || true  || true  || true
-        ':D:tasks'              || false || false || false || true
+        task                      || evalA || evalB || evalC || evalD
+        ':A:startMainContainer'   || true  || false || false || false
+        ':B:startMainContainer'   || true  || true  || true  || false
+        ':C:startMainContainer'   || true  || false || true  || false
+        ':A:stopMainContainer'    || true  || true  || true  || true
+        ':B:stopMainContainer'    || true  || true  || true  || true
+        ':C:stopMainContainer'    || true  || true  || true  || true
+        ':B:removeDefaultNetwork' || true  || true  || true  || true
+        ':D:tasks'                || false || false || false || true
     }
 
 }

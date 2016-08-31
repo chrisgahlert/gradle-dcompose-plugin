@@ -16,27 +16,15 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.TypeChecked
-import org.gradle.util.GUtil
 
 @TypeChecked
-abstract class Service {
-    /**
-     * The internal dcompose service name, e.g. "database"
-     */
-    final String name
-
-    /**
-     * The path to the Gradle project where this service is defined
-     */
-    final String projectPath
-
+abstract class Service extends AbstractEntity {
     Service(String name, String projectPath) {
-        this.name = name
-        this.projectPath = projectPath
+        super(name, projectPath)
     }
 
     String getPullImageTaskName() {
-        "pull${getTaskLabel()}Image"
+        "pull${taskLabel}Image"
     }
 
     @Deprecated
@@ -45,7 +33,7 @@ abstract class Service {
     }
 
     String getCreateContainerTaskName() {
-        "create${getTaskLabel()}Container"
+        "create${taskLabel}Container"
     }
 
     @Deprecated
@@ -54,7 +42,7 @@ abstract class Service {
     }
 
     String getStartContainerTaskName() {
-        "start${getTaskLabel()}Container"
+        "start${taskLabel}Container"
     }
 
     @Deprecated
@@ -63,7 +51,7 @@ abstract class Service {
     }
 
     String getStopContainerTaskName() {
-        "stop${getTaskLabel()}Container"
+        "stop${taskLabel}Container"
     }
 
     @Deprecated
@@ -72,24 +60,20 @@ abstract class Service {
     }
 
     String getRemoveContainerTaskName() {
-        "remove${getTaskLabel()}Container"
+        "remove${taskLabel}Container"
     }
 
     String getRemoveImageTaskName() {
-        "remove${getTaskLabel()}Image"
+        "remove${taskLabel}Image"
     }
 
     String getBuildImageTaskName() {
-        "build${getTaskLabel()}Image"
+        "build${taskLabel}Image"
     }
 
     @Deprecated
     String getBuildTaskName() {
         buildImageTaskName
-    }
-
-    private String getTaskLabel() {
-        GUtil.toCamelCase(name)
     }
 
     @Override
@@ -195,6 +179,12 @@ abstract class Service {
 
     abstract void validate()
 
+    abstract List<Network> getNetworks()
+
+    abstract List<String> getAliases()
+
+    abstract Integer getStopTimeout()
+
     ServiceDependency link(String alias = null) {
         new ServiceDependency({ "$containerName:${alias ?: name}" }, this)
     }
@@ -216,20 +206,5 @@ abstract class Service {
         String toString() {
             getDefinition()
         }
-    }
-
-    @Override
-    boolean equals(Object obj) {
-        if(obj == null || !(obj instanceof Service)) {
-            return false
-        }
-
-        def other = (Service) obj
-        return Objects.equals(this.name, other.name) && Objects.equals(this.projectPath, other.projectPath)
-    }
-
-    @Override
-    int hashCode() {
-        return Objects.hash(name, projectPath)
     }
 }

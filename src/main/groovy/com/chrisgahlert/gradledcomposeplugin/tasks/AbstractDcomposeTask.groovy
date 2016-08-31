@@ -27,6 +27,7 @@ import org.gradle.util.ConfigureUtil
 
 @TypeChecked
 class AbstractDcomposeTask extends DefaultTask {
+    public static final String DOCKER_API_VERSION = '1.18'
 
     private Set<String> initializedOutputs = []
 
@@ -62,7 +63,7 @@ class AbstractDcomposeTask extends DefaultTask {
     protected def buildClientConfig() {
         def configBuilderClass = loadClass('com.github.dockerjava.core.DefaultDockerClientConfig')
         def configBuilder = configBuilderClass.getMethod('createDefaultConfigBuilder').invoke(null)
-        configBuilder.withApiVersion("1.18")
+        configBuilder.withApiVersion(DOCKER_API_VERSION)
 
         def extension = project.extensions.getByType(DcomposeExtension)
         if (extension.dockerClientConfig != null) {
