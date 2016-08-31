@@ -106,6 +106,8 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
 
     def 'different networks should not be able to connect to each other'() {
         given:
+        fork = true
+        
         buildFile << """
             dcompose {
                 networks {
@@ -203,6 +205,8 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
 
     def 'create should work for networked cross project containers'() {
         given:
+        fork = true
+        
         buildFile.text = ''
 
         addSubproject 'subDatabase', """
