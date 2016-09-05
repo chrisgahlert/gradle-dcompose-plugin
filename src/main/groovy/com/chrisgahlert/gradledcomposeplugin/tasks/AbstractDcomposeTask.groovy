@@ -27,7 +27,7 @@ import org.gradle.util.ConfigureUtil
 
 @TypeChecked
 class AbstractDcomposeTask extends DefaultTask {
-    public static final String DOCKER_API_VERSION = '1.18'
+    public static final String DOCKER_API_VERSION = '1.20'
 
     private Set<String> initializedOutputs = []
 
