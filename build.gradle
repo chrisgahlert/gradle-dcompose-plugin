@@ -74,6 +74,7 @@ dcompose {
 }
 
 test {
+    inputs.property 'docker-image', dcompose.dockerDaemon.image
     maxParallelForks = Math.round(Runtime.runtime.availableProcessors() / 2)
 
     doFirst {
