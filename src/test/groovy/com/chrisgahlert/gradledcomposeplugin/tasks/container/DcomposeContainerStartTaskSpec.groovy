@@ -291,10 +291,15 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
         addSubproject 'subServer', """
             dcompose {
+                networks {
+                    backend
+                }
+
                 server {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
                     exposedPorts = ['8000']
+                    networks = [ network('backend') ]
                 }
             }
         """
@@ -305,6 +310,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                     command = ['sh', '-c', 'nc server 8000 > /transfer']
                     links = [service(':subServer:server').link()]
                     waitForCommand = true
+                    networks = [ network(':subServer:backend') ]
                 }
             }
 
@@ -341,6 +347,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                     command = ['sh', '-c', 'nc alias 8000 > /transfer']
                     links = [service(':subServer:server').link('alias')]
                     waitForCommand = true
+                    networks = [ network(':subServer:default') ]
                 }
             }
 
@@ -400,6 +407,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
                     exposedPorts = ['8000']
+                    networks = [ network(':subClient:frontend'), network('default') ]
                 }
             }
         """
@@ -407,11 +415,16 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
         addSubproject 'subClient', """
             dcompose {
+                networks {
+                    frontend
+                }
+
                 client {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'nc server 8000 > /transfer']
                     links = [service(':subServer:server').link()]
                     waitForCommand = true
+                    networks = [ network(':subClient:frontend'), network('default') ]
                 }
             }
 
