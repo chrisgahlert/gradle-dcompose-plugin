@@ -231,7 +231,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
             if (portBindings) {
                 def portParser = loadClass('com.github.dockerjava.api.model.PortBinding').getMethod('parse', String)
-                cmd.withPortBindings(portBindings.collect { portParser.invoke(null, it) })
+                cmd.withPortBindings(portBindings.collect { portParser.invoke(null, it as String) })
             }
 
             if (command) {
@@ -240,13 +240,13 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
             if (volumes) {
                 def volumeClass = loadClass('com.github.dockerjava.api.model.Volume')
-                cmd.withVolumes(volumes.collect { volumeClass.newInstance(it) })
+                cmd.withVolumes(volumes.collect { volumeClass.newInstance(it as String) })
             }
 
             def allBinds = []
             if (binds) {
                 def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
-                allBinds.addAll(binds.collect { bindParser.invoke(null, it) })
+                allBinds.addAll(binds.collect { bindParser.invoke(null, it as String) })
             }
 
             if (preserveVolumes) {
@@ -257,19 +257,14 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 cmd.withBinds(allBinds)
             }
 
-            if (links) {
-                def linkParser = loadClass('com.github.dockerjava.api.model.Link').getMethod('parse', String)
-                cmd.withLinks(links.collect { linkParser.invoke(null, it) })
-            }
-
             if (exposedPorts) {
                 def ePortParser = loadClass('com.github.dockerjava.api.model.ExposedPort').getMethod('parse', String)
-                cmd.withExposedPorts(exposedPorts.collect { ePortParser.invoke(null, it) })
+                cmd.withExposedPorts(exposedPorts.collect { ePortParser.invoke(null, it as String) })
             }
 
             if (volumesFrom) {
                 def volumesFromParser = loadClass('com.github.dockerjava.api.model.VolumesFrom').getMethod('parse', String)
-                cmd.withVolumesFrom(volumesFrom.collect { volumesFromParser.invoke(null, it) })
+                cmd.withVolumesFrom(volumesFrom.collect { volumesFromParser.invoke(null, it as String) })
             }
 
             if (extraHosts) {
@@ -277,7 +272,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (workingDir) {
-                cmd.withWorkingDir(workingDir)
+                cmd.withWorkingDir(workingDir as String)
             }
 
             if (dns) {
@@ -289,7 +284,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (hostName) {
-                cmd.withHostName(hostName)
+                cmd.withHostName(hostName as String)
             }
 
             if (entrypoints) {
@@ -301,7 +296,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (user) {
-                cmd.withUser(user)
+                cmd.withUser(user as String)
             }
 
             if (publishAllPorts != null) {
@@ -316,7 +311,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 cmd.withAttachStdin(attachStdin)
             }
 
-            if(stdinOpen) {
+            if (stdinOpen) {
                 cmd.withStdInOnce(stdinOpen).withStdinOpen(stdinOpen)
             }
 
@@ -339,21 +334,34 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             def result = cmd.withName(containerName).exec()
             logger.quiet("Created new container with id $result.id ($containerName)")
 
+            if (!networkMode) {
+                client.disconnectFromNetworkCmd()
+                        .withNetworkId('bridge')
+                        .withContainerId(containerName)
+                        .exec()
+            }
+
             if (service.networks) {
                 service.networks.each { Network network ->
                     def aliases = service.aliases ?: []
                     aliases << service.name
 
-                    def containerNetwork = loadClass('com.github.dockerjava.api.model.ContainerNetwork').newInstance()
+                    def networkSettings = loadClass('com.github.dockerjava.api.model.ContainerNetwork').newInstance()
+                            .withAliases(aliases.collect { it as String })
+
+                    if (links) {
+                        def linkParser = loadClass('com.github.dockerjava.api.model.Link').getMethod('parse', String)
+                        networkSettings.withLinks(links.collect { linkParser.invoke(null, it as String) })
+                }
 
                     client.connectToNetworkCmd()
                             .withNetworkId(network.networkName)
                             .withContainerId(containerName)
-                            .withContainerNetwork(containerNetwork.withAliases(aliases.collect { it as String }))
+                            .withContainerNetwork(networkSettings)
                             .exec()
 
                     logger.quiet("Connected container $containerName to network $network")
-                }
+            }
             }
         }
     }
@@ -377,7 +385,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             if (!bind) {
                 def volumeName = containerName + '__' + GUtil.toLowerCamelCase(volume.path)
                 logger.info("Using named volume '$volumeName' (thus: persistent) for container $containerName")
-                allBinds << bindParser.invoke(null, volumeName + ':' + volume.path)
+                allBinds << bindParser.invoke(null, "$volumeName:$volume.path" as String)
             }
         }
     }
@@ -420,7 +428,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 }
                 result.networkSettings = null
 
-                if(!result.hostConfig?.networkMode) {
+                if (!result.hostConfig?.networkMode) {
                     result.hostConfig?.networkMode = 'default'
                 }
                 result.mounts = result.mounts?.sort { it.destination?.path }
