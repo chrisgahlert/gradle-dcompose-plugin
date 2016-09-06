@@ -69,7 +69,15 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
                     cmd.withTimeout(stopTimeout)
                 }
 
-                cmd.exec()
+                try {
+                    cmd.exec()
+                } catch (Exception e) {
+                    if (e.getClass() != loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
+                            || !e.message?.endsWith('Container does not exist: container destroyed')) {
+                        throw e
+                    }
+                }
+
                 logger.quiet("Stopped Docker container named $containerName")
             }
         }

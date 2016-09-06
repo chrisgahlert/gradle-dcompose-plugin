@@ -38,7 +38,16 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
                 client.removeNetworkCmd().withNetworkId(networkName).exec()
             }
 
-            client.createNetworkCmd().withName(networkName).exec()
+            try {
+                client.createNetworkCmd().withName(networkName).exec()
+            } catch (Exception e) {
+                if (e.getClass() == loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
+                        && e.message?.endsWith('Another app is currently holding the xtables lock; waiting (1s) for it to exit...')) {
+                    createNetwork()
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
