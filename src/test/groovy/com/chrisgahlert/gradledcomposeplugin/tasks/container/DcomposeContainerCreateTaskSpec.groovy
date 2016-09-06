@@ -327,6 +327,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['echo', 'abc']
                     exposedPorts = ['8000']
+                    networks = [ network(':subClient:default') ]
                 }
             }
         """
@@ -336,6 +337,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['echo', 'abc']
                     exposedPorts = ['8001']
+                    networks = [ network(':subClient:default') ]
                 }
             }
         """

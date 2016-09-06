@@ -131,6 +131,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                 main {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
+                    networks = [ network(':D:default') ]
                 }
             }
         """
@@ -141,7 +142,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     links = [service(':C:main').link()]
-                    networks = [ network(':C:default') ]
+                    networks = [ network(':D:default') ]
                 }
             }
         """
@@ -152,11 +153,12 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     links = [service(':A:main').link()]
+                    networks = [ network(':D:default') ]
                 }
             }
         """
 
-        addSubproject 'D'
+        addSubproject 'D', ''
 
         when:
         def result = runTasksSuccessfully task, '--configure-on-demand', '--dry-run'
@@ -171,9 +173,9 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
 
         where:
         task                      || evalA || evalB || evalC || evalD
-        ':A:startMainContainer'   || true  || false || false || false
-        ':B:startMainContainer'   || true  || true  || true  || false
-        ':C:startMainContainer'   || true  || false || true  || false
+        ':A:startMainContainer'   || true  || false || false || true
+        ':B:startMainContainer'   || true  || true  || true  || true
+        ':C:startMainContainer'   || true  || false || true  || true
         ':A:stopMainContainer'    || true  || true  || true  || true
         ':B:stopMainContainer'    || true  || true  || true  || true
         ':C:stopMainContainer'    || true  || true  || true  || true

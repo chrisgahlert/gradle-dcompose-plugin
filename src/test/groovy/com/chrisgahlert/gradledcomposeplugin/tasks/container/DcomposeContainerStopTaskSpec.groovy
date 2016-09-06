@@ -125,6 +125,7 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                     command = ['sleep', '300']
                     exposedPorts = ['8000']
                     stopTimeout = 0
+                    networks = [ network(':subClient:default') ]
                 }
             }
         """

@@ -85,4 +85,30 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         then:
         result.standardOutput.contains 'foobar'
     }
+
+    def 'should validate correctly when linking services on different networks'() {
+        given:
+
+        buildFile << """
+            dcompose {
+                networks {
+                    other
+                }
+                server {
+                    image = '$DEFAULT_IMAGE'
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    links = [ server.link() ]
+                    networks = [ network('other') ]
+                }
+            }
+        """
+
+        when:
+        def result = runTasksWithFailure 'help'
+
+        then:
+        result.standardError.contains('Please make sure they are on the same network')
+    }
 }

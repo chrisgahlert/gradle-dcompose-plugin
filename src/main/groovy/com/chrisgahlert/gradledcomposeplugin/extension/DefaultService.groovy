@@ -157,13 +157,13 @@ class DefaultService extends Service {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     def findHostPort(Map<String, String> properties = [:], int containerPort) {
-        if(hostPortBindings == null) {
+        if (hostPortBindings == null) {
             throw new GradleException("Host port bindings not available for $name - has it been started?")
         }
 
         def exposedPorts = hostPortBindings.findAll { exposedPort, bindings ->
-            if(exposedPort.port == containerPort) {
-                if(properties.protocol) {
+            if (exposedPort.port == containerPort) {
+                if (properties.protocol) {
                     return exposedPort.protocol as String == properties.protocol.toLowerCase()
                 }
 
@@ -171,10 +171,10 @@ class DefaultService extends Service {
             }
         }
 
-        if(exposedPorts.size() == 0) {
+        if (exposedPorts.size() == 0) {
             throw new GradleException("Could not find container port $containerPort for service $name")
         }
-        if(exposedPorts.size() > 1) {
+        if (exposedPorts.size() > 1) {
             throw new GradleException("The port number for container port $containerPort is ambigous for service " +
                     "$name - please specify a protocol with findHostPort(port, protocol: 'tcp or udp')")
         }
@@ -183,12 +183,12 @@ class DefaultService extends Service {
             !properties.containsKey('hostIp') || binding.hostIp == properties.hostIp
         }
 
-        if(!bindings) {
+        if (!bindings) {
             throw new GradleException("The container port $containerPort for service $name has not been bound to a host port")
         }
 
         def possibleIps = bindings.collect { it.hostIp }.unique()
-        if(bindings.size() > 1 && !properties.hostIp && possibleIps.size() > 1) {
+        if (bindings.size() > 1 && !properties.hostIp && possibleIps.size() > 1) {
             throw new GradleException("The container port $containerPort for service $name has multiple host ports bound - " +
                     "please specify a hostIp with findHostPort(port, hostIp: '127.0.0.1')! " +
                     "Possible values: " + possibleIps)
@@ -199,7 +199,7 @@ class DefaultService extends Service {
 
     @Override
     String getDockerHost() {
-        if(!dockerHost) {
+        if (!dockerHost) {
             throw new GradleException("Docker hostname not available for service $name - has it been started?")
         }
 
@@ -208,9 +208,9 @@ class DefaultService extends Service {
 
     @Override
     void setDockerHost(URI uri) {
-        if(uri == null) {
+        if (uri == null) {
             dockerHost = null
-        } else if(uri.scheme == 'unix') {
+        } else if (uri.scheme == 'unix') {
             dockerHost = 'localhost'
         } else {
             dockerHost = uri.host
@@ -240,6 +240,15 @@ class DefaultService extends Service {
         links?.each {
             if (it instanceof Service) {
                 throw new GradleException("Invalid service link from $name to $it.name: Please use ${it.name}.link()")
+            }
+
+            if (it instanceof ServiceDependency) {
+                def dep = it as ServiceDependency
+                if (networks.intersect(dep.service.networks).size() == 0) {
+                    throw new GradleException("Cannot create link from $projectPath:$name " +
+                            "to $dep.service.projectPath:$dep.service.name: " +
+                            "They don't share any networks. Please make sure they are on the same network")
+                }
             }
         }
     }

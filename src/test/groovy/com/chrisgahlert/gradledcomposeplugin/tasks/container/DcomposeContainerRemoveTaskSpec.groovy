@@ -119,6 +119,7 @@ class DcomposeContainerRemoveTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     exposedPorts = ['8000']
+                    networks = [ network(':subClient:default') ]
                 }
             }
         """
