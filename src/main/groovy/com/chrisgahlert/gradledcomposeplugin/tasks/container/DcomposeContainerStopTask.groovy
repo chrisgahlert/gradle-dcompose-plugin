@@ -73,7 +73,7 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
                     cmd.exec()
                 } catch (Exception e) {
                     if (e.getClass() != loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
-                            || !e.message?.endsWith('Container does not exist: container destroyed')) {
+                            || !e.message?.trim().endsWith('Container does not exist: container destroyed')) {
                         throw e
                     }
                 }
