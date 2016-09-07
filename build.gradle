@@ -72,6 +72,7 @@ dcompose {
         portBindings = ['2375']
     }
 }
+createDockerDaemonContainer.outputs.upToDateWhen { false }
 
 test {
     inputs.property 'docker-image', dcompose.dockerDaemon.image
