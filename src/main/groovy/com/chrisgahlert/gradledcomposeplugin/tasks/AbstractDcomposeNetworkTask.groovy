@@ -49,12 +49,6 @@ class AbstractDcomposeNetworkTask extends AbstractDcomposeTask {
             }
         }
 
-        result.each {
-            logger.error "networks: " + it.networks
-            logger.error "looking for: " + network
-            logger.error "found: " + it.networks.contains(network)
-        }
-
         new HashSet<>(result.findAll { it.networks.contains(network) })
     }
 }
