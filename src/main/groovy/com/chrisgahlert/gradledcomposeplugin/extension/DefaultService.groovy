@@ -244,7 +244,10 @@ class DefaultService extends Service {
 
             if (it instanceof ServiceDependency) {
                 def dep = it as ServiceDependency
-                if (networks.intersect(dep.service.networks).size() == 0) {
+
+                def sharedNetworks = new HashSet<>(networks)
+                sharedNetworks.retainAll(dep.service.networks)
+                if (sharedNetworks.size() == 0) {
                     throw new GradleException("Cannot create link from $projectPath:$name " +
                             "to $dep.service.projectPath:$dep.service.name: " +
                             "They don't share any networks. Please make sure they are on the same network")
