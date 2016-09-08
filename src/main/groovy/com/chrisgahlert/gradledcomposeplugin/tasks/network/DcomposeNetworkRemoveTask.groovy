@@ -48,7 +48,7 @@ class DcomposeNetworkRemoveTask extends AbstractDcomposeNetworkTask {
                     client.removeNetworkCmd().withNetworkId(networkName).exec()
                 } catch (Exception e) {
                     if (e.getClass() == loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
-                            && e.message?.trim().endsWith('waiting (1s) for it to exit...')) {
+                            && e.message?.contains('waiting (1s) for it to exit...')) {
                         removeNetwork()
                     } else {
                         throw e

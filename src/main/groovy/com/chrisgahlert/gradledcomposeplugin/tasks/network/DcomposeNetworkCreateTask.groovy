@@ -42,7 +42,7 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
                 client.createNetworkCmd().withName(networkName).exec()
             } catch (Exception e) {
                 if (e.getClass() == loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
-                        && e.message?.trim().endsWith('waiting (1s) for it to exit...')) {
+                        && e.message?.contains('waiting (1s) for it to exit...')) {
                     createNetwork()
                 } else {
                     throw e
