@@ -12,7 +12,7 @@ container should be recreated.
 
 This plugin requires: 
 * Gradle >= 2.0
-* Docker (host) >= 1.8.1 (older versions possibly work but have not been tested) 
+* Docker (host) >= 1.10.0 
 * **Please note:** Docker for Mac (native) is currently not supported, due to a [bug in the docker-java library](https://github.com/docker-java/docker-java/issues/537)
 
 # Example
@@ -63,7 +63,7 @@ https://github.com/docker-java/docker-java#documentation
 
 Please also make sure, that the Project has the Maven Central Repository or a mirror added. This is needed to download the Docker Java Client dependencies.
 
-After applying the plugin you can start by defining containers:
+After applying the plugin you can start by defining services:
 
 ## Use existing image
 
@@ -85,6 +85,7 @@ test {
 Executing `gradle test` will result in the following tasks being executed:
 
 1. `:pullDatabaseImage`
+1. `:createDefaultNetwork`
 1. `:createDatabaseContainer`
 1. `:startDatabaseContainer`
 1. `:test`
@@ -123,6 +124,7 @@ test {
 Executing `gradle test` will result in the following tasks being executed:
 
 1. `:buildMyImageImage`
+1. `:createDefaultNetwork`
 1. `:createMyImageContainer`
 1. `:startMyImageContainer`
 1. `:test`
@@ -130,9 +132,9 @@ Executing `gradle test` will result in the following tasks being executed:
 1. `:removeMyImageContainer`
 1. `:removeMyImageImage`
 
-## Runtime properties
+## Container properties
 
-The runtime properties are available for both types of containers (existing image or custom 
+The container properties are available for both types of services (existing image or custom 
 built image). They are all optional and can be applied like this:
 
 ```gradle
@@ -149,6 +151,7 @@ dcompose {
 | --- | --- | --- |
 | waitForCommand | boolean<br> *Default: false* | Whether the `start<Name>Container` task should wait until the container is not running anymore.
 | waitTimeout | int<br> *Default: 0* | How long should we wait for the command to finish before failing. <br> &lt;=0 *Wait forever*<br> &gt;0 *Timeout in seconds*
+| stopTimeout | int<br> *Default: 10* | How long should we wait for a container to stop gracefully (before killing it).
 | ignoreExitCode | boolean<br> *Default: false* | Whether the exit code will be checked after running the container. (Only applies if `waitForCommand` is enabled.)
 | preserveVolumes | boolean<br> *Default: false* | Whether the container's volumes should be preserved when removing/recreating the container. All volumes will be named in the format "`<dockerPrefix><containerName>__<PathToUpperCase>`".
 | command | List&lt;String&gt; | A list of command parts that should be executed when starting the container.<br><br> *Samples:* <br>`['echo', 'hello']`<br>`['sh', '-c', 'echo $ENV']`
@@ -158,12 +161,12 @@ dcompose {
 | user | String | The user which should be used to launch the command/entrypoints. <br><br> *Sample:* `'root'`
 | readonlyRootfs | Boolean<br> *Default: null* | Whether the container's main filesystem should be readonly. If enabled, only volumes can be written to.
 | volumes | List&lt;String&gt; | A list of volumes, which are provided by this container. These are additional to the volumes defined in the image or Dockerfile.<br><br> *Sample:* `['/data1', '/var/log', ...]`
-| binds | List&lt;String&gt; | A list of container bindings. Here you can specify which volumes or which host paths should be mounted in the container.<br><br> *Samples:* `['custom_volume:/data1', '/host/path:/var/log', 'vol:/tmp:rw', ...]`
-| volumesFrom | List&lt;Container \| String&gt; | Here you can specify a list of other containers, which volumes should be mounted. You can pass in the container instance by referencing it by value. If you specify a String, it will be interpreted as an external non-managed container. <br><br> *Sample:* `[database, 'non_managed_container', ...]`
+| binds | List&lt;String&gt; | A list of volume bindings. Here you can specify which volumes or which host paths should be mounted in the container.<br><br> *Samples:* `['custom_volume:/data1', '/host/path:/var/log', 'vol:/tmp:rw', ...]`
+| volumesFrom | List&lt;Container \| String&gt; | Here you can specify a list of other containers, whose volumes should be mounted. You can pass in the container instance by referencing it by value. If you specify a String, it will be interpreted as an external non-managed container. <br><br> *Sample:* `[database, 'non_managed_container', ...]`
 | exposedPorts | List&lt;String&gt; | A list of ports or port ranges, that are available within this container.<br><br> *Sample:* `['8080', '10000-10020', ...]`
 | portBindings | List&lt;String&gt; | A list of port bindings. These specify which host ports should be mapped to which container ports. The possible formats are `hostIp:hostPort:containerPort`, `hostIp::containerPort` and `containerPort`. If no host port has been given, a port will be automatically chosen. In order to find a dynamically chosen port, see chapter *Dynamic host ports*. <br><br> *Sample:* `['8080', '10000:8080', '1234-1236:1234-1236/tcp', '127.0.0.1::8080', '192.168.0.1:8080:8080']`
 | publishAllPorts | Boolean<br> *Default: null* | Whether all ports of this container should be accessible from other containers.
-| links | List&lt;ContainerDependency \| String&gt; | A list of containers, that this container should be linked to. You can create a `ContainerDependency` by calling a Container's `link` method - optionally with an alias. If you specify a String, it will be interpreted as an external non-managed container.<br><br> *Sample:* `[database.link(), database.link('otheralias'), 'non_managed_container', 'non_managed_container:alias',]`
+| links | List&lt;ContainerDependency \| String&gt; | A list of containers, that this container should be linked to. You can create a `ContainerDependency` by calling a Container's `link` method - optionally with an alias. If you specify a String, it will be interpreted as an external non-managed container.<br><br> *Sample:* `[database.link(), database.link('otheralias'), 'non_managed_container', 'non_managed_container:alias',]` <br><br> As of version 0.5.0 linking containers is no longer necessary, as compose-like networks will be created.
 | hostName | String | The hostname that should be given to the container instance. <br><br> *Sample:* `'myhost'`
 | dns | List&lt;String&gt; | A list of DNS servers. <br><br> *Sample:* `['8.8.8.8', '8.8.4.4', ...]`
 | dnsSearch | List&lt;String&gt; | A list of DNS search domains.<br><br> *Sample:* `['mydomain1', 'mydomain2', ...]`
@@ -173,18 +176,20 @@ dcompose {
 | attachStdout | Boolean<br> *Default: null* | Whether the containers' stdout should be attached. If used in combination with `waitForCommand` it will redirect stdout to `System.out` by default.
 | attachStderr | Boolean<br> *Default: null* | Whether the containers' stderr should be attached. If used in combination with `waitForCommand` it will redirect stderr to `System.err` by default.
 | privileged | Boolean<br> *Default: null* | Whether this container should be started in privileged mode. This will give the container almost the same rights as the host itself. This is useful e.g. for running "Docker in Docker".
+| networks | List&lt;String&gt;<br> *Default: \[ network('default') \]* | A list of networks that this container should be connected to. <br><br> *Sample:* `[ network('network1'), network(':otherproject:network2') ]`
+| aliases | List&lt;String&gt; <br> *Default: null* | A list of aliases that can be used to reference a container on the same network. <br><br> *Sample:* `['alias1', 'alias2', ...]` <br><br> _The service name will automatically be added as well._
 
 
 # Gradle tasks
 
 ## Container tasks
-For each container definition the following tasks will be created:
+For each service definition the following tasks will be created:
 
 | Task name | Depends on | Description |
 | --- | --- | --- |
-| `build<Name>Image` | - | Build an image based on the `Dockerfile` and `baseDir` definitions. <br><br> _Only created if the `baseDir` (and optionally the `dockerFilename`) property is provided_ 
-| `pull<Name>Image` | - | Pulls an image from the Docker hub. It will be skipped if an image with that name/id already exists. <br><br> _Only created if the `image` property is provided_
-| `create<Name>Container` | `build<Name>Image` OR `pull<Name>Image` | Creates or recreates a container based on the container definition. |
+| `build<Name>Image` | - | Build an image based on the `Dockerfile` and `baseDir` definitions. <br><br> _Will be disabled, if the `baseDir` has not been set._ 
+| `pull<Name>Image` | - | Pulls an image from the Docker hub. It will be skipped if an image with that name/id already exists. <br><br> _Will be disabled, if the `image` property has not been set._
+| `create<Name>Container` | `build<Name>Image`, `pull<Name>Image` <br>for every network: `create<networkName>Network` | Creates or recreates a container based on the service definition. |
 | `start<Name>Container` | `create<Name>Container` | Starts a previously created container. If the flag ```waitForCommand``` has been set to ```true``` this task will not complete until the container has stopped running. |
 | `stop<Name>Container` | - | Stops a container if it is running. It will be skipped otherwise.
 | `remove<Name>Container` | `stop<Name>Container` | Removes a container. It will also remove the container's volumes if ```preserveVolumes``` has not been set to ```true``` |
@@ -193,15 +198,17 @@ For each container definition the following tasks will be created:
 
 ## All tasks
 
-Additionally, the following all-tasks will be created after applying the plugin (regaradless of whether container definitions were added or not):
+Additionally, the following all-tasks will be created after applying the plugin (regaradless of whether service definitions were added or not):
 
 * `buildImages`
 * `pullImages`
+* `createNetworks`
 * `createContainers`
 * `startContainers`
 * `stopContainers`
 * `removeContainers`
 * `removeImages`
+* `removeNetworks`
 
 ## Copy files from container
 
@@ -210,7 +217,7 @@ copy some files or directories from the container to the host:
 
 ```gradle
 task copyFiles(type: DcomposeCopyFileFromContainerTask) {
-  service = dcompose.database       // Just reference the container from which the files should be copied
+  service = dcompose.database       // Just reference the service from which the files should be copied
   containerPath = '/some/dir/or/file'
   destinationDir = file(...)        // Default: "$buildDir/<taskName>/"
   cleanDestinationDir = true|false  // Default: false. Will remove the entire destination dir! Use with caution!
@@ -219,8 +226,8 @@ task copyFiles(type: DcomposeCopyFileFromContainerTask) {
 
 ## Dynamic host ports
 
-When linking containers, you have the option to not specify a host port. Instead Docker will automatically choose 
-a host port for you. In order to access this host port later on, you can reference them from the container definition:
+When linking services, you have the option to not specify a host port. Instead Docker will automatically choose 
+a host port for you. In order to access this host port later on, you can reference them from the service definition:
 
 ```gradle
 dcompose {
@@ -252,6 +259,30 @@ task runTestsAgainstDatabase(type: Test) {
     systemProperties.remove 'mysql.host'
   }
 }
+```
+
+## Networking
+
+Starting with version 0.5.0 all services within one subproject will be added to the same network.
+Therefore linking services is not necessary anymore. You can now define compose like networks:
+
+```gradle
+dcompose {
+  networks {
+    frontend
+    backend
+    // default is always created and every container will be connected unless networks are defined
+  }
+  database {
+    image = 'mongo:latest'
+    networks = [ network('backend') ]
+    aliases = ['backup_database']
+  }
+  webserver {
+    image = 'nginx:latest'
+    env = ['PRIMARY_DB_HOST=database', 'SECONDARY_DB_HOST=backup_database']
+    networks = [ network('frontend'), network('backend') ]
+  }
 ```
 
 ## Redirecting standard streams
@@ -336,17 +367,25 @@ The default syntax for referencing services within a project is to reference the
 with their name like ```dcompose.myService```. In order to also support Multi-project 
 setups, there is another syntax: ```dcompose.service(':project:myService')```. This
 allows to reference a service from another project. _FYI: Although this looks like a 
-Gradle task path it is actually referencing a service within that project._
+Gradle task path it is actually referencing a service within that project.
+
+Starting with version 0.5.0 all services in a subproject will automatically be connected
+through the subproject's `default` network. In order to get inter-subproject communication
+you need to connect the services to the same network.
 
 ```gradle
 project(':prjA') {
   apply plugin: 'com.chrisgahlert.gradle-dcompose-plugin'
   
   dcompose {
+    networks {
+      backend
+    }
     server {
       image = '...'
       exposedPorts = ['8080']
       volumes = ['/var/log']
+      networks = [ network('backend') ]
     }
   }
 }
@@ -355,6 +394,9 @@ project(':prjB') {
   apply plugin: 'com.chrisgahlert.gradle-dcompose-plugin'
   
   dcompose {
+    networks {
+      frontend 
+    }
     client {
       image = '...'
       links = [
@@ -364,6 +406,7 @@ project(':prjB') {
       volumesFrom = [
         service(':prjA:server')
       ]
+      networks = [ network(':prjA:backend'), network('frontend') ] // If defined we don't need the links definition
     }
   }
   
