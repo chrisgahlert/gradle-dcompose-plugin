@@ -47,7 +47,7 @@ class DcomposePlugin implements Plugin<Project> {
     public static final String TASK_GROUP_SERVICE_TEMPLATE = "$TASK_GROUP '%s' service"
     public static final String CONFIGURATION_NAME = "dcompose"
     public static final String EXTENSION_NAME = "dcompose"
-    public static final String DOCKER_DEPENDENCY = 'com.github.docker-java:docker-java:3.0.5'
+    public static final String DOCKER_DEPENDENCY = 'com.github.docker-java:docker-java:3.0.6'
     public static final String SLF4J_DEPENDENCY = 'org.slf4j:slf4j-simple:1.7.5'
     public static final String SNAKEYAML_DEPENDENCY = 'org.yaml:snakeyaml:1.17'
 
