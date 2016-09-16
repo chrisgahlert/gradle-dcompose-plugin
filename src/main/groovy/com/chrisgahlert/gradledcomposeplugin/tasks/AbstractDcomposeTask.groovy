@@ -23,6 +23,7 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
+import org.gradle.util.ConfigureUtil
 
 @TypeChecked
 class AbstractDcomposeTask extends DefaultTask {
@@ -66,7 +67,7 @@ class AbstractDcomposeTask extends DefaultTask {
 
         def extension = project.extensions.getByType(DcomposeExtension)
         if (extension.dockerClientConfig != null) {
-            extension.dockerClientConfig.execute(configBuilder)
+            ConfigureUtil.configure(extension.dockerClientConfig, configBuilder)
         }
 
         configBuilder.build()

@@ -20,7 +20,6 @@ import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
-import org.gradle.api.internal.ClosureBackedAction
 import org.gradle.util.GUtil
 
 @TypeChecked
@@ -33,7 +32,7 @@ class DcomposeExtension {
 
     String namePrefix
 
-    Action _dockerClientConfig
+    Closure dockerClientConfig
 
     DcomposeExtension(Project project, String namePrefix) {
         this.project = project
@@ -54,16 +53,12 @@ class DcomposeExtension {
         networks.create(Network.DEFAULT_NAME)
     }
     
-    Action getDockerClientConfig() {
-        _dockerClientConfig
-    }
-
     void setDockerClientConfig(Action dockerClientConfig) {
-        this._dockerClientConfig = dockerClientConfig
+        this.dockerClientConfig = { dockerClientConfig.execute(delegate) }
     }
 
     void setDockerClientConfig(Closure dockerClientConfig) {
-        this._dockerClientConfig = new ClosureBackedAction(dockerClientConfig)
+        this.dockerClientConfig = dockerClientConfig
     }
 
     @Deprecated
@@ -87,12 +82,7 @@ class DcomposeExtension {
     }
 
     NamedDomainObjectContainer<DefaultService> services(Closure config) {
-        services(new ClosureBackedAction<NamedDomainObjectContainer<? extends Service>>(config))
-    }
-
-    NamedDomainObjectContainer<DefaultService> services(Action<NamedDomainObjectContainer<? extends Service>> config) {
-        config.execute(services)
-        services
+        services.configure config
     }
 
     @Deprecated
@@ -132,12 +122,7 @@ class DcomposeExtension {
     }
 
     NamedDomainObjectContainer<DefaultNetwork> networks(Closure config) {
-        networks(new ClosureBackedAction<NamedDomainObjectContainer<? extends Network>>(config))
-    }
-
-    NamedDomainObjectContainer<DefaultNetwork> networks(Action<NamedDomainObjectContainer<? extends Network>> config) {
-        config.execute(networks)
-        networks
+        networks.configure config
     }
 
     Network network(String path) {
