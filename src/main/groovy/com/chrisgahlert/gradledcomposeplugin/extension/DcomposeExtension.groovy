@@ -33,7 +33,7 @@ class DcomposeExtension {
 
     String namePrefix
 
-    Action dockerClientConfig
+    Action _dockerClientConfig
 
     DcomposeExtension(Project project, String namePrefix) {
         this.project = project
@@ -53,13 +53,17 @@ class DcomposeExtension {
         })
         networks.create(Network.DEFAULT_NAME)
     }
+    
+    Action getDockerClientConfig() {
+        _dockerClientConfig
+    }
 
     void setDockerClientConfig(Action dockerClientConfig) {
-        this.dockerClientConfig = dockerClientConfig
+        this._dockerClientConfig = dockerClientConfig
     }
 
     void setDockerClientConfig(Closure dockerClientConfig) {
-        this.dockerClientConfig = new ClosureBackedAction(dockerClientConfig)
+        this._dockerClientConfig = new ClosureBackedAction(dockerClientConfig)
     }
 
     @Deprecated
