@@ -130,8 +130,8 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
             def callback = loadClass('com.github.dockerjava.core.command.BuildImageResultCallback').newInstance()
             def response = cmd.exec(callback)
 
-            def imageId = response.awaitImageId()
-            logger.quiet("Built Docker image with id $imageId and tagged as $tag")
+            service.imageId = response.awaitImageId()
+            logger.quiet("Built Docker image with id $service.imageId and tagged as $tag")
         }
     }
 
@@ -141,6 +141,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
         dockerOutput('image-state') {
             ignoreDockerException('NotFoundException') {
                 def result = client.inspectImageCmd(tag).exec()
+                service.imageId = result.id
                 result.repoTags = null
                 result
             }

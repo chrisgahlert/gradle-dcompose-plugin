@@ -178,6 +178,7 @@ dcompose {
 | privileged | Boolean<br> *Default: null* | Whether this container should be started in privileged mode. This will give the container almost the same rights as the host itself. This is useful e.g. for running "Docker in Docker".
 | networks | List&lt;String&gt;<br> *Default: \[ network('default') \]* | A list of networks that this container should be connected to. <br><br> *Sample:* `[ network('network1'), network(':otherproject:network2') ]`
 | aliases | List&lt;String&gt; <br> *Default: null* | A list of aliases that can be used to reference a container on the same network. <br><br> *Sample:* `['alias1', 'alias2', ...]` <br><br> _The service name will automatically be added as well._
+| deploy | boolean<br> *Default: true* | Whether this service should be included when creating a `docker-compose.yml` file by calling the `createComposeFile` task
 
 
 # Gradle tasks
@@ -314,6 +315,32 @@ startCmdAppContainer {
   }
 }
 ```
+
+## Generate docker-compose.yml for deployment
+
+For every subproject a task named `createComposeFile` will be created. This will create a 
+compose file that can be used to deploy your app configuration:
+
+```gradle
+dcompose {
+    database {
+        baseDir = "..."
+    }
+    databaseTest {
+        image = "..."
+        deploy = false // Set to false to NOT include this service in the compose file.
+    }
+}
+createComposeFile {
+    target = file("$buildDir/docker-compose.yml") // default
+}
+```
+
+All locally built services will first create an image and then include the image tag
+instead of including the build definitions. This aims at providing "deployable" compose
+files.
+
+**Please note:** _As of now generating compose files is not supported for cross-project setups._
 
 # Advanced example (not tested)
 

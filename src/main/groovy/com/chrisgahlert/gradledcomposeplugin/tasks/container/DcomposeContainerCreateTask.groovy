@@ -339,10 +339,8 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                         .withNetworkId('bridge')
                         .withContainerId(containerName)
                         .exec()
-            }
 
-            if (service.networks) {
-                service.networks.each { Network network ->
+                service.networks?.each { Network network ->
                     def aliases = service.aliases ?: []
                     aliases << service.name
 
@@ -352,7 +350,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                     if (links) {
                         def linkParser = loadClass('com.github.dockerjava.api.model.Link').getMethod('parse', String)
                         networkSettings.withLinks(links.collect { linkParser.invoke(null, it as String) })
-                }
+                    }
 
                     client.connectToNetworkCmd()
                             .withNetworkId(network.networkName)
@@ -361,7 +359,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                             .exec()
 
                     logger.quiet("Connected container $containerName to network $network")
-            }
+                }
             }
         }
     }

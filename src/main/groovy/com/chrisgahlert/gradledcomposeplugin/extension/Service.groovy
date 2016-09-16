@@ -185,26 +185,42 @@ abstract class Service extends AbstractEntity {
 
     abstract Integer getStopTimeout()
 
+    abstract void setExitCode(int exitCode)
+
+    abstract int getExitCode()
+
+    abstract void setImageId(String imageId)
+
+    abstract String getImageId()
+
+    abstract boolean isDeploy()
+
+    abstract void setDeploy(boolean enabled)
+
     ServiceDependency link(String alias = null) {
-        new ServiceDependency({ "$containerName:${alias ?: name}" }, this)
+        new ServiceDependency(alias ?: name, this)
     }
 
     static class ServiceDependency {
         final Service service
-        final private Closure definitionAction
+        final private String alias
 
-        ServiceDependency(Closure definitionAction, Service service = null) {
+        ServiceDependency(String alias, Service service) {
+            this.alias = alias
             this.service = service
-            this.definitionAction = definitionAction
         }
 
-        String getDefinition() {
-            definitionAction() as String
+        String getContainerDefinition() {
+            "$service.containerName:$alias" as String
+        }
+
+        String getServiceDefinition() {
+            "$service.name:$alias" as String
         }
 
         @Override
         String toString() {
-            getDefinition()
+            getContainerDefinition()
         }
     }
 }

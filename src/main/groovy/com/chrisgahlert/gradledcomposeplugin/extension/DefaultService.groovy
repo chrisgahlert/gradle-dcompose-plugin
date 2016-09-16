@@ -59,6 +59,11 @@ class DefaultService extends Service {
     boolean preserveVolumes = false
 
     /**
+     * Whether the service should be included when creating the docker-compose.yml
+     */
+    boolean deploy = true
+
+    /**
      * Create container specific properties. Properties are optional by default.
      */
     List<String> command
@@ -108,10 +113,28 @@ class DefaultService extends Service {
      */
     Map hostPortBindings
     String dockerHost
+    Integer exitCode
+    String imageId
 
     DefaultService(String name, String projectPath, Closure<String> dockerPrefix) {
         super(name, projectPath)
         this.dockerPrefix = dockerPrefix
+    }
+
+    void setCommand(String command) {
+        this.command = ['sh', '-c', command]
+    }
+
+    void setCommand(List<String> command) {
+        this.command = command
+    }
+
+    void setEntrypoints(List<String> entrypoints) {
+        this.entrypoints = entrypoints
+    }
+
+    void setEntrypoints(String entrypoint) {
+        this.entrypoints = ['sh', '-c', entrypoint]
     }
 
     @Override
@@ -254,9 +277,48 @@ class DefaultService extends Service {
                 }
             }
         }
+
+        if (networkMode && networks.find { Network net -> net.name != Network.DEFAULT_NAME }) {
+            throw new GradleException("Cannot combine networkMode and networks for service $name")
+        }
+
+        if (imageId != null) {
+            throw new ReadOnlyPropertyException('imageId', getClass())
+        }
+
+        if (exitCode != null) {
+            throw new ReadOnlyPropertyException('exitCode', getClass())
+        }
+
+        if (hostPortBindings != null) {
+            throw new ReadOnlyPropertyException('hostPortBindings', getClass())
+        }
+
+        if (dockerHost != null) {
+            throw new ReadOnlyPropertyException('dockerHost', getClass())
+        }
     }
 
     String getDockerFilename() {
         dockerFilename ?: 'Dockerfile'
+    }
+
+    int getExitCode() {
+        if (exitCode == null) {
+            throw new GradleException("Cannot get exitCode of service $name - has it been started (with waitForCommand = true)?")
+        }
+        exitCode
+    }
+
+    @Override
+    void setExitCode(int exitCode) {
+        this.exitCode = exitCode
+    }
+
+    String getImageId() {
+        if (imageId == null) {
+            throw new GradleException("Cannot get imageId of service $name - has it been built/pulled?")
+        }
+        imageId
     }
 }

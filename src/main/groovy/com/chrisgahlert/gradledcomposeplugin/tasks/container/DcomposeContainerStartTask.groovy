@@ -101,10 +101,11 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
             }
 
             if (service.waitForCommand) {
-                extensions.exitCode = waitForExitCode(start)
-                logger.info "Docker container with name $containerName returned with a '$extensions.exitCode' exit code"
+                service.exitCode = waitForExitCode(start)
+                extensions.exitCode = service.exitCode
+                logger.info "Docker container with name $containerName returned with a '$service.exitCode' exit code"
 
-                if (extensions.exitCode != 0 && !ignoreExitCode) {
+                if (service.exitCode != 0 && !ignoreExitCode) {
                     throw new GradleException("Container $containerName did not return with a '0' exit code. " +
                             "(Use dcompose.${service.name}.ignoreExitCode = true to disable this check!)")
                 }

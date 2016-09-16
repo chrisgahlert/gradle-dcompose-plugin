@@ -41,7 +41,8 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
     boolean imageExists() {
         runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectImageCmd(image).exec()
+                def result = client.inspectImageCmd(image).exec()
+                service.imageId = result.id
                 true
             }
         }
@@ -53,7 +54,7 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
         runInDockerClasspath {
             def callback = loadClass('com.github.dockerjava.core.command.PullImageResultCallback').newInstance()
             def result = client.pullImageCmd(image).exec(callback)
-            result.awaitCompletion()
+            result.awaitSuccess()
             logger.quiet("Successfully pulled image $image")
         }
     }

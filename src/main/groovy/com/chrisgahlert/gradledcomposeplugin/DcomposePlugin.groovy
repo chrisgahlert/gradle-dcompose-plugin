@@ -20,6 +20,7 @@ import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.DcomposeComposeFileTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.DcomposeCopyFileFromContainerTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerCreateTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerRemoveTask
@@ -48,12 +49,14 @@ class DcomposePlugin implements Plugin<Project> {
     public static final String EXTENSION_NAME = "dcompose"
     public static final String DOCKER_DEPENDENCY = 'com.github.docker-java:docker-java:3.0.5'
     public static final String SLF4J_DEPENDENCY = 'org.slf4j:slf4j-simple:1.7.5'
+    public static final String SNAKEYAML_DEPENDENCY = 'org.yaml:snakeyaml:1.17'
 
     @Override
     void apply(Project project) {
         def extension = createExtension(project)
         createDockerConfiguration(project)
         createAllTasks(project.tasks)
+        createDeployTasks(project, extension)
         updateTaskGroups(project)
         injectExtraProperties(project)
         validateContainers(project, extension)
@@ -76,6 +79,7 @@ class DcomposePlugin implements Plugin<Project> {
 
         config.dependencies.add(project.dependencies.create(DOCKER_DEPENDENCY))
         config.dependencies.add(project.dependencies.create(SLF4J_DEPENDENCY))
+        config.dependencies.add(project.dependencies.create(SNAKEYAML_DEPENDENCY))
 
         def classLoaderFactory = new DockerClassLoaderFactory(config)
 
@@ -104,6 +108,15 @@ class DcomposePlugin implements Plugin<Project> {
             tasks.withType(taskClass as Class) { Task task ->
                 allTask.dependsOn task
             }
+        }
+    }
+
+    private void createDeployTasks(Project project, DcomposeExtension extension) {
+        def task = project.tasks.create("createComposeFile", DcomposeComposeFileTask)
+        task.target = new File(project.buildDir, "docker-compose.yml")
+
+        project.afterEvaluate {
+            task.services = extension.services.findAll { Service service -> service.deploy }
         }
     }
 

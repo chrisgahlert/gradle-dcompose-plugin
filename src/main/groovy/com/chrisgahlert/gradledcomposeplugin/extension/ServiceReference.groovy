@@ -301,4 +301,34 @@ class ServiceReference extends Service {
     Integer getStopTimeout() {
         resolved.stopTimeout
     }
+
+    @Override
+    void setExitCode(int exitCode) {
+        resolved.exitCode = exitCode
+    }
+
+    @Override
+    int getExitCode() {
+        resolved.exitCode
+    }
+
+    @Override
+    void setImageId(String imageId) {
+        resolved.imageId = imageId
+    }
+
+    @Override
+    String getImageId() {
+        resolved.imageId
+    }
+
+    @Override
+    boolean isDeploy() {
+        resolved.deploy
+    }
+
+    @Override
+    void setDeploy(boolean enabled) {
+        resolved.deploy = enabled
+    }
 }
