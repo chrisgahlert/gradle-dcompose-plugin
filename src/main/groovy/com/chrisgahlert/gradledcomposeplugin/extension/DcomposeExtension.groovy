@@ -16,9 +16,11 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.TypeChecked
+import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.api.internal.ClosureBackedAction
 import org.gradle.util.GUtil
 
 @TypeChecked
@@ -31,7 +33,7 @@ class DcomposeExtension {
 
     String namePrefix
 
-    Closure dockerClientConfig
+    Action dockerClientConfig
 
     DcomposeExtension(Project project, String namePrefix) {
         this.project = project
@@ -50,6 +52,14 @@ class DcomposeExtension {
             new DefaultNetwork(name, project.path, { namePrefix })
         })
         networks.create(Network.DEFAULT_NAME)
+    }
+
+    void setDockerClientConfig(Action dockerClientConfig) {
+        this.dockerClientConfig = dockerClientConfig
+    }
+
+    void setDockerClientConfig(Closure dockerClientConfig) {
+        this.dockerClientConfig = new ClosureBackedAction(dockerClientConfig)
     }
 
     @Deprecated
@@ -73,7 +83,12 @@ class DcomposeExtension {
     }
 
     NamedDomainObjectContainer<DefaultService> services(Closure config) {
-        services.configure config
+        services(new ClosureBackedAction<NamedDomainObjectContainer<? extends Service>>(config))
+    }
+
+    NamedDomainObjectContainer<DefaultService> services(Action<NamedDomainObjectContainer<? extends Service>> config) {
+        config.execute(services)
+        services
     }
 
     @Deprecated
@@ -113,7 +128,12 @@ class DcomposeExtension {
     }
 
     NamedDomainObjectContainer<DefaultNetwork> networks(Closure config) {
-        networks.configure config
+        networks(new ClosureBackedAction<NamedDomainObjectContainer<? extends Network>>(config))
+    }
+
+    NamedDomainObjectContainer<DefaultNetwork> networks(Action<NamedDomainObjectContainer<? extends Network>> config) {
+        config.execute(networks)
+        networks
     }
 
     Network network(String path) {
