@@ -52,7 +52,7 @@ class DcomposeExtension {
         })
         networks.create(Network.DEFAULT_NAME)
     }
-    
+
     void setDockerClientConfig(Action dockerClientConfig) {
         this.dockerClientConfig = { dockerClientConfig.execute(delegate) }
     }
@@ -143,9 +143,19 @@ class DcomposeExtension {
 
     def propertyMissing(String name) {
         def service = services.findByName(name)
-        if (service == null) {
-            throw new MissingPropertyException(name, getClass())
+        def network = networks.findByName(name)
+
+        if (service && network) {
+            throw new GradleException("The property '$name' is ambiguous - are you referring to the service or the network?\n" +
+                    "Please specify by replacing $name with network('$name') or service('$name')!")
         }
-        service
+        if (service) {
+            return service
+        }
+        if (network) {
+            return network
+        }
+
+        throw new MissingPropertyException(name, getClass())
     }
 }

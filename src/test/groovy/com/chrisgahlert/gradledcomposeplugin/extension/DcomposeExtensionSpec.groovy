@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
+import spock.lang.Unroll
 
 class DcomposeExtensionSpec extends AbstractDcomposeSpec {
 
@@ -88,7 +89,6 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
 
     def 'should validate correctly when linking services on different networks'() {
         given:
-
         buildFile << """
             dcompose {
                 networks {
@@ -100,7 +100,7 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
                 client {
                     image = '$DEFAULT_IMAGE'
                     links = [ server.link() ]
-                    networks = [ network('other') ]
+                    networks = [other]
                 }
             }
         """
@@ -110,5 +110,42 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
 
         then:
         result.standardError.contains('Please make sure they are on the same network')
+    }
+
+    @Unroll
+    def 'should #successText when container name is #containerName and network name is #networkName'() {
+        given:
+        buildFile << """
+            dcompose {
+                networks {
+                    $networkName
+                }
+                $containerName {
+                    image = '$DEFAULT_IMAGE'
+                    networks = [$networkReference]
+                }
+            }
+        """
+
+        when:
+        def result = runTasks 'help'
+
+        then:
+        if (error) {
+            assert !result.success
+            assert result.standardError.contains(error)
+        } else {
+            assert result.success
+        }
+
+
+
+        where:
+        containerName || networkName || networkReference   || error
+        'main'        || 'main'      || 'main'             || "The property 'main' is ambiguous"
+        'main'        || 'main'      || 'network("main")'  || false
+        'main'        || 'main'      || 'network(":main")' || false
+
+        successText = error ? 'fail' : 'succeed'
     }
 }

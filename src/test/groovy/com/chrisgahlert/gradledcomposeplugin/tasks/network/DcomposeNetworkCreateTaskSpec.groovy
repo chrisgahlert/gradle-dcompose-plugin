@@ -123,7 +123,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
                     command = ['sh', '-c', 'nc server 8000']
                     waitForCommand = true
                     attachStderr = true
-                    networks = [ network('other') ]
+                    networks = [other]
                 }
             }
         """
@@ -149,7 +149,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'echo gus fring goodman | nc -l -p 8000']
                     exposedPorts = ['8000']
-                    networks = [ network('backend') ]
+                    networks = [backend]
                     aliases = ['other']
                 }
                 client {
@@ -157,7 +157,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
                     command = ['sh', '-c', 'nc server 8000']
                     waitForCommand = true
                     attachStdout = true
-                    networks = [ network('frontend'), network('backend') ]
+                    networks = [frontend, backend]
                 }
             }
         """
@@ -183,7 +183,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'echo saul goodman | nc -l -p 8000']
                     exposedPorts = ['8000']
-                    networks = [ network('backend') ]
+                    networks = [backend]
                     aliases = ['methlab', 'restaurant']
                 }
                 client {
@@ -191,7 +191,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
                     command = ['sh', '-c', 'nc methlab 8000']
                     waitForCommand = true
                     attachStdout = true
-                    networks = [ network('frontend'), network('backend') ]
+                    networks = [frontend, backend]
                 }
             }
         """
@@ -218,7 +218,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'echo los pollos | nc -l -p 8000']
                     exposedPorts = ['8000']
-                    networks = [ network('backend') ]
+                    networks = [backend]
                 }
             }
         """
@@ -276,7 +276,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'echo jessie pinkman | nc -l -p 8000']
                     exposedPorts = ['8000']
-                    networks = [ network('other') ]
+                    networks = [other]
                 }
             }
         """

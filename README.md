@@ -276,13 +276,21 @@ dcompose {
   }
   database {
     image = 'mongo:latest'
-    networks = [ network('backend') ]
+    networks = [backend]
     aliases = ['backup_database']
   }
   webserver {
     image = 'nginx:latest'
     env = ['PRIMARY_DB_HOST=database', 'SECONDARY_DB_HOST=backup_database']
-    networks = [ network('frontend'), network('backend') ]
+    networks = [frontend, backend]
+  }
+  other {
+    image = 'busybox:latest'
+    networks << frontend
+  }
+  other2 {
+    image = 'busybox:latest'
+    networks = [frontend, backend, network('default')] // as 'default' is a reserved keyword you need to reference it by method
   }
 ```
 
@@ -412,7 +420,7 @@ project(':prjA') {
       image = '...'
       exposedPorts = ['8080']
       volumes = ['/var/log']
-      networks = [ network('backend') ]
+      networks = [backend]
     }
   }
 }
@@ -433,7 +441,7 @@ project(':prjB') {
       volumesFrom = [
         service(':prjA:server')
       ]
-      networks = [ network(':prjA:backend'), network('frontend') ] // If defined we don't need the links definition
+      networks = [ network(':prjA:backend'), frontend ] // If defined we don't need the links definition
     }
   }
   

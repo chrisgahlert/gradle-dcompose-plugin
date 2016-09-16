@@ -29,7 +29,7 @@ class DcomposeNetworkRemoveTaskSpec extends AbstractDcomposeSpec {
                 main {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '60']
-                    networks = [ network('test') ]
+                    networks = [test]
                     stopTimeout = 0
                 }
             }
@@ -76,7 +76,7 @@ class DcomposeNetworkRemoveTaskSpec extends AbstractDcomposeSpec {
                 main {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '60']
-                    networks = [ network('test') ]
+                    networks = [test]
                     stopTimeout = 0
                 }
             }
@@ -107,7 +107,7 @@ class DcomposeNetworkRemoveTaskSpec extends AbstractDcomposeSpec {
                 database {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '60']
-                    networks = [ network('backend') ]
+                    networks = [backend]
                     stopTimeout = 0
                 }
             }

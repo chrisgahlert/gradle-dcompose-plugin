@@ -57,7 +57,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     attachStdout = true
                     attachStderr = true
                     privileged = true
-                    networks += network('backend')
+                    networks += backend
                     aliases = ['netalias', 'netalias2']
                 }
             }
@@ -175,7 +175,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 main {
                     image = "$DEFAULT_IMAGE"
                     networkMode = 'bridge'
-                    networks = [network('custom')]
+                    networks = [custom]
                 }
             }
         """

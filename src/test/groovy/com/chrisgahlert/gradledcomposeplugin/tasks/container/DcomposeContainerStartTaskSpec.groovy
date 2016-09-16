@@ -299,7 +299,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
                     exposedPorts = ['8000']
-                    networks = [ network('backend') ]
+                    networks = [backend]
                 }
             }
         """
@@ -424,7 +424,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                     command = ['sh', '-c', 'nc server 8000 > /transfer']
                     links = [service(':subServer:server').link()]
                     waitForCommand = true
-                    networks = [ network(':subClient:frontend'), network('default') ]
+                    networks << frontend
                 }
             }
 
