@@ -69,7 +69,8 @@ dcompose {
     dockerDaemon {
         image = 'docker:1.12.1-dind'
         privileged = true
-        portBindings = ['2375']
+        exposedPorts = ['1500']
+        portBindings = ['2375', '1500']
     }
 }
 createDockerDaemonContainer.outputs.upToDateWhen { false }
@@ -81,14 +82,17 @@ test {
     doFirst {
         def dockerHost = dcompose.dockerDaemon.dockerHost
         def dockerPort = dcompose.dockerDaemon.findHostPort(2375)
+        def networkTestPort = dcompose.dockerDaemon.findHostPort(1500)
 
         systemProperty 'DOCKER_HOST', "tcp://$dockerHost:$dockerPort"
         systemProperty 'DOCKER_TLS_VERIFY', '0'
+        systemProperty 'networkCreateTaskSpec.testUrl', "http://$dockerHost:$networkTestPort"
     }
 
     doLast {
         systemProperties.remove 'DOCKER_HOST'
         systemProperties.remove 'DOCKER_TLS_VERIFY'
+        systemProperties.remove 'networkCreateTaskSpec.hostPort'
     }
 
     dependsOn startDockerDaemonContainer

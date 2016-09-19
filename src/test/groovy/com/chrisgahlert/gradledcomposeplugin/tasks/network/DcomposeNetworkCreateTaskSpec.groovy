@@ -304,4 +304,31 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':subServer:startServerContainer')
         result.wasExecuted(':subClient:startClientContainer')
     }
+
+    def 'host port should be accessible'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = 'echo -e "HTTP/1.1 200 OK\\\\n\\\\ntuco" | nc -l -p 1500'
+                    portBindings = ['1500:1500']
+                    exposedPorts = ['1500']
+                }
+            }
+
+            task url(dependsOn: startServerContainer) << {
+                logger.warn "URL: http://\${dcompose.server.dockerHost}:\${dcompose.server.findHostPort(1500)}"
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'url'
+        def directUrl = (result.standardOutput =~ /(?m)^URL: (.*)$/)[0][1]
+        def url = System.getProperty('networkCreateTaskSpec.testUrl', directUrl)
+        System.err.println url
+
+        then:
+        url.toURL().text.trim() == 'tuco'
+    }
 }
