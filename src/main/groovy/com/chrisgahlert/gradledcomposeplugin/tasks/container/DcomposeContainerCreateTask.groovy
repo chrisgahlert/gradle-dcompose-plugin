@@ -339,10 +339,12 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             logger.quiet("Created new container with id $result.id ($containerName)")
 
             if (!networkMode) {
-                client.disconnectFromNetworkCmd()
-                        .withNetworkId('bridge')
-                        .withContainerId(containerName)
-                        .exec()
+                ignoreDockerException('NotFoundException') {
+                    client.disconnectFromNetworkCmd()
+                            .withNetworkId('bridge')
+                            .withContainerId(containerName)
+                            .exec()
+                }
 
                 service.networks?.each { Network network ->
                     def aliases = service.aliases ?: []
