@@ -33,6 +33,14 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
             }
         }
 
+        dependsOn {
+            otherServices.findAll { otherService ->
+                otherService.dependsOn.contains(service)
+            }.collect { otherService ->
+                "$otherService.projectPath:$otherService.stopContainerTaskName"
+            }
+        }
+
         onlyIf {
             containerRunning()
         }

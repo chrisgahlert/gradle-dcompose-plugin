@@ -163,7 +163,7 @@ abstract class Service extends AbstractEntity {
 
     abstract def findHostPort(Map<String, String> properties, int containerPort)
 
-    abstract void setDockerHost(URI uri);
+    abstract void setDockerHost(URI uri)
 
     abstract String getDockerHost();
 
@@ -196,6 +196,10 @@ abstract class Service extends AbstractEntity {
     abstract boolean isDeploy()
 
     abstract void setDeploy(boolean enabled)
+
+    abstract List<Service> getDependsOn()
+
+    abstract void setDependsOn(List<Service> dependencies)
 
     ServiceDependency link(String alias = null) {
         new ServiceDependency(alias ?: name, this)

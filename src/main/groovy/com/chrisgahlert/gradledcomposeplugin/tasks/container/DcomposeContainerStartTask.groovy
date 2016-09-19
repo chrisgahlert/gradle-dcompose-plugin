@@ -47,6 +47,10 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
         }
 
         dependsOn {
+            service.dependsOn.collect { "$it.projectPath:$it.startContainerTaskName" }
+        }
+
+        dependsOn {
             service.createContainerTaskName
         }
     }

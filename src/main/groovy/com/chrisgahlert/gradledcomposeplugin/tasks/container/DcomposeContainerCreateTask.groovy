@@ -39,6 +39,10 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         }
 
         dependsOn {
+            service.dependsOn.collect { "$it.projectPath:$it.createContainerTaskName" }
+        }
+
+        dependsOn {
             if (service.hasImage()) {
                 service.pullImageTaskName
             } else {

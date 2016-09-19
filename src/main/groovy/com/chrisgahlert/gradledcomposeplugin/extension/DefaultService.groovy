@@ -64,6 +64,11 @@ class DefaultService extends Service {
     boolean deploy = true
 
     /**
+     * Services that the current service depends on
+     */
+    List<Service> dependsOn
+
+    /**
      * Create container specific properties. Properties are optional by default.
      */
     List<String> command
@@ -176,6 +181,11 @@ class DefaultService extends Service {
         }
 
         result
+    }
+
+    @Override
+    List<Service> getDependsOn() {
+        dependsOn ?: [] as List<Service>
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)

@@ -331,4 +331,14 @@ class ServiceReference extends Service {
     void setDeploy(boolean enabled) {
         resolved.deploy = enabled
     }
+
+    @Override
+    List<Service> getDependsOn() {
+        resolved.dependsOn
+    }
+
+    @Override
+    void setDependsOn(List<Service> dependencies) {
+        resolved.dependsOn = dependencies
+    }
 }

@@ -141,7 +141,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                 main {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
-                    links = [service(':C:main').link()]
+                    dependsOn = [service(':C:main')]
                     networks = [ network(':D:default') ]
                 }
             }

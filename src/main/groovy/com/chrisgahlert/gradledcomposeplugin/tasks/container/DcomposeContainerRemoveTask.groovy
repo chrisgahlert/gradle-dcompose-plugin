@@ -41,6 +41,14 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeServiceTask {
         }
 
         dependsOn {
+            otherServices.findAll { otherService ->
+                otherService.dependsOn.contains(service)
+            }.collect { otherService ->
+                "$otherService.projectPath:$otherService.removeContainerTaskName"
+            }
+        }
+
+        dependsOn {
             service.stopContainerTaskName
         }
 

@@ -279,6 +279,31 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':createClientContainer')
     }
 
+    def 'create should work for dependant containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    exposedPorts = ['8000']
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    dependsOn = [server]
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'createClientContainer'
+
+        then:
+        result.wasExecuted(':createServerContainer')
+        result.wasExecuted(':createClientContainer')
+    }
+
     def 'create should work for containers with volumes from'() {
         given:
         buildFile << """
@@ -347,6 +372,50 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['echo', 'abc']
                     links = [service(':subServer:server').link(), service(':subDatabase:db').link('alias')]
+                }
+            }
+        """
+        addSubproject 'other'
+
+        when:
+        def result = runTasksSuccessfully 'createClientContainer'
+
+        then:
+        result.wasExecuted(':subServer:createServerContainer')
+        result.wasExecuted(':subDatabase:createDbContainer')
+        result.wasExecuted(':subClient:createClientContainer')
+    }
+
+    def 'create should work for dependant cross project containers'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subServer', """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    exposedPorts = ['8000']
+                    networks = [ network(':subClient:default') ]
+                }
+            }
+        """
+        addSubproject 'subDatabase', """
+            dcompose {
+                db {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    exposedPorts = ['8001']
+                    networks = [ network(':subClient:default') ]
+                }
+            }
+        """
+        addSubproject 'subClient', """
+            dcompose {
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'abc']
+                    dependsOn = [service(':subServer:server'), service(':subDatabase:db')]
                 }
             }
         """

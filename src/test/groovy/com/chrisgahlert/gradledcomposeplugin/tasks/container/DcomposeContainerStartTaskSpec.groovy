@@ -162,6 +162,35 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         file('build/copy/transfer').text.trim() == 'linkcool'
     }
 
+    def 'start should work for dependant containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc server 8000 > /transfer']
+                    dependsOn = [server]
+                    waitForCommand = true
+                }
+            }
+
+            ${copyTaskConfig('client', '/transfer')}
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startClientContainer', 'copy'
+
+        then:
+        result.wasExecuted(':startServerContainer')
+        result.wasExecuted(':startClientContainer')
+        file('build/copy/transfer').text.trim() == 'linkcool'
+    }
+
     def 'start should work for linked containers with alias'() {
         given:
         buildFile << """
@@ -325,6 +354,48 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':subServer:startServerContainer')
         result.wasExecuted(':subClient:startClientContainer')
         file('subClient/build/copy/transfer').text.trim() == 'linkcool'
+    }
+
+    def 'start should work for dependant cross project containers'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subServer', """
+            dcompose {
+                networks {
+                    backend
+                }
+
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo depcool | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                    networks = [backend]
+                }
+            }
+        """
+        addSubproject 'subClient', """
+            dcompose {
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc server 8000 > /transfer']
+                    dependsOn = [service(':subServer:server')]
+                    waitForCommand = true
+                    networks = [ network(':subServer:backend') ]
+                }
+            }
+
+            ${copyTaskConfig('client', '/transfer')}
+        """
+        addSubproject 'other'
+
+        when:
+        def result = runTasksSuccessfully 'startClientContainer', 'copy'
+
+        then:
+        result.wasExecuted(':subServer:startServerContainer')
+        result.wasExecuted(':subClient:startClientContainer')
+        file('subClient/build/copy/transfer').text.trim() == 'depcool'
     }
 
     def 'start should work for linked cross project containers with alias'() {

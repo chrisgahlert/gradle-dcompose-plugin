@@ -85,6 +85,35 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':stopServerContainer')
     }
 
+    def 'stop should work for dependant containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    exposedPorts = ['8000']
+                    stopTimeout = 0
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    dependsOn = [server]
+                    stopTimeout = 0
+                }
+            }
+        """
+
+        runTasksSuccessfully 'startClientContainer'
+
+        when:
+        def result = runTasksSuccessfully 'stopServerContainer'
+
+        then:
+        result.wasExecuted(':stopClientContainer')
+        result.wasExecuted(':stopServerContainer')
+    }
+
     def 'stop should work for containers with volumes from'() {
         given:
         buildFile << """
@@ -135,6 +164,43 @@ class DcomposeContainerStopTaskSpec extends AbstractDcomposeSpec {
                     image = '$DEFAULT_IMAGE'
                     command = ['sleep', '300']
                     links = [service(':subServer:server').link()]
+                    stopTimeout = 0
+                }
+            }
+        """
+        addSubproject 'other'
+
+        runTasksSuccessfully 'startClientContainer'
+
+        when:
+        def result = runTasksSuccessfully 'stopServerContainer'
+
+        then:
+        result.wasExecuted(':subClient:stopClientContainer')
+        result.wasExecuted(':subServer:stopServerContainer')
+    }
+
+    def 'stop should work for dependant cross project containers'() {
+        given:
+        buildFile.text = ''
+
+        addSubproject 'subServer', """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    exposedPorts = ['8000']
+                    stopTimeout = 0
+                    networks = [ network(':subClient:default') ]
+                }
+            }
+        """
+        addSubproject 'subClient', """
+            dcompose {
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sleep', '300']
+                    dependsOn = [service(':subServer:server')]
                     stopTimeout = 0
                 }
             }
