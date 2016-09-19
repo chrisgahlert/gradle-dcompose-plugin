@@ -13,7 +13,7 @@ buildscript {
     dependencies {
         classpath "com.gradle:build-scan-plugin:1.0"
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
-        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.4.0'
+        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.5.1'
     }
 }
 
@@ -92,7 +92,7 @@ test {
     doLast {
         systemProperties.remove 'DOCKER_HOST'
         systemProperties.remove 'DOCKER_TLS_VERIFY'
-        systemProperties.remove 'networkCreateTaskSpec.hostPort'
+        systemProperties.remove 'networkCreateTaskSpec.testUrl'
     }
 
     dependsOn startDockerDaemonContainer
