@@ -18,10 +18,7 @@ package com.chrisgahlert.gradledcomposeplugin
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
-import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
-import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask
-import com.chrisgahlert.gradledcomposeplugin.tasks.DcomposeComposeFileTask
-import com.chrisgahlert.gradledcomposeplugin.tasks.DcomposeCopyFileFromContainerTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.*
 import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerCreateTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerRemoveTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerStartTask
@@ -44,6 +41,8 @@ class DcomposePlugin implements Plugin<Project> {
 
     public static final String TASK_GROUP = "Dcompose Docker"
     public static final String TASK_GROUP_ALL = "$TASK_GROUP (all)"
+    public static final String TASK_GROUP_DEPLOY = "$TASK_GROUP (deploy)"
+    public static final String TASK_GROUP_NETWORKS = "$TASK_GROUP (networks)"
     public static final String TASK_GROUP_SERVICE_TEMPLATE = "$TASK_GROUP '%s' service"
     public static final String CONFIGURATION_NAME = "dcompose"
     public static final String EXTENSION_NAME = "dcompose"
@@ -123,6 +122,12 @@ class DcomposePlugin implements Plugin<Project> {
     private void updateTaskGroups(Project project) {
         project.tasks.withType(AbstractDcomposeServiceTask) { AbstractDcomposeServiceTask task ->
             task.group = { String.format(TASK_GROUP_SERVICE_TEMPLATE, task.service.name) }
+        }
+        project.tasks.withType(AbstractDcomposeNetworkTask) { AbstractDcomposeNetworkTask task ->
+            task.group = TASK_GROUP_NETWORKS
+        }
+        project.tasks.withType(DcomposeComposeFileTask) { DcomposeComposeFileTask task ->
+            task.group = TASK_GROUP_DEPLOY
         }
     }
 
