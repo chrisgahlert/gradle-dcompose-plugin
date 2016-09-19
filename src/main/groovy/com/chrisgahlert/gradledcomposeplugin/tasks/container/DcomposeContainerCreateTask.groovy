@@ -420,6 +420,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 result.hostsPath = null
                 result.resolvConfPath = null
                 result.hostnamePath = null
+                result.logPath = null
 
                 def networkData = result.networkSettings?.networks?.collect { name, props ->
                     [name, props.aliases]
