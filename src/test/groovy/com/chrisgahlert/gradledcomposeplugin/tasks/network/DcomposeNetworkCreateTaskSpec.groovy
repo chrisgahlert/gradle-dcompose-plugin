@@ -359,7 +359,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
             dcompose {
                 server {
                     image = '$DEFAULT_IMAGE'
-                    command = 'echo -e "HTTP/1.1 200 OK\\\\n\\\\ntuco" | nc -l -p 1500'
+                    command = ['sh', '-c', 'echo -e "HTTP/1.1 200 OK\\\\n\\\\ntuco" | nc -l -p 1500']
                     portBindings = ['1500:1500']
                     exposedPorts = ['1500']
                 }
