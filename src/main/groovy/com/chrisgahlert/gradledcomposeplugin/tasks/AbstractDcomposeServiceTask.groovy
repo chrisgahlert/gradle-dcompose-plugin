@@ -15,12 +15,8 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
-import com.chrisgahlert.gradledcomposeplugin.DcomposePlugin
-import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
-import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import groovy.transform.TypeChecked
-import org.gradle.api.internal.project.ProjectInternal
 
 @TypeChecked
 class AbstractDcomposeServiceTask extends AbstractDcomposeTask {
@@ -46,17 +42,7 @@ class AbstractDcomposeServiceTask extends AbstractDcomposeTask {
     }
 
     protected Set<Service> getOtherServices() {
-        Set<DefaultService> result = new HashSet<>()
-
-        project.rootProject.allprojects.each { prj ->
-            ((ProjectInternal) prj).evaluate()
-
-            if (prj.plugins.hasPlugin(DcomposePlugin)) {
-                result.addAll prj.extensions.getByType(DcomposeExtension).services
-            }
-        }
-
-        new HashSet<>(result.findAll { it != service })
+        new HashSet<>(allServices.findAll { it != service })
     }
 
 }

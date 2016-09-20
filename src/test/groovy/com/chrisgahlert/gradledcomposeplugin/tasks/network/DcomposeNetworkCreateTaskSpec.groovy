@@ -36,6 +36,54 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':createTestNetwork')
     }
 
+    def 'should be able to re-create network'() {
+        given:
+        buildFile << """
+            dcompose {
+                networks {
+                    frontend
+                }
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo jessie pinkman | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                    networks << frontend
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc server 8000 > /result.txt']
+                    waitForCommand = true
+                    dependsOn = [server]
+                    networks = [frontend]
+                }
+            }
+
+            ${copyTaskConfig('client', '/result.txt', 'copy')}
+
+            createDefaultNetwork.outputs.upToDateWhen { false }
+            createFrontendNetwork.outputs.upToDateWhen { false }
+        """
+
+        runTasksSuccessfully 'startServerContainer'
+
+        when:
+        def result = runTasksSuccessfully 'startClientContainer', 'copy'
+
+        then:
+        result.wasExecuted(':createDefaultNetwork')
+        result.wasExecuted(':createFrontendNetwork')
+        result.wasExecuted(':createServerContainer')
+        result.wasUpToDate(':createServerContainer')
+        result.wasExecuted(':startServerContainer')
+        !result.wasUpToDate(':startServerContainer')
+        result.wasExecuted(':createClientContainer')
+        !result.wasUpToDate(':createClientContainer')
+        result.wasExecuted(':startClientContainer')
+        !result.wasUpToDate(':startClientContainer')
+
+        file('build/copy/result.txt').text.trim() == 'jessie pinkman'
+    }
+
     def 'should create default network on container create'() {
         given:
         fork = true

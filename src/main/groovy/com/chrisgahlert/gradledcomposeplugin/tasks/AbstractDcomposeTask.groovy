@@ -15,13 +15,17 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
+import com.chrisgahlert.gradledcomposeplugin.DcomposePlugin
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
+import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
+import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import groovy.json.JsonBuilder
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.tasks.Input
 import org.gradle.util.ConfigureUtil
 
@@ -137,6 +141,20 @@ class AbstractDcomposeTask extends DefaultTask {
         }
 
         outputFile
+    }
+
+    protected Set<Service> getAllServices() {
+        Set<DefaultService> result = new HashSet<>()
+
+        project.rootProject.allprojects.each { prj ->
+            ((ProjectInternal) prj).evaluate()
+
+            if (prj.plugins.hasPlugin(DcomposePlugin)) {
+                result.addAll prj.extensions.getByType(DcomposeExtension).services
+            }
+        }
+
+        new HashSet<>(result)
     }
 
 }
