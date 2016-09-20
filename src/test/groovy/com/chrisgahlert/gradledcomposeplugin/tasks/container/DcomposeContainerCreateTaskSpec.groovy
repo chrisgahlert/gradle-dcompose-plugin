@@ -37,7 +37,10 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
 
     def 'create should be up-to-date'() {
         given:
-        buildFile << DEFAULT_BUILD_FILE
+        buildFile << """
+            $DEFAULT_BUILD_FILE
+            dcompose.main.aliases = ['hello']
+        """
         runTasksSuccessfully 'createMainContainer'
 
         when:

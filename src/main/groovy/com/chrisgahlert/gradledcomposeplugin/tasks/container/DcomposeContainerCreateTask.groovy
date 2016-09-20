@@ -347,8 +347,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 }
 
                 service.networks?.each { Network network ->
-                    def aliases = service.aliases ?: []
-                    aliases << service.name
+                    def aliases = (service.aliases ?: []) + [service.name]
 
                     def networkSettings = loadClass('com.github.dockerjava.api.model.ContainerNetwork').newInstance()
                             .withAliases(aliases.collect { it as String })
