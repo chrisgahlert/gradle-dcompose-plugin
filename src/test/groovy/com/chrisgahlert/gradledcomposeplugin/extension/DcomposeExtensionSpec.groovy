@@ -145,6 +145,7 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         'main'        || 'main'      || 'main'             || "The property 'main' is ambiguous"
         'main'        || 'main'      || 'network("main")'  || false
         'main'        || 'main'      || 'network(":main")' || false
+        'main'        || 'main'      || '"main"'           || 'Can only set instances of Network on dcompose.main.networks'
 
         successText = error ? 'fail' : 'succeed'
     }

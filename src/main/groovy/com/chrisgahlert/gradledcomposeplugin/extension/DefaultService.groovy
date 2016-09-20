@@ -307,6 +307,11 @@ class DefaultService extends Service {
         if (dockerHost != null) {
             throw new ReadOnlyPropertyException('dockerHost', getClass())
         }
+
+        if (networks.find { !(it instanceof Network) }) {
+            throw new GradleException("Can only set instances of Network on dcompose.${name}.networks - " +
+                    "please use networkName or network('networkName') instead")
+        }
     }
 
     String getDockerFilename() {
