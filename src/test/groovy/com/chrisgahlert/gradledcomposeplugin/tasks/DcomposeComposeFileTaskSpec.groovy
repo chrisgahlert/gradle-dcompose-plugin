@@ -238,6 +238,93 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         validateComposeFile 'build/docker-compose.yml'
     }
 
+    def 'should support customizing the compose file'() {
+        given:
+        buildFile << """
+            dcompose {
+                networks {
+                    othernet
+                }
+
+                main {
+                    image = "$DEFAULT_IMAGE"
+                    networks = [othernet]
+                }
+            }
+
+            createComposeFile {
+                beforeSave { config ->
+                    config.networks.othernet.driver = 'overlay'
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'createComposeFile'
+        def composeFile = readNormalizedFile('build/docker-compose.yml')
+
+        then:
+        composeFile == """
+            version: '2'
+            services:
+              main:
+                image: sha256:...
+                networks:
+                  othernet:
+                    aliases: []
+            networks:
+              othernet:
+                driver: overlay
+            volumes: {}
+        """.stripIndent().trim()
+
+        validateComposeFile 'build/docker-compose.yml'
+    }
+
+    def 'should support customizing the compose file with java syntax'() {
+        given:
+        buildFile << """
+            dcompose {
+                main {
+                    image = "$DEFAULT_IMAGE"
+                }
+            }
+
+            createComposeFile {
+                beforeSave new Action<Map<String, Object>>() {
+                    void execute(Map<String, Object> item) {
+                        item.networks.default = [
+                            driver: 'other'
+                        ]
+                        item.volumes.special = [:]
+                    }
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'createComposeFile'
+        def composeFile = readNormalizedFile('build/docker-compose.yml')
+
+        then:
+        composeFile == """
+            version: '2'
+            services:
+              main:
+                image: sha256:...
+                networks:
+                  default:
+                    aliases: []
+            networks:
+              default:
+                driver: other
+            volumes:
+              special: {}
+        """.stripIndent().trim()
+
+        validateComposeFile 'build/docker-compose.yml'
+    }
+
     private String readNormalizedFile(String s) {
         file(s).text.replaceAll(/sha256:[a-f0-9]{64}/, 'sha256:...').trim()
     }

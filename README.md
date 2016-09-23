@@ -342,6 +342,13 @@ dcompose {
 }
 createComposeFile {
     target = file("$buildDir/docker-compose.yml") // default
+    
+    // If you need to modify the compose file before it is saved:
+    beforeSave { config ->
+        config.networks.default = [
+            driver: 'overlay'
+        ]
+    }
 }
 ```
 

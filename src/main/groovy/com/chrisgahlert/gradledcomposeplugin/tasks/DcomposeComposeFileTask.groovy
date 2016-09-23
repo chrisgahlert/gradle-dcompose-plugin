@@ -19,6 +19,7 @@ import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
+import org.gradle.api.Action
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.GUtil
@@ -29,6 +30,8 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
     @OutputFile
     File target
+
+    List<Closure> beforeSaves = []
 
     DcomposeComposeFileTask() {
         dependsOn {
@@ -46,6 +49,16 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
     void setServices(Collection<? extends Service> dcomposeServices) {
         this.dcomposeServices = dcomposeServices
+    }
+
+    void beforeSave(Closure beforeSave) {
+        this.beforeSaves << beforeSave
+    }
+
+    void beforeSave(Action<Map<String, Object>> beforeSave) {
+        this.beforeSaves << { Map<String, Object> config ->
+            beforeSave.execute(config)
+        }
     }
 
     @TaskAction
@@ -173,6 +186,10 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     private void writeYaml(yml) {
+        beforeSaves?.each { Closure config ->
+            config(yml)
+        }
+
         target.withWriter { out ->
             runInDockerClasspath {
                 def options = loadClass('org.yaml.snakeyaml.DumperOptions').newInstance()
