@@ -183,4 +183,52 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
         ':D:tasks'                || false || false || false || true
     }
 
+    def 'tasks description should be correct'() {
+        given:
+        buildFile << """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'tasks'
+
+        then:
+        result.standardOutput.contains '''
+            Dcompose Docker 'main' service tasks
+            ------------------------------------
+            buildMainImage
+            createMainContainer
+            pullMainImage
+            removeMainContainer
+            removeMainImage
+            startMainContainer
+            stopMainContainer
+
+            Dcompose Docker (all) tasks
+            ---------------------------
+            buildImages
+            createContainers
+            createNetworks
+            pullImages
+            removeContainers
+            removeImages
+            removeNetworks
+            startContainers
+            stopContainers
+
+            Dcompose Docker (deploy) tasks
+            ------------------------------
+            createComposeFile
+
+            Dcompose Docker (networks) tasks
+            --------------------------------
+            createDefaultNetwork
+            removeDefaultNetwork
+        '''.stripIndent()
+    }
+
 }
