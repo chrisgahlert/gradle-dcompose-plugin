@@ -95,6 +95,7 @@ class DefaultService extends Service {
     Boolean privileged
     List<? extends Network> networks
     List<String> aliases
+    String restart
 
     /**
      * Build image specific properties (can only be used when no image is defined). Properties are optional by default.

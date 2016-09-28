@@ -341,4 +341,14 @@ class ServiceReference extends Service {
     void setDependsOn(List<Service> dependencies) {
         resolved.dependsOn = dependencies
     }
+
+    @Override
+    String getRestart() {
+        resolved.restart
+    }
+
+    @Override
+    void setRestart(String restart) {
+        resolved.restart = restart
+    }
 }

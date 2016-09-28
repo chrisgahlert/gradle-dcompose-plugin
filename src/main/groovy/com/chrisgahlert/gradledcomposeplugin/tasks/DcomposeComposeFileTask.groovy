@@ -156,6 +156,9 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
             if (service.privileged) {
                 spec.privileged = service.privileged
             }
+            if (service.restart) {
+                spec.restart = service.restart
+            }
             if (service.networks) {
                 def networksSpec = [:]
                 service.networks.each { network ->

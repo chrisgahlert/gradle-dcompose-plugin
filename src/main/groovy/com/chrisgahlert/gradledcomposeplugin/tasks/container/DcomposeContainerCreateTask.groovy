@@ -223,6 +223,12 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         service.aliases
     }
 
+    @Input
+    @Optional
+    String getRestart() {
+        service.restart
+    }
+
     // TODO: add cpu/mem options
 
     @TaskAction
@@ -329,6 +335,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
             if (privileged != null) {
                 cmd.withPrivileged(privileged)
+            }
+
+            if (restart != null) {
+                def policyParser = loadClass('com.github.dockerjava.api.model.RestartPolicy').getMethod('parse', String)
+                cmd.withRestartPolicy(policyParser.invoke(null, restart as String))
             }
 
             if (networkMode) {

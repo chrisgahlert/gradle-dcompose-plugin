@@ -59,6 +59,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     privileged = true
                     networks += backend
                     aliases = ['netalias', 'netalias2']
+                    restart = 'always'
                 }
             }
         """
@@ -113,6 +114,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 - test:1.4.7.8
                 - otheraa:1.2.3.4
                 privileged: true
+                restart: always
                 networks:
                   default:
                     aliases:

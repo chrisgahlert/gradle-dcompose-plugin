@@ -201,6 +201,10 @@ abstract class Service extends AbstractEntity {
 
     abstract void setDependsOn(List<Service> dependencies)
 
+    abstract String getRestart()
+
+    abstract void setRestart(String restart)
+
     ServiceDependency link(String alias = null) {
         new ServiceDependency(alias ?: name, this)
     }

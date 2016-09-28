@@ -180,6 +180,7 @@ dcompose {
 | aliases | List&lt;String&gt; <br> *Default: null* | A list of aliases that can be used to reference a container on the same network. <br><br> *Sample:* `['alias1', 'alias2', ...]` <br><br> _The service name will automatically be added as well._
 | deploy | boolean<br> *Default: true* | Whether this service should be included when creating a `docker-compose.yml` file by calling the `createComposeFile` task
 | dependsOn | List&lt;Service&gt; <br> *Defaut: null* | A list of services that this service depends on. These services will be created/started before this service and stopped/removed after this service. <br><br> *Sample:* `[myService1, service('myService2'), service(':project:myService3')`
+| restart | String<br> *Default: null* | The container's restart policy.<br><br> *Sample:* `'on-failure'`, `'on-failure:10'`, `'always'` or `'unless-stopped'`
 
 
 # Gradle tasks

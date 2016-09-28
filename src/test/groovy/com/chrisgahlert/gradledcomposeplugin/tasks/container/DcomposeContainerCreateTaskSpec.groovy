@@ -493,6 +493,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                     attachStderr = true
                     privileged = true
                     networks = null
+                    restart = 'always'
                 }
             }
 
