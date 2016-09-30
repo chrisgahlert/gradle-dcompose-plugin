@@ -99,6 +99,7 @@ dcompose {
   myImage {
     baseDir = file('docker/')             // Required; will monitor directory for changes
     dockerFilename = 'Dockerfile'         // Optional
+    repository = 'user/image'             // The name for the image repository (used for building and pushing)
     tag = 'myImage'                       // Optional
     memory = 1000000L                     // Optional
     memswap = 500000L                     // Optional
@@ -326,6 +327,31 @@ startCmdAppContainer {
 }
 ```
 
+## Pushing images and private Registries
+
+It is possible to publish images to a public or private registry:
+
+```gradle
+dcompose {
+  dockerClientConfig = {
+    withRegistryUrl 'https://myregistry.com:5000'
+    withRegistryUsername 'myuser'
+    withRegistryPassword 'mypass'
+  }
+
+  publicImage {
+    baseDir = file('build/docker/pub/')
+    repository = 'user/publicImage'               // Will be pushed to Docker hub
+    tag = 'latest' // Default
+  }
+  privateImage {
+    image = 'mysql:latest'                        // Will be pulled from Docker hub
+    repository = 'myregistry.com:5000/awesomesql' // Will be pushed to custom repo
+    tag = '1.0'
+  }
+}
+```
+
 ## Generate docker-compose.yml for deployment
 
 For every subproject a task named `createComposeFile` will be created. This will create a 
@@ -333,23 +359,23 @@ compose file that can be used to deploy your app configuration:
 
 ```gradle
 dcompose {
-    database {
-        baseDir = "..."
-    }
-    databaseTest {
-        image = "..."
-        deploy = false // Set to false to NOT include this service in the compose file.
-    }
+  database {
+    baseDir = "..."
+  }
+  databaseTest {
+    image = "..."
+    deploy = false // Set to false to NOT include this service in the compose file.
+  }
 }
 createComposeFile {
-    target = file("$buildDir/docker-compose.yml") // default
+  target = file("$buildDir/docker-compose.yml") // default
     
-    // If you need to modify the compose file before it is saved:
-    beforeSave { config ->
-        config.networks.default = [
-            driver: 'overlay'
-        ]
-    }
+  // If you need to modify the compose file before it is saved:
+  beforeSave { config ->
+    config.networks.default = [
+      driver: 'overlay'
+    ]
+  }
 }
 ```
 

@@ -71,6 +71,10 @@ abstract class Service extends AbstractEntity {
         "build${taskLabel}Image"
     }
 
+    String getPushImageTaskName() {
+        "push${taskLabel}Image"
+    }
+
     @Deprecated
     String getBuildTaskName() {
         buildImageTaskName
@@ -204,6 +208,10 @@ abstract class Service extends AbstractEntity {
     abstract String getRestart()
 
     abstract void setRestart(String restart)
+
+    abstract String getRepository()
+
+    abstract void setRepository(String repository)
 
     ServiceDependency link(String alias = null) {
         new ServiceDependency(alias ?: name, this)

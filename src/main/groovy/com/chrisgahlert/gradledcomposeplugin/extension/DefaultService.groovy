@@ -69,6 +69,11 @@ class DefaultService extends Service {
     List<Service> dependsOn
 
     /**
+     * The name of the repository for publishing
+     */
+    String repository
+
+    /**
      * Create container specific properties. Properties are optional by default.
      */
     List<String> command
@@ -150,12 +155,17 @@ class DefaultService extends Service {
 
     @Override
     String getTag() {
-        tag ?: (dockerPrefix() + '/' + name).replace('_', '')
+        tag ?: 'latest'
     }
 
     @Override
     String getImage() {
-        image ?: getTag()
+        image
+    }
+
+    @Override
+    String getRepository() {
+        repository ?: (dockerPrefix() + '/' + name).replace('_', '')
     }
 
     @Override
@@ -265,9 +275,6 @@ class DefaultService extends Service {
         if (baseDir == null) {
             if (dockerFilename != null) {
                 throw new GradleException("Cannot set baseDir when image in use for dcompose service '$name'")
-            }
-            if (tag != null) {
-                throw new GradleException("Cannot set tag when image in use for dcompose service '$name'")
             }
         }
 

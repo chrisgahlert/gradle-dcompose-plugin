@@ -1,0 +1,3 @@
+FROM docker:1.12.1-dind
+
+COPY dockerRegistry.crt /etc/docker/certs.d/dockerRegistry:5000/ca.crt

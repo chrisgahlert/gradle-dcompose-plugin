@@ -25,6 +25,7 @@ import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerSt
 import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerStopTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageBuildTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImagePullTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImagePushTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageRemoveTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.network.DcomposeNetworkCreateTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.network.DcomposeNetworkRemoveTask
@@ -98,6 +99,7 @@ class DcomposePlugin implements Plugin<Project> {
                 'pullImages'      : DcomposeImagePullTask,
                 'createNetworks'  : DcomposeNetworkCreateTask,
                 'removeNetworks'  : DcomposeNetworkRemoveTask,
+                'pushImages'      : DcomposeImagePushTask,
         ]
 
         allTaskGroups.each { name, taskClass ->
@@ -157,6 +159,7 @@ class DcomposePlugin implements Plugin<Project> {
             project.tasks.create(service.stopContainerTaskName, DcomposeContainerStopTask).service = service
             project.tasks.create(service.removeContainerTaskName, DcomposeContainerRemoveTask).service = service
             project.tasks.create(service.removeImageTaskName, DcomposeImageRemoveTask).service = service
+            project.tasks.create(service.pushImageTaskName, DcomposeImagePushTask).service = service
         }
     }
 

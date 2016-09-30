@@ -203,6 +203,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
             buildMainImage
             createMainContainer
             pullMainImage
+            pushMainImage
             removeMainContainer
             removeMainImage
             startMainContainer
@@ -214,6 +215,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
             createContainers
             createNetworks
             pullImages
+            pushImages
             removeContainers
             removeImages
             removeNetworks

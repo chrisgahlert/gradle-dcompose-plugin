@@ -351,4 +351,14 @@ class ServiceReference extends Service {
     void setRestart(String restart) {
         resolved.restart = restart
     }
+
+    @Override
+    String getRepository() {
+        resolved.repository
+    }
+
+    @Override
+    void setRepository(String repository) {
+        resolved.repository = repository
+    }
 }

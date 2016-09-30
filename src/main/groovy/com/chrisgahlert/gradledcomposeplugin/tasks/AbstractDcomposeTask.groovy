@@ -77,6 +77,18 @@ class AbstractDcomposeTask extends DefaultTask {
         configBuilder.build()
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected void addAuthConfig(cmd) {
+        def clientConfig = buildClientConfig()
+        if (clientConfig.registryUsername || clientConfig.registryPassword) {
+            def authConfig = loadClass('com.github.dockerjava.api.model.AuthConfig').newInstance()
+                    .withUsername(clientConfig.registryUsername)
+                    .withPassword(clientConfig.registryPassword)
+
+            cmd.withAuthConfig(authConfig)
+        }
+    }
+
     protected Class loadClass(String name) {
         Thread.currentThread().contextClassLoader.loadClass(name)
     }

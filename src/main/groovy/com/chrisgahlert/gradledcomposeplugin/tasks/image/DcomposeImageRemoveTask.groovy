@@ -35,8 +35,12 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
     }
 
     @Input
-    String getImage() {
-        service.image
+    String getImageRef() {
+        if (service.hasImage()) {
+            "$service.image"
+        } else {
+            "$service.repository:$service.tag"
+        }
     }
 
     @Input
@@ -55,7 +59,7 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
     boolean imageExists() {
         runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectImageCmd(image).exec()
+                client.inspectImageCmd(imageRef).exec()
                 true
             }
         }
@@ -66,7 +70,7 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
     void removeImage() {
         runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                def cmd = client.removeImageCmd(image)
+                def cmd = client.removeImageCmd(imageRef)
 
                 if (force != null) {
                     cmd.withForce(force)
@@ -77,7 +81,7 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
                 }
 
                 cmd.exec()
-                logger.quiet("Successfully removed image $image")
+                logger.quiet("Successfully removed image $imageRef")
             }
         }
     }

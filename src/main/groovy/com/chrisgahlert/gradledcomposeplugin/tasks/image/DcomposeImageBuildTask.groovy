@@ -84,6 +84,11 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
     }
 
     @Input
+    String getBuildTag() {
+        "$service.repository:$service.tag"
+    }
+
+    @Input
     @Optional
     Map<String, String> getBuildArgs() {
         service.buildArgs
@@ -95,7 +100,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
         runInDockerClasspath {
             def cmd = client.buildImageCmd(dockerFile)
                     .withBaseDirectory(baseDir)
-                    .withTag(tag)
+                    .withTag(buildTag)
 
             if (noCache != null) {
                 cmd.withNoCache(noCache)
@@ -140,7 +145,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
     File getImageState() {
         dockerOutput('image-state') {
             ignoreDockerException('NotFoundException') {
-                def result = client.inspectImageCmd(tag).exec()
+                def result = client.inspectImageCmd(buildTag).exec()
                 service.imageId = result.id
                 result.repoTags = null
                 result

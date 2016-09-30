@@ -56,11 +56,6 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
     }
 
     @Input
-    String getImage() {
-        service.image
-    }
-
-    @Input
     String getContainerName() {
         service.containerName
     }
@@ -229,6 +224,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         service.restart
     }
 
+    @Input
+    String getImageId() {
+        service.imageId
+    }
+
     // TODO: add cpu/mem options
 
     @TaskAction
@@ -237,7 +237,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         runInDockerClasspath {
             removeOldContainer(service)
 
-            def cmd = client.createContainerCmd(image)
+            def cmd = client.createContainerCmd(imageId)
 
             if (portBindings) {
                 def portParser = loadClass('com.github.dockerjava.api.model.PortBinding').getMethod('parse', String)
@@ -386,7 +386,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
 
         def imageVolumes = []
-        client.inspectImageCmd(image).exec().config.volumes?.keySet().each {
+        client.inspectImageCmd(imageId).exec().config.volumes?.keySet().each {
             imageVolumes << volumeClass.newInstance(it)
         }
 
@@ -453,13 +453,4 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         }
     }
 
-    @Input
-    @TypeChecked(TypeCheckingMode.SKIP)
-    def getImageState() {
-        runInDockerClasspath {
-            def result = client.inspectImageCmd(image).exec()
-            result.repoTags = null
-            toJson(result)
-        }
-    }
 }

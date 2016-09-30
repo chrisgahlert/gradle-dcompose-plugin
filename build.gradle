@@ -13,7 +13,7 @@ buildscript {
     dependencies {
         classpath "com.gradle:build-scan-plugin:1.0"
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
-        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.5.1'
+        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.5.4'
     }
 }
 
@@ -67,13 +67,26 @@ artifacts {
 
 dcompose {
     dockerDaemon {
-        image = 'docker:1.12.1-dind'
+        baseDir = file('src/test/docker/')
+        dockerFilename = 'Dockerfile.daemon'
         privileged = true
         exposedPorts = ['1500']
-        portBindings = ['2375', '1500']
+        portBindings = ['12375:2375', '1500']
+
+        // FIXME
+        tag = "latest"
+    }
+    dockerRegistry {
+        baseDir = file('src/test/docker/')
+        dockerFilename = 'Dockerfile.registry'
+        portBindings = ['5000:5000']
+
+        // FIXME
+        tag = "latest"
     }
 }
 createDockerDaemonContainer.outputs.upToDateWhen { false }
+createDockerRegistryContainer.outputs.upToDateWhen { false }
 
 test {
     inputs.property 'docker-image', dcompose.dockerDaemon.image
@@ -83,20 +96,29 @@ test {
         def dockerHost = dcompose.dockerDaemon.dockerHost
         def dockerPort = dcompose.dockerDaemon.findHostPort(2375)
         def networkTestPort = dcompose.dockerDaemon.findHostPort(1500)
+        def registryPort = dcompose.dockerRegistry.findHostPort(5000)
 
         systemProperty 'DOCKER_HOST', "tcp://$dockerHost:$dockerPort"
         systemProperty 'DOCKER_TLS_VERIFY', '0'
         systemProperty 'networkCreateTaskSpec.testUrl', "http://$dockerHost:$networkTestPort"
+        systemProperty 'registry.host', 'dockerRegistry'
+        systemProperty 'registry.port', registryPort
+        systemProperty 'registry.user', 'reguser'
+        systemProperty 'registry.pass', 'regpass'
     }
 
     doLast {
         systemProperties.remove 'DOCKER_HOST'
         systemProperties.remove 'DOCKER_TLS_VERIFY'
         systemProperties.remove 'networkCreateTaskSpec.testUrl'
+        systemProperties.remove 'registry.host'
+        systemProperties.remove 'registry.port'
+        systemProperties.remove 'registry.user'
+        systemProperties.remove 'registry.pass'
     }
 
-    dependsOn startDockerDaemonContainer
-    finalizedBy removeDockerDaemonContainer
+    dependsOn startDockerDaemonContainer, startDockerRegistryContainer
+    finalizedBy removeDockerDaemonContainer, removeDockerRegistryContainer
 }
 
 pluginBundle {
