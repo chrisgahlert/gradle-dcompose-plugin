@@ -16,8 +16,6 @@
 package com.chrisgahlert.gradledcomposeplugin.utils
 
 import org.gradle.api.GradleException
-import org.gradle.internal.impldep.org.apache.commons.lang.builder.EqualsBuilder
-import org.gradle.internal.impldep.org.apache.commons.lang.builder.HashCodeBuilder
 
 class ImageRef implements Serializable {
     final String registry
@@ -71,12 +69,18 @@ class ImageRef implements Serializable {
 
     @Override
     boolean equals(Object obj) {
-        EqualsBuilder.reflectionEquals(this, obj)
+        if (obj == null || !(obj instanceof ImageRef)) {
+            return false
+        }
+
+        return Objects.equals(this.registry, obj.registry) &&
+                Objects.equals(this.repository, obj.repository) &&
+                Objects.equals(this.tag, obj.tag)
     }
 
     @Override
     int hashCode() {
-        HashCodeBuilder.reflectionHashCode(this)
+        registry?.hashCode() + repository?.hashCode() + tag?.hashCode()
     }
 
     String getRegistryWithRepository() {
