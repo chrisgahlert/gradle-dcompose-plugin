@@ -17,6 +17,7 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
+import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
@@ -74,8 +75,9 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
         dcomposeServices.each { Service service ->
             networks.addAll service.networks
+            def imageRef = ImageRef.parse(service.repository)
             def spec = [
-                    image: service.imageId
+                    image: "$imageRef.registryWithRepository@$service.imageId" as String
             ]
 
             if (service.command) {

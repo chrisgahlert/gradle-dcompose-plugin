@@ -45,11 +45,6 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
     }
 
     @Input
-    String getTag() {
-        service.tag
-    }
-
-    @Input
     @Optional
     Long getMemory() {
         service.memory
@@ -85,7 +80,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
     @Input
     String getBuildTag() {
-        "$service.repository:$service.tag"
+        service.repository
     }
 
     @Input
@@ -136,7 +131,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
             def response = cmd.exec(callback)
 
             service.imageId = response.awaitImageId()
-            logger.quiet("Built Docker image with id $service.imageId and tagged as $tag")
+            logger.quiet("Built Docker image with id $service.imageId and tagged as $buildTag")
         }
     }
 

@@ -175,8 +175,6 @@ abstract class Service extends AbstractEntity {
 
     abstract Set<Service> getVolumesFromDependencies()
 
-    abstract String getTag()
-
     abstract String getImage()
 
     abstract boolean hasImage()

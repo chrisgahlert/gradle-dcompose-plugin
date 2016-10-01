@@ -34,6 +34,8 @@ class DcomposeExtension {
 
     Closure dockerClientConfig
 
+    Map<String, Closure> registries = [:]
+
     DcomposeExtension(Project project, String namePrefix) {
         this.project = project
         this.namePrefix = namePrefix
@@ -128,6 +130,10 @@ class DcomposeExtension {
     Network network(String path) {
         def name = path.tokenize(Project.PATH_SEPARATOR).last()
         new NetworkReference(name, parseProjectPath(path))
+    }
+
+    void registry(String name, Closure authConfig) {
+        registries[name] = authConfig
     }
 
     def methodMissing(String name, def args) {

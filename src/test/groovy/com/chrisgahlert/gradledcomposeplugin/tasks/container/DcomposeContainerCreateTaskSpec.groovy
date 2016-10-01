@@ -75,7 +75,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                 main {
                     baseDir = file('docker/')
                     command = ['echo', 'test']
-                    tag = 'createtestimage'
+                    repository = 'imagechanged:createtestimage'
                 }
             }
         """

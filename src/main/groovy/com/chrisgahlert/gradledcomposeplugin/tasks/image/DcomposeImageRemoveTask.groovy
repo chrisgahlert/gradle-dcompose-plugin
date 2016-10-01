@@ -36,11 +36,7 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
 
     @Input
     String getImageRef() {
-        if (service.hasImage()) {
-            "$service.image"
-        } else {
-            "$service.repository:$service.tag"
-        }
+        service.hasImage() ? service.image : service.repository
     }
 
     @Input

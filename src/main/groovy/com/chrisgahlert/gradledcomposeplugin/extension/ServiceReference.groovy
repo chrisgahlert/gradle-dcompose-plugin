@@ -268,11 +268,6 @@ class ServiceReference extends Service {
     }
 
     @Override
-    String getTag() {
-        resolved.tag
-    }
-
-    @Override
     String getImage() {
         resolved.image
     }

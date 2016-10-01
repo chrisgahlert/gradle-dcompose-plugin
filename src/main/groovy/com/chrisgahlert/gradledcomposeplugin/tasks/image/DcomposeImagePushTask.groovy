@@ -16,10 +16,10 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks.image
 
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
+import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 @TypeChecked
@@ -31,13 +31,8 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
     }
 
     @Input
-    String getTag() {
-        service.tag
-    }
-
-    @Input
-    String getRepository() {
-        service.repository
+    ImageRef getRepositoryRef() {
+        ImageRef.parse(service.repository)
     }
 
     DcomposeImagePushTask() {
@@ -48,36 +43,32 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
                 "$service.projectPath:$service.buildImageTaskName"
             }
         }
+
+        onlyIf {
+            !service.hasImage() || ImageRef.parse(service.image) != ImageRef.parse(service.repository)
+        }
+
+        outputs.upToDateWhen { false }
     }
 
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void pushImage() {
         runInDockerClasspath {
-            logger.quiet("Tagging image $imageId with $repository:$tag")
-            client.tagImageCmd(imageId, repository, tag).exec()
+            logger.quiet("Tagging image $imageId with $repositoryRef")
+            client.tagImageCmd(imageId, repositoryRef.registryWithRepository, repositoryRef.tag).exec()
 
             def pushCmd = client.pushImageCmd(imageId)
-                    .withName(repository)
-                    .withTag(tag)
+                    .withName(repositoryRef.registryWithRepository)
+                    .withTag(repositoryRef.tag)
 
-            addAuthConfig(pushCmd)
+            addAuthConfig(repositoryRef.toString(), pushCmd)
 
             def callback = loadClass('com.github.dockerjava.core.command.PushImageResultCallback').newInstance()
-            logger.quiet("Pushing image $imageId to $repository:$tag")
+            logger.quiet("Pushing image $imageId to $repositoryRef")
             pushCmd.exec(callback)
             callback.awaitSuccess()
         }
     }
 
-    @OutputFile
-    @TypeChecked(TypeCheckingMode.SKIP)
-    File getImageRegistryState() {
-        dockerOutput('image-registry-state') {
-            runInDockerClasspath {
-//                client.ins
-                null
-            }
-        }
-    }
 }

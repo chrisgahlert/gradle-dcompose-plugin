@@ -20,6 +20,7 @@ import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
 import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
+import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.json.JsonBuilder
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -78,15 +79,28 @@ class AbstractDcomposeTask extends DefaultTask {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    protected void addAuthConfig(cmd) {
-        def clientConfig = buildClientConfig()
-        if (clientConfig.registryUsername || clientConfig.registryPassword) {
-            def authConfig = loadClass('com.github.dockerjava.api.model.AuthConfig').newInstance()
-                    .withUsername(clientConfig.registryUsername)
-                    .withPassword(clientConfig.registryPassword)
+    protected void addAuthConfig(String image, cmd) {
+        def imageRef = ImageRef.parse(image)
+        def authConfig = loadClass('com.github.dockerjava.api.model.AuthConfig').newInstance()
 
-            cmd.withAuthConfig(authConfig)
+        if (imageRef.registry) {
+            def extension = project.extensions.getByType(DcomposeExtension)
+            if (extension.registries.containsKey(imageRef.registry)) {
+                ConfigureUtil.configure(extension.registries[imageRef.registry], authConfig)
+            } else {
+                throw new GradleException("Cannot find auth config for registry '$imageRef.registry'")
+            }
+        } else {
+            def clientConfig = buildClientConfig()
+            if (clientConfig.registryUsername || clientConfig.registryPassword) {
+                authConfig
+                        .withUsername(clientConfig.registryUsername)
+                        .withPassword(clientConfig.registryPassword)
+
+            }
         }
+
+        cmd.withAuthConfig(authConfig)
     }
 
     protected Class loadClass(String name) {

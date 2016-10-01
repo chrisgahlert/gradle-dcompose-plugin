@@ -54,7 +54,7 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
         runInDockerClasspath {
             def callback = loadClass('com.github.dockerjava.core.command.PullImageResultCallback').newInstance()
             def cmd = client.pullImageCmd(image)
-            addAuthConfig(cmd)
+            addAuthConfig(image, cmd)
             def result = cmd.exec(callback)
             result.awaitSuccess()
             logger.quiet("Successfully pulled image $image")

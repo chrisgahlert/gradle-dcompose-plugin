@@ -101,8 +101,7 @@ test {
         systemProperty 'DOCKER_HOST', "tcp://$dockerHost:$dockerPort"
         systemProperty 'DOCKER_TLS_VERIFY', '0'
         systemProperty 'networkCreateTaskSpec.testUrl', "http://$dockerHost:$networkTestPort"
-        systemProperty 'registry.host', 'dockerRegistry'
-        systemProperty 'registry.port', registryPort
+        systemProperty 'registry.url', "dockerRegistry:$registryPort"
         systemProperty 'registry.user', 'reguser'
         systemProperty 'registry.pass', 'regpass'
     }

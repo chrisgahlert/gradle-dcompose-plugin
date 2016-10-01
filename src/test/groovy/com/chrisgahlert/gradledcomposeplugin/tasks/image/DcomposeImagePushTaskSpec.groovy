@@ -19,21 +19,19 @@ import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
 class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
-    private registryHost = System.getProperty('registry.host')
-    private registryPort = System.getProperty('registry.port')
+    private registryUrl = System.getProperty('registry.url')
     private registryUser = System.getProperty('registry.user')
     private registryPass = System.getProperty('registry.pass')
 
     private dockerClientConfig = """
-        dockerClientConfig = {
-            withRegistryUrl 'https://$registryHost:$registryPort'
-            withRegistryUsername '$registryUser'
-            withRegistryPassword '$registryPass'
+        registry ('$registryUrl') {
+            withUsername '$registryUser'
+            withPassword '$registryPass'
         }
     """
 
     def setup() {
-        assert registryHost && registryPort && registryUser && registryPass
+        assert registryUrl && registryUser && registryPass
     }
 
     def 'should be able to push image from hub to private reg'() {
@@ -44,8 +42,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
                 main {
                     image = '$DEFAULT_IMAGE'
-                    repository = 'dockerRegistry:5000/myapp'
-                    tag = 'pushsimple'
+                    repository = '$registryUrl/myapp:pushsimple'
                 }
             }
         """
@@ -67,7 +64,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
                 main {
                     baseDir = file('src/main/docker')
-                    repository = 'dockerRegistry:5000/custom'
+                    repository = '$registryUrl/custom'
                 }
             }
         """
@@ -78,15 +75,17 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
             CMD ["cat", "/test.txt"]
         """.stripIndent()
 
-        runTasksSuccessfully 'pushMainImage', 'removeImages'
+        runTasksSuccessfully 'pushMainImage', 'removeMainImage'
 
         and:
         buildFile.text = """
             $DEFAULT_PLUGIN_INIT
 
             dcompose {
+                $dockerClientConfig
+
                 pulled {
-                    image = '$registryHost:$registryPort/custom:latest'
+                    image = '$registryUrl/custom:latest'
                     waitForCommand = true
                 }
             }
@@ -102,8 +101,25 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':pullPulledImage')
         !result.wasSkipped(':pullPulledImage')
         !result.wasUpToDate(':pullPulledImage')
-        testFile.text == 'hello custom image for pushing'
-        result.standardOutput.contains('fdsafdsaf')
+        testFile.text.trim() == 'hello custom image for pushing'
+        result.standardOutput.contains('Successfully pulled image dockerRegistry:5000/custom:latest')
+    }
+
+    def 'push should not push back already existing images'() {
+        given:
+        buildFile << """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'pushImages'
+
+        then:
+        result.wasSkipped(':pushMainImage')
     }
 
 }

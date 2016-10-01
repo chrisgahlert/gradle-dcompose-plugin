@@ -334,20 +334,29 @@ It is possible to publish images to a public or private registry:
 ```gradle
 dcompose {
   dockerClientConfig = {
-    withRegistryUrl 'https://myregistry.com:5000'
-    withRegistryUsername 'myuser'
-    withRegistryPassword 'mypass'
+    withRegistryUsername 'dockerHubUser'
+    withRegistryPassword 'dockerHubPass'
+  }
+  registry ('myregistry.com:5000') {
+      // Delegated to an instance of 
+      // https://github.com/docker-java/docker-java/blob/master/src/main/java/com/github/dockerjava/api/model/AuthConfig.java
+      withUsername 'privateRegistryUser'
+      withPassword 'privateRegistryPass'
+  }
+  registry ('myotherregistry.com:5000') {
+      // Needs no user/pass
   }
 
   publicImage {
     baseDir = file('build/docker/pub/')
-    repository = 'user/publicImage'               // Will be pushed to Docker hub
-    tag = 'latest' // Default
+    repository = 'user/publicImage:latest'            // Will be pushed to Docker hub
   }
   privateImage {
-    image = 'mysql:latest'                        // Will be pulled from Docker hub
-    repository = 'myregistry.com:5000/awesomesql' // Will be pushed to custom repo
-    tag = '1.0'
+    image = 'mysql:latest'                            // Will be pulled from Docker hub
+    repository = 'myregistry.com:5000/awesomesql:1.0' // Will be pushed to custom repo in private registry 
+  }
+  privatePullImage {
+    image = 'myotherregistry.com:5000/customapp'      // Tag 'latest' will be pulled from private registry without login
   }
 }
 ```

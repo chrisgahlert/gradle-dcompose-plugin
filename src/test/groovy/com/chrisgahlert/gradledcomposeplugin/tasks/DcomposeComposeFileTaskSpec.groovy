@@ -78,7 +78,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
             version: '2'
             services:
               main:
-                image: sha256:...
+                image: busybox@sha256:...
                 command:
                 - hello
                 - world
@@ -125,7 +125,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     - netalias
                     - netalias2
               other:
-                image: sha256:...
+                image: dcompose.../other@sha256:...
                 networks:
                   default:
                     aliases: []
@@ -158,7 +158,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
             version: '2'
             services:
               main:
-                image: sha256:...
+                image: busybox@sha256:...
                 network_mode: bridge
             networks: {}
             volumes: {}
@@ -222,7 +222,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
             version: '2'
             services:
               main:
-                image: sha256:...
+                image: dcompose.../main@sha256:...
                 volumes:
                 - .:/data:ro
                 - namedv:/data2:rw
@@ -270,7 +270,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
             version: '2'
             services:
               main:
-                image: sha256:...
+                image: busybox@sha256:...
                 networks:
                   othernet:
                     aliases: []
@@ -313,7 +313,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
             version: '2'
             services:
               main:
-                image: sha256:...
+                image: busybox@sha256:...
                 networks:
                   default:
                     aliases: []
@@ -328,7 +328,10 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
     }
 
     private String readNormalizedFile(String s) {
-        file(s).text.replaceAll(/sha256:[a-f0-9]{64}/, 'sha256:...').trim()
+        file(s).text
+                .replaceAll(/sha256:[a-f0-9]{64}/, 'sha256:...')
+                .replaceAll(/dcompose[a-f0-9]{8}/, 'dcompose...')
+                .trim()
     }
 
     private boolean validateComposeFile(String f) {

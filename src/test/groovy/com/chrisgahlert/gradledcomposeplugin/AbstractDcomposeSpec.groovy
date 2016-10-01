@@ -54,6 +54,15 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
 
     def setup() {
         buildFile << DEFAULT_PLUGIN_INIT
+
+        // Fix for Windows?
+//        classpathFilter = new Predicate<URL>() {
+//            @Override
+//            boolean apply(URL url) {
+//                File userDir = new File(StandardSystemProperty.USER_DIR.value())
+//                url.path.substring(1).startsWith(userDir.path.replace('\\', '/'))
+//            }
+//        }
     }
 
     @Override

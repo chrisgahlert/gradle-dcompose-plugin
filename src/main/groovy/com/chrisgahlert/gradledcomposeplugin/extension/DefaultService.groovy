@@ -15,6 +15,7 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.extension
 
+import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
@@ -107,7 +108,6 @@ class DefaultService extends Service {
      */
     File baseDir          // Required
     String dockerFilename // optional, Default: "Dockerfile"
-    String tag            // The image tag name, tag should be used
     Long memory
     Long memswap
     String cpushares
@@ -154,18 +154,19 @@ class DefaultService extends Service {
     }
 
     @Override
-    String getTag() {
-        tag ?: 'latest'
-    }
-
-    @Override
     String getImage() {
-        image
+        ImageRef.parse(image).toString()
     }
 
     @Override
     String getRepository() {
-        repository ?: (dockerPrefix() + '/' + name).replace('_', '')
+        ImageRef.parse(repository ?: (hasImage() ? image : (dockerPrefix() + '/' + name).replace('_', ''))).toString()
+    }
+
+    @Deprecated
+    void setTag(String tag) {
+        throw new GradleException("Setting tag is no longer supported. Please include it in the repository defintion: " +
+                "dcompose.${name}.repository = 'repository:$tag'")
     }
 
     @Override
