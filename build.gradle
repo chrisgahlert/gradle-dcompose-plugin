@@ -71,7 +71,7 @@ dcompose {
         dockerFilename = 'Dockerfile.daemon'
         privileged = true
         exposedPorts = ['1500']
-        portBindings = ['12375:2375', '1500']
+        portBindings = ['2375', '1500']
 
         // FIXME
         tag = "latest"
