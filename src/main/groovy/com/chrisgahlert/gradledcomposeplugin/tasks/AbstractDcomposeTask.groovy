@@ -156,17 +156,36 @@ class AbstractDcomposeTask extends DefaultTask {
 
             runInDockerClasspath {
                 outputFile.text = toJson(value())
+                saveDebugOutput(outputFile, "before")
                 logger.debug("Initialzed Docker output file $outputFile for coming up-to-date checks")
             }
             doLast {
                 runInDockerClasspath {
                     outputFile.text = toJson(value())
+                    saveDebugOutput(outputFile, "after")
                     logger.debug("Updated Docker output file $outputFile for persisting output state")
                 }
             }
         }
 
         outputFile
+    }
+
+    /**
+     * For debugging purposes
+     */
+    protected void saveDebugOutput(File outputFile, String suffix) {
+        if (!System.getProperties().containsKey('com.chrisgahlert.gradledcomposeplugin.debugUpToDate')) {
+            return
+        }
+
+        File debugOutputFile
+        def i = 1
+        while ((debugOutputFile = new File(outputFile.parentFile, "${outputFile.name}.${i}.${suffix}")).exists()) {
+            i++
+        }
+
+        debugOutputFile.bytes = outputFile.bytes
     }
 
     protected Set<Service> getAllServices() {
