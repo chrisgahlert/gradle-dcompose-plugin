@@ -343,7 +343,7 @@ dcompose {
       withUsername 'privateRegistryUser'
       withPassword 'privateRegistryPass'
   }
-  registry ('myotherregistry.com:5000') {
+  registry ('http://myotherregistry.com:5000') {
       // Needs no user/pass
   }
 

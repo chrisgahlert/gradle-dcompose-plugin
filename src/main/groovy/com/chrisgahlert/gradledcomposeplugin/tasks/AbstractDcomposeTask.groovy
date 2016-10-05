@@ -83,12 +83,24 @@ class AbstractDcomposeTask extends DefaultTask {
         def imageRef = ImageRef.parse(image)
         def registryAddress = imageRef.registry ?: defaultRegistryAddress
 
-        def authConfigs = getAuthConfigs()
-        if (!authConfigs.configs.containsKey(registryAddress)) {
+        def authConfig = getAuthConfigs().configs.find { authRegistryAddress, authConfig ->
+            def registryUri
+            try {
+                registryUri = URI.create(authRegistryAddress)
+            } catch (Throwable t) {
+                logger.debug("Could not parse registry address '$authRegistryAddress' to URI", t)
+            }
+
+            return authRegistryAddress == registryAddress ||
+                    (registryUri?.host == registryAddress && registryUri?.port == 80) ||
+                    registryUri?.host + ':' + registryUri?.port == registryAddress
+        }?.value
+
+        if (!authConfig) {
             throw new GradleException("Cannot find auth config for registry '$registryAddress'")
         }
 
-        cmd.withAuthConfig(authConfigs.configs[registryAddress])
+        cmd.withAuthConfig(authConfig)
     }
 
     protected String getDefaultRegistryAddress() {

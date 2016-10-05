@@ -56,6 +56,31 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         !result.wasUpToDate(':pushMainImage')
     }
 
+    def 'should be able to push image from hub to private reg with custom url'() {
+        given:
+        buildFile << """
+            dcompose {
+                registry ('https://$registryUrl') {
+                    withUsername '$registryUser'
+                    withPassword '$registryPass'
+                }
+
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    repository = '$registryUrl/oapp:pushsimple'
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'pushMainImage'
+
+        then:
+        result.wasExecuted(':pushMainImage')
+        !result.wasSkipped(':pushMainImage')
+        !result.wasUpToDate(':pushMainImage')
+    }
+
     def 'should be able to pull published image from private reg'() {
         given:
         buildFile << """
