@@ -27,7 +27,7 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
 
     @Input
     String getImageId() {
-        service.imageId?.replaceFirst(/^sha256:/, '')
+        service.imageId
     }
 
     @Input
@@ -55,8 +55,11 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     void pushImage() {
         runInDockerClasspath {
-            logger.quiet("Tagging image $imageId with $repositoryRef")
-            client.tagImageCmd(imageId, repositoryRef.registryWithRepository, repositoryRef.tag).exec()
+            if (service.hasImage()) {
+                // Tagging only needed when image has been pulled, as building it automatically sets the tag
+                logger.quiet("Tagging image $imageId with $repositoryRef")
+                client.tagImageCmd(imageId, repositoryRef.registryWithRepository, repositoryRef.tag).exec()
+            }
 
             def pushCmd = client.pushImageCmd(imageId)
                     .withName(repositoryRef.registryWithRepository)

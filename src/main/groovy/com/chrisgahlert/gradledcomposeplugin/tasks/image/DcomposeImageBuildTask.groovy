@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks.image
 
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
+import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.*
@@ -79,8 +80,8 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
     }
 
     @Input
-    String getBuildTag() {
-        service.repository
+    ImageRef getBuildTag() {
+        ImageRef.parse(service.repository)
     }
 
     @Input
@@ -95,7 +96,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
         runInDockerClasspath {
             def cmd = client.buildImageCmd(dockerFile)
                     .withBaseDirectory(baseDir)
-                    .withTag(buildTag)
+                    .withBuildAuthConfigs(authConfigs)
 
             if (noCache != null) {
                 cmd.withNoCache(noCache)
@@ -127,11 +128,13 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
                 }
             }
 
-            def callback = loadClass('com.github.dockerjava.core.command.BuildImageResultCallback').newInstance()
-            def response = cmd.exec(callback)
+            def response = cmd.exec(loadClass('com.github.dockerjava.core.command.BuildImageResultCallback').newInstance())
 
             service.imageId = response.awaitImageId()
-            logger.quiet("Built Docker image with id $service.imageId and tagged as $buildTag")
+            logger.quiet("Built Docker image with id $service.imageId")
+
+            client.tagImageCmd(service.imageId, buildTag.registryWithRepository, buildTag.tag).exec()
+            logger.quiet("Tagged Docker image with id $service.imageId as $buildTag")
         }
     }
 
@@ -140,7 +143,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
     File getImageState() {
         dockerOutput('image-state') {
             ignoreDockerException('NotFoundException') {
-                def result = client.inspectImageCmd(buildTag).exec()
+                def result = client.inspectImageCmd(buildTag as String).exec()
                 service.imageId = result.id
                 result.repoTags = null
                 result

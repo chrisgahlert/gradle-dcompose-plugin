@@ -80,6 +80,7 @@ dcompose {
         baseDir = file('src/test/docker/')
         dockerFilename = 'Dockerfile.registry'
         portBindings = ['5000:5000']
+        aliases = ['testreg']
 
         // FIXME
         tag = "latest"
@@ -92,28 +93,24 @@ test {
     inputs.property 'docker-image', dcompose.dockerDaemon.image
     maxParallelForks = Math.round(Runtime.runtime.availableProcessors() / 2)
 
+    systemProperty 'testreg.url', "testreg:5000"
+    systemProperty 'testreg.user', 'reguser'
+    systemProperty 'testreg.pass', 'regpass'
+
     doFirst {
         def dockerHost = dcompose.dockerDaemon.dockerHost
         def dockerPort = dcompose.dockerDaemon.findHostPort(2375)
         def networkTestPort = dcompose.dockerDaemon.findHostPort(1500)
-        def registryPort = dcompose.dockerRegistry.findHostPort(5000)
 
         systemProperty 'DOCKER_HOST', "tcp://$dockerHost:$dockerPort"
         systemProperty 'DOCKER_TLS_VERIFY', '0'
         systemProperty 'networkCreateTaskSpec.testUrl', "http://$dockerHost:$networkTestPort"
-        systemProperty 'registry.url', "dockerRegistry:$registryPort"
-        systemProperty 'registry.user', 'reguser'
-        systemProperty 'registry.pass', 'regpass'
     }
 
     doLast {
         systemProperties.remove 'DOCKER_HOST'
         systemProperties.remove 'DOCKER_TLS_VERIFY'
         systemProperties.remove 'networkCreateTaskSpec.testUrl'
-        systemProperties.remove 'registry.host'
-        systemProperties.remove 'registry.port'
-        systemProperties.remove 'registry.user'
-        systemProperties.remove 'registry.pass'
     }
 
     dependsOn startDockerDaemonContainer, startDockerRegistryContainer

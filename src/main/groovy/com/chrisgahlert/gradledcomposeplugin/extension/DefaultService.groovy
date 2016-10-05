@@ -345,4 +345,8 @@ class DefaultService extends Service {
         }
         imageId
     }
+
+    void setImageId(String imageId) {
+        this.imageId = imageId?.replaceFirst(/^sha256:/, '')
+    }
 }

@@ -19,9 +19,9 @@ import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
 class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
-    private registryUrl = System.getProperty('registry.url')
-    private registryUser = System.getProperty('registry.user')
-    private registryPass = System.getProperty('registry.pass')
+    private registryUrl = System.getProperty('testreg.url')
+    private registryUser = System.getProperty('testreg.user')
+    private registryPass = System.getProperty('testreg.pass')
 
     private dockerClientConfig = """
         registry ('$registryUrl') {
@@ -102,7 +102,63 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         !result.wasSkipped(':pullPulledImage')
         !result.wasUpToDate(':pullPulledImage')
         testFile.text.trim() == 'hello custom image for pushing'
-        result.standardOutput.contains('Successfully pulled image dockerRegistry:5000/custom:latest')
+        result.standardOutput.contains("Successfully pulled image $registryUrl/custom:latest")
+    }
+
+    def 'should be able to pull published image from private reg during build'() {
+        given:
+        buildFile << """
+            dcompose {
+                $dockerClientConfig
+
+                main {
+                    baseDir = file('src/main/docker')
+                    repository = '$registryUrl/customforbuilding:abc'
+                }
+            }
+        """
+
+
+        def dockerFile = file('src/main/docker/Dockerfile')
+        dockerFile.text = """
+            FROM $DEFAULT_IMAGE
+            CMD ["cat", "/test.txt"]
+        """.stripIndent()
+
+        runTasksSuccessfully 'pushMainImage', 'removeMainImage'
+
+        and:
+        dockerFile.text = """
+            FROM $registryUrl/customforbuilding:abc
+            RUN echo building from private registry > /test.txt
+        """.stripIndent()
+
+        buildFile.text = """
+            $DEFAULT_PLUGIN_INIT
+
+            dcompose {
+                $dockerClientConfig
+
+                built {
+                    baseDir = file('src/main/docker')
+                    waitForCommand = true
+                }
+            }
+
+            ${copyTaskConfig('built', '/test.txt')}
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startBuiltContainer', 'copy'
+        def testFile = file('build/copy/test.txt')
+
+        then:
+        !result.wasExecuted(':pullBuiltImage')
+        result.wasExecuted(':buildBuiltImage')
+        !result.wasSkipped(':buildBuiltImage')
+        !result.wasUpToDate(':buildBuiltImage')
+        testFile.text.trim() == 'building from private registry'
+        result.standardOutput.contains("Built Docker image with id")
     }
 
     def 'push should not push back already existing images'() {
@@ -120,6 +176,25 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
         then:
         result.wasSkipped(':pushMainImage')
+    }
+
+    def 'push should try to push back already existing images under new name'() {
+        given:
+        buildFile << """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    repository = 'user/image'
+                }
+            }
+        """
+
+        when:
+        def result = runTasks 'pushImages'
+
+        then:
+        result.wasExecuted(':pushMainImage')
+        result.standardError.contains('Could not push image: unauthorized: authentication required')
     }
 
 }

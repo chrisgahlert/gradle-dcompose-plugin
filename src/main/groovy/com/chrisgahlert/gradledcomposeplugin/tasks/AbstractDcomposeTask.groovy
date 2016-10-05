@@ -81,26 +81,44 @@ class AbstractDcomposeTask extends DefaultTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     protected void addAuthConfig(String image, cmd) {
         def imageRef = ImageRef.parse(image)
-        def authConfig = loadClass('com.github.dockerjava.api.model.AuthConfig').newInstance()
+        def registryAddress = imageRef.registry ?: defaultRegistryAddress
 
-        if (imageRef.registry) {
-            def extension = project.extensions.getByType(DcomposeExtension)
-            if (extension.registries.containsKey(imageRef.registry)) {
-                ConfigureUtil.configure(extension.registries[imageRef.registry], authConfig)
-            } else {
-                throw new GradleException("Cannot find auth config for registry '$imageRef.registry'")
-            }
-        } else {
-            def clientConfig = buildClientConfig()
-            if (clientConfig.registryUsername || clientConfig.registryPassword) {
-                authConfig
-                        .withUsername(clientConfig.registryUsername)
-                        .withPassword(clientConfig.registryPassword)
-
-            }
+        def authConfigs = getAuthConfigs()
+        if (!authConfigs.configs.containsKey(registryAddress)) {
+            throw new GradleException("Cannot find auth config for registry '$registryAddress'")
         }
 
-        cmd.withAuthConfig(authConfig)
+        cmd.withAuthConfig(authConfigs.configs[registryAddress])
+    }
+
+    protected String getDefaultRegistryAddress() {
+        def authConfigClass = loadClass('com.github.dockerjava.api.model.AuthConfig')
+        authConfigClass.getDeclaredField('DEFAULT_SERVER_ADDRESS').get(null)
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected def getAuthConfigs() {
+        def result = loadClass('com.github.dockerjava.api.model.AuthConfigurations').newInstance()
+        def extension = project.extensions.getByType(DcomposeExtension)
+        def authConfigClass = loadClass('com.github.dockerjava.api.model.AuthConfig')
+
+        def clientConfig = buildClientConfig()
+        def clientConfigAuth = authConfigClass.newInstance().withRegistryAddress(defaultRegistryAddress)
+        if (clientConfig.registryUsername) clientConfigAuth.withUsername(clientConfig.registryUsername)
+        if (clientConfig.registryPassword) clientConfigAuth.withPassword(clientConfig.registryPassword)
+        if (clientConfig.registryEmail) clientConfigAuth.withEmail(clientConfig.registryEmail)
+        if (clientConfig.registryUrl) clientConfigAuth.withRegistryAddress(clientConfig.registryUrl)
+        result.addConfig(clientConfigAuth)
+
+        extension.registries.each { String name, Closure config ->
+            def authConfig = authConfigClass.newInstance()
+            authConfig.withRegistryAddress(name)
+            ConfigureUtil.configure(config, authConfig)
+
+            result.addConfig(authConfig)
+        }
+
+        result
     }
 
     protected Class loadClass(String name) {

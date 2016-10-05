@@ -1,8 +1,8 @@
 FROM registry:2.5.1
 
-COPY dockerRegistry.* /certs/
-ENV REGISTRY_HTTP_TLS_CERTIFICATE /certs/dockerRegistry.crt
-ENV REGISTRY_HTTP_TLS_KEY /certs/dockerRegistry.key
+COPY registry.* /certs/
+ENV REGISTRY_HTTP_TLS_CERTIFICATE /certs/registry.crt
+ENV REGISTRY_HTTP_TLS_KEY /certs/registry.key
 
 COPY htpasswd /auth/
 ENV REGISTRY_AUTH htpasswd

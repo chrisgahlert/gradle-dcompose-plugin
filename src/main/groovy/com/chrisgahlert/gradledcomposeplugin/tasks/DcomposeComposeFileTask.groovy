@@ -77,7 +77,7 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
             networks.addAll service.networks
             def imageRef = ImageRef.parse(service.repository)
             def spec = [
-                    image: "$imageRef.registryWithRepository@$service.imageId" as String
+                    image: "$imageRef.registryWithRepository@sha256:$service.imageId" as String
             ]
 
             if (service.command) {
