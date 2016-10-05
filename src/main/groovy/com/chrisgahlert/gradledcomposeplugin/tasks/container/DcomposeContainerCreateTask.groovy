@@ -447,6 +447,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                     result.hostConfig?.networkMode = 'default'
                 }
                 result.mounts = result.mounts?.sort { it.destination?.path }
+                result.hostConfig?.portBindings = result.hostConfig?.portBindings.sort { k, v -> k }
 
                 [result, networkData]
             }
