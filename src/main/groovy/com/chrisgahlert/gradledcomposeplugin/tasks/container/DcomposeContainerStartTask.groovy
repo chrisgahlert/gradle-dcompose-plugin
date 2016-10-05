@@ -21,7 +21,6 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 import java.lang.reflect.InvocationHandler
@@ -38,10 +37,6 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
     OutputStream stdErr = System.err
 
     DcomposeContainerStartTask() {
-        outputs.upToDateWhen {
-            !service.waitForCommand
-        }
-
         dependsOn {
             service.linkDependencies.collect { "$it.projectPath:$it.startContainerTaskName" }
         }
@@ -58,6 +53,11 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
     @Input
     String getContainerName() {
         service.containerName
+    }
+
+    @Input
+    String getContainerId() {
+        service.containerId
     }
 
     @Input
@@ -99,7 +99,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
                 }
 
                 logger.quiet "Starting Docker container with name $containerName"
-                client.startContainerCmd(containerName).exec()
+                client.startContainerCmd(containerId).exec()
 
                 outHandler?.awaitCompletion(service.waitTimeout)
             }
@@ -114,13 +114,15 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
                             "(Use dcompose.${service.name}.ignoreExitCode = true to disable this check!)")
                 }
             }
+
+            updateServiceState()
         }
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected Integer waitForExitCode(long startTime) {
         def callbackClass = loadClass('com.github.dockerjava.core.command.WaitContainerResultCallback')
-        def callback = client.waitContainerCmd(containerName).exec(callbackClass.newInstance())
+        def callback = client.waitContainerCmd(containerId).exec(callbackClass.newInstance())
 
         if (service.waitTimeout > 0) {
             def timeout = service.waitTimeout * 1000L - System.currentTimeMillis() + startTime
@@ -132,7 +134,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected StreamOutputHandler attachStreams() {
-        def attachCmd = getClient(useNetty: true).attachContainerCmd(containerName)
+        def attachCmd = getClient(useNetty: true).attachContainerCmd(containerId)
                 .withFollowStream(true)
 
         if (attachStdout) {
@@ -162,27 +164,23 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
         outHandler
     }
 
-    @OutputFile
     @TypeChecked(TypeCheckingMode.SKIP)
-    File getContainerState() {
-        dockerOutput('container-state') {
-            def result = ignoreDockerException('NotFoundException') {
-                client.inspectContainerCmd(containerName).exec()
-            }
-
-            if (result?.state?.running) {
-                service.hostPortBindings = result?.networkSettings?.ports?.bindings
-                service.dockerHost = buildClientConfig().dockerHost
-            } else {
-                service.hostPortBindings = null
-                service.dockerHost = null
-            }
-
-            result?.mounts = result?.mounts?.sort { it.destination?.path }
-
-
-            result
+    @Input
+    boolean updateServiceState() {
+        def result = ignoreDockerException('NotFoundException') {
+            client.inspectContainerCmd(containerName).exec()
         }
+
+        if (result?.state?.running) {
+            service.hostPortBindings = result?.networkSettings?.ports?.bindings
+            service.dockerHost = buildClientConfig().dockerHost
+        } else {
+            service.hostPortBindings = null
+            service.dockerHost = null
+        }
+
+        // Always return true - just hijacking this method to update container state
+        true
     }
 
 

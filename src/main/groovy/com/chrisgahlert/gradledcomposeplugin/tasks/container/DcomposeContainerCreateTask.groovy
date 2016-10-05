@@ -347,13 +347,14 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             def result = cmd.withName(containerName).exec()
+            service.containerId = result.id
             logger.quiet("Created new container with id $result.id ($containerName)")
 
             if (!networkMode) {
                 ignoreDockerException('NotFoundException') {
                     client.disconnectFromNetworkCmd()
                             .withNetworkId('bridge')
-                            .withContainerId(containerName)
+                            .withContainerId(service.containerId)
                             .exec()
                 }
 
@@ -370,7 +371,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
                     client.connectToNetworkCmd()
                             .withNetworkId(network.networkName)
-                            .withContainerId(containerName)
+                            .withContainerId(service.containerId)
                             .withContainerNetwork(networkSettings)
                             .exec()
 
@@ -432,6 +433,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         dockerOutput('container-state') {
             ignoreDockerException('NotFoundException') {
                 def result = client.inspectContainerCmd(containerName).exec()
+                service.containerId = result.id
                 result.state = null
                 result.hostsPath = null
                 result.resolvConfPath = null

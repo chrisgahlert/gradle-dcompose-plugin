@@ -161,7 +161,19 @@ abstract class Service extends AbstractEntity {
 
     abstract Boolean getBuildRemove()
 
-    abstract Boolean getBuildPull()
+    @Deprecated
+    final Boolean getBuildPull() {
+        forcePull
+    }
+
+    @Deprecated
+    final void setBuildPull(boolean buildPull) {
+        forcePull = buildPull
+    }
+
+    abstract void setForcePull(boolean forcePull)
+
+    abstract boolean isForcePull()
 
     abstract void setHostPortBindings(Map hostPortBindings)
 
@@ -194,6 +206,10 @@ abstract class Service extends AbstractEntity {
     abstract void setImageId(String imageId)
 
     abstract String getImageId()
+
+    abstract void setContainerId(String containerId)
+
+    abstract String getContainerId()
 
     abstract boolean isDeploy()
 

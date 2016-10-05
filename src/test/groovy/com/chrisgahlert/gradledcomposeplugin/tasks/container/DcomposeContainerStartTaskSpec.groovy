@@ -45,14 +45,38 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
     def 'start should be up-to-date'() {
         given:
-        buildFile << DEFAULT_BUILD_FILE
+        buildFile << """
+            dcompose {
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'hello world']
+                    waitForCommand = true
+                    attachStdout = true
+                }
+            }
+
+            startMainContainer{
+                def out = file('out.txt')
+                outputs.file out
+                doFirst {
+                    stdOut = out.newOutputStream()
+                }
+                doLast {
+                    stdOut.close()
+                }
+            }
+        """
+
         runTasksSuccessfully 'startMainContainer'
+        def outFile = file('out.txt')
+        assert outFile.text.trim() == 'hello world'
 
         when:
         def result = runTasksSuccessfully 'startMainContainer'
 
         then:
         result.wasUpToDate(':startMainContainer')
+        outFile.text.trim() == 'hello world'
     }
 
     def 'start should not be up-to-date when create was not up-to-date'() {

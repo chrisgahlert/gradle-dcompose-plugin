@@ -75,6 +75,11 @@ class DefaultService extends Service {
     String repository
 
     /**
+     * Whether the image pull should be forced when pulling/building an image
+     */
+    boolean forcePull = false
+
+    /**
      * Create container specific properties. Properties are optional by default.
      */
     List<String> command
@@ -117,7 +122,6 @@ class DefaultService extends Service {
     Boolean noPruneParentImages
     Boolean buildNoCache
     Boolean buildRemove
-    Boolean buildPull
 
     /**
      * Results populated after starting a container
@@ -126,6 +130,7 @@ class DefaultService extends Service {
     String dockerHost
     Integer exitCode
     String imageId
+    String containerId
 
     DefaultService(String name, String projectPath, Closure<String> dockerPrefix) {
         super(name, projectPath)
@@ -250,7 +255,16 @@ class DefaultService extends Service {
             throw new GradleException("Docker hostname not available for service $name - has it been started?")
         }
 
-        return dockerHost
+        dockerHost
+    }
+
+    @Override
+    String getContainerId() {
+        if (!containerId) {
+            throw new GradleException("Container id not available for service $name - has it been started?")
+        }
+
+        containerId
     }
 
     @Override

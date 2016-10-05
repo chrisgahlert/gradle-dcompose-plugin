@@ -233,8 +233,13 @@ class ServiceReference extends Service {
     }
 
     @Override
-    Boolean getBuildPull() {
-        resolved.buildPull
+    void setForcePull(boolean forcePull) {
+        resolved.forcePull = forcePull
+    }
+
+    @Override
+    boolean isForcePull() {
+        resolved.forcePull
     }
 
     @Override
@@ -355,5 +360,15 @@ class ServiceReference extends Service {
     @Override
     void setRepository(String repository) {
         resolved.repository = repository
+    }
+
+    @Override
+    void setContainerId(String containerId) {
+        resolved.containerId = containerId
+    }
+
+    @Override
+    String getContainerId() {
+        resolved.containerId
     }
 }

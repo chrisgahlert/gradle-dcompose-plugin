@@ -103,7 +103,7 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
         then:
         result.wasUpToDate(':buildDbImage')
         result.wasUpToDate(':createDbContainer')
-        result.wasUpToDate(':startDbContainer')
+        result.wasExecuted(':startDbContainer')
     }
 
     def 'build image should not be up-to-date on change'() {

@@ -19,14 +19,15 @@ import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 @TypeChecked
 class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
 
     DcomposeImagePullTask() {
-        onlyIf {
-            !imageExists()
+        outputs.upToDateWhen {
+            !service.forcePull
         }
 
         enabled = { service.hasImage() }
@@ -35,17 +36,6 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
     @Input
     String getImage() {
         service.image
-    }
-
-    @TypeChecked(TypeCheckingMode.SKIP)
-    boolean imageExists() {
-        runInDockerClasspath {
-            ignoreDockerException('NotFoundException') {
-                def result = client.inspectImageCmd(image).exec()
-                service.imageId = result.id
-                true
-            }
-        }
     }
 
     @TaskAction
@@ -58,8 +48,20 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
             def result = cmd.exec(callback)
             result.awaitSuccess()
             logger.quiet("Successfully pulled image $image")
+        }
+    }
 
-            service.imageId = client.inspectImageCmd(image).exec().id
+    @OutputFile
+    @TypeChecked(TypeCheckingMode.SKIP)
+    File getImageState() {
+        dockerOutput('image-state') {
+            runInDockerClasspath {
+                ignoreDockerException('NotFoundException') {
+                    def result = client.inspectImageCmd(image).exec()
+                    service.imageId = result.id
+                    result.id
+                }
+            }
         }
     }
 }

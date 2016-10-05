@@ -110,7 +110,6 @@ dcompose {
     noPruneParentImages = true|false|null // Optional
     buildNoCache = true|false|null        // Optional
     buildRemove = true|false|null         // Optional
-    buildPull = true|false|null           // Optional
     
     command = ['sh', '-c', 'echo abc']    // Optional, if provided by Dockerfile
   }
@@ -182,6 +181,7 @@ dcompose {
 | deploy | boolean<br> *Default: true* | Whether this service should be included when creating a `docker-compose.yml` file by calling the `createComposeFile` task
 | dependsOn | List&lt;Service&gt; <br> *Defaut: null* | A list of services that this service depends on. These services will be created/started before this service and stopped/removed after this service. <br><br> *Sample:* `[myService1, service('myService2'), service(':project:myService3')`
 | restart | String<br> *Default: null* | The container's restart policy.<br><br> *Sample:* `'on-failure'`, `'on-failure:10'`, `'always'` or `'unless-stopped'`
+| forcePull | boolean<br> *Default: false* | Whether the build or pull task should force pulling the image from the registry.
 
 
 # Gradle tasks

@@ -35,8 +35,8 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
     @Input
     @Optional
-    Boolean getPull() {
-        service.buildPull
+    boolean isForcePull() {
+        service.forcePull
     }
 
     @Input
@@ -97,6 +97,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
             def cmd = client.buildImageCmd(dockerFile)
                     .withBaseDirectory(baseDir)
                     .withBuildAuthConfigs(authConfigs)
+                    .withPull(forcePull)
 
             if (noCache != null) {
                 cmd.withNoCache(noCache)
@@ -104,10 +105,6 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
             if (remove != null) {
                 cmd.withRemove(remove)
-            }
-
-            if (pull != null) {
-                cmd.withPull(pull)
             }
 
             if (memory != null) {
@@ -122,6 +119,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
             if (cpusetcpus != null) {
                 cmd.withCpusetcpus(cpusetcpus)
             }
+
             if (buildArgs) {
                 buildArgs.each { key, value ->
                     cmd.withBuildArg(key, value)
@@ -145,8 +143,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
             ignoreDockerException('NotFoundException') {
                 def result = client.inspectImageCmd(buildTag as String).exec()
                 service.imageId = result.id
-                result.repoTags = null
-                result
+                result.id
             }
         }
     }

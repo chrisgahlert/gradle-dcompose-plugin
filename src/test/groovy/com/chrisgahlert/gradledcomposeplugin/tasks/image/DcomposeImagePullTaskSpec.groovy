@@ -46,7 +46,7 @@ class DcomposeImagePullTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':pullDbImage')
     }
 
-    def 'pull should be skipped when already pulled'() {
+    def 'pull should be up-to-date when already pulled'() {
         given:
         buildFile << """
             dcompose {
@@ -62,7 +62,7 @@ class DcomposeImagePullTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksSuccessfully 'pullDbImage'
 
         then:
-        result.wasSkipped(':pullDbImage')
+        result.wasUpToDate(':pullDbImage')
     }
 
     def 'pull should not be skipped when image changed'() {
