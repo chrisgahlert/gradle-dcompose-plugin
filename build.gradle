@@ -79,7 +79,6 @@ dcompose {
     dockerRegistry {
         baseDir = file('src/test/docker/')
         dockerFilename = 'Dockerfile.registry'
-        portBindings = ['5000:5000']
         aliases = ['testreg']
 
         // FIXME
