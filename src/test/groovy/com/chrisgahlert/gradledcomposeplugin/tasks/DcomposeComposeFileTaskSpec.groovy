@@ -60,6 +60,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     networks += backend
                     aliases = ['netalias', 'netalias2']
                     restart = 'always'
+                    dependsOn = [other]
                 }
             }
         """
@@ -79,6 +80,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
             services:
               main:
                 image: busybox@sha256:...
+                depends_on:
+                - other
                 command:
                 - hello
                 - world

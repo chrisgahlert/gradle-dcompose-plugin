@@ -80,6 +80,9 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
                     image: "$imageRef.registryWithRepository@sha256:$service.imageId" as String
             ]
 
+            if (service.dependsOn) {
+                spec.depends_on = service.dependsOn.collect { it.name }
+            }
             if (service.command) {
                 spec.command = service.command
             }
