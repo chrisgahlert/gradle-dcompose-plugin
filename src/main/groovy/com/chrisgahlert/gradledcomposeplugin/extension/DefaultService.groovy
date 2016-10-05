@@ -160,7 +160,9 @@ class DefaultService extends Service {
 
     @Override
     String getRepository() {
-        ImageRef.parse(repository ?: (hasImage() ? image : (dockerPrefix() + '/' + name).replace('_', ''))).toString()
+        ImageRef.parse(repository ?: (hasImage() ? image : (dockerPrefix() + '/' + name).replace('_', '')))
+                .toString()
+                .toLowerCase()
     }
 
     @Deprecated
