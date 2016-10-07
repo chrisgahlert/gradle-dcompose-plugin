@@ -45,7 +45,7 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
         }
 
         onlyIf {
-            !service.hasImage() || ImageRef.parse(service.image) != ImageRef.parse(service.repository)
+            (!service.hasImage() || ImageRef.parse(service.image) != ImageRef.parse(service.repository)) && service.deploy
         }
 
         outputs.upToDateWhen { false }

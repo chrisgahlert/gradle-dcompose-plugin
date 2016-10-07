@@ -83,6 +83,7 @@ class DcomposeImagePullTaskSpec extends AbstractDcomposeSpec {
 
         then:
         !result.wasSkipped(':pullDbImage')
+        !result.wasUpToDate(':pullDbImage')
         result.wasExecuted(':pullDbImage')
     }
 }
