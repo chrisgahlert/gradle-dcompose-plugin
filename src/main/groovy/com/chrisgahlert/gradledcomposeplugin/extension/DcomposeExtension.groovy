@@ -41,7 +41,7 @@ class DcomposeExtension {
         this.namePrefix = namePrefix
 
         services = project.container(DefaultService, { String name ->
-            def service = new DefaultService(name, project.path, { DcomposeExtension.this.namePrefix })
+            def service = new DefaultService(name, project.path, { getNamePrefix() })
             def defaultNetwork = networks.findByName(Network.DEFAULT_NAME)
             if (defaultNetwork) {
                 service.networks = [defaultNetwork]
@@ -50,7 +50,7 @@ class DcomposeExtension {
         })
 
         networks = project.container(DefaultNetwork, { String name ->
-            new DefaultNetwork(name, project.path, { DcomposeExtension.this.namePrefix })
+            new DefaultNetwork(name, project.path, { getNamePrefix() })
         })
         networks.create(Network.DEFAULT_NAME)
     }
@@ -130,6 +130,10 @@ class DcomposeExtension {
     Network network(String path) {
         def name = path.tokenize(Project.PATH_SEPARATOR).last()
         new NetworkReference(name, parseProjectPath(path))
+    }
+    
+    String getNamePrefix() {
+        namePrefix
     }
 
     void registry(String name, Closure authConfig) {
