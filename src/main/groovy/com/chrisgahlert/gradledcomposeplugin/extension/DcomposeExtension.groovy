@@ -41,7 +41,7 @@ class DcomposeExtension {
         this.namePrefix = namePrefix
 
         services = project.container(DefaultService, { String name ->
-            def service = new DefaultService(name, project.path, { namePrefix })
+            def service = new DefaultService(name, project.path, { DcomposeExtension.this.namePrefix })
             def defaultNetwork = networks.findByName(Network.DEFAULT_NAME)
             if (defaultNetwork) {
                 service.networks = [defaultNetwork]
@@ -50,7 +50,7 @@ class DcomposeExtension {
         })
 
         networks = project.container(DefaultNetwork, { String name ->
-            new DefaultNetwork(name, project.path, { namePrefix })
+            new DefaultNetwork(name, project.path, { DcomposeExtension.this.namePrefix })
         })
         networks.create(Network.DEFAULT_NAME)
     }
