@@ -157,7 +157,7 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
                 server {
                     image = '$DEFAULT_IMAGE'
                 }
-                namePrefix = 'custom_prefix'
+                namePrefix = 'custom_prefix_'
             }
         """
 
