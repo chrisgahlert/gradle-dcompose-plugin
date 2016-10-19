@@ -149,4 +149,23 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
 
         successText = error ? 'fail' : 'succeed'
     }
+    
+    def 'should be able to change container name prefix'() {
+        given:
+        buildFile << """
+            dcompose {
+                server {
+                    image = '$DEFAULT_IMAGE'
+                }
+                namePrefix = 'custom_prefix'
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'createServerContainer'
+
+        then:
+        result.standardOutput.contains('custom_prefix_server')
+    }
+            
 }
