@@ -469,4 +469,27 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
             10.0.1.0        *               255.255.255.0   U     0      0        0 eth0
         '''.stripIndent())
     }
+
+    def 'should support changing the default subnet'() {
+        given:
+        buildFile << """
+            dcompose {
+                network('default').ipam.config { subnet = '10.0.17.0/24' }
+
+                ipecho {
+                    image = '$DEFAULT_IMAGE'
+                    command = 'ifconfig > /test.txt'
+                    waitForCommand = true
+                }
+            }
+
+            ${copyTaskConfig('ipecho', '/test.txt')}
+        """
+
+        when:
+        runTasksSuccessfully 'startContainers', 'copy'
+
+        then:
+        file('build/copy/test.txt').text.contains('inet addr:10.0.17.2')
+    }
 }

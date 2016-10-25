@@ -156,7 +156,9 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                   - subnet: 10.0.1.0/24
                     ip_range: 10.0.1.128/25
                     gateway: 10.0.1.138
-              default: {}
+              default:
+                ipam:
+                  config: []
             volumes:
               main__data: {}
         """.stripIndent().trim()
@@ -187,7 +189,9 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 image: busybox@sha256:...
                 network_mode: bridge
             networks:
-              default: {}
+              default:
+                ipam:
+                  config: []
             volumes: {}
         """.stripIndent().trim()
 
@@ -259,7 +263,9 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                   default:
                     aliases: []
             networks:
-              default: {}
+              default:
+                ipam:
+                  config: []
             volumes:
               namedv: {}
               main__other: {}
@@ -304,6 +310,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     aliases: []
             networks:
               othernet:
+                ipam:
+                  config: []
                 driver: overlay
             volumes: {}
         """.stripIndent().trim()

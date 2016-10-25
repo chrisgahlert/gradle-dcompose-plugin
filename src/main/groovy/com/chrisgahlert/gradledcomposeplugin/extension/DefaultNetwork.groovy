@@ -39,10 +39,14 @@ public class DefaultNetwork extends Network {
     }
 
     Ipam ipam(Closure config) {
+        ConfigureUtil.configure(config, getIpam())
+    }
+
+    Ipam getIpam() {
         if (ipam == null) {
             ipam = new Ipam()
         }
 
-        ConfigureUtil.configure(config, ipam)
+        ipam
     }
 }
