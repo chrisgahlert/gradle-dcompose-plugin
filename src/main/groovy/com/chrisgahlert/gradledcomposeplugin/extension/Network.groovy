@@ -30,12 +30,36 @@ abstract class Network extends AbstractEntity {
             configs << ipamConfig
             ConfigureUtil.configure(config, ipamConfig)
         }
+
+        @Override
+        boolean equals(Object obj) {
+            if (obj == null || !(obj instanceof Ipam)) {
+                return false
+            }
+            def other = (Ipam) obj
+
+            return Objects.equals(this.driver, other.driver) &&
+                    Objects.equals(this.configs, other.configs) &&
+                    Objects.equals(this.options, other.options)
+        }
     }
 
     public static class IpamConfig implements Serializable {
         String subnet
         String ipRange
         String gateway
+
+        @Override
+        boolean equals(Object obj) {
+            if (obj == null || !(obj instanceof IpamConfig)) {
+                return false
+            }
+            def other = (IpamConfig) obj
+
+            return Objects.equals(this.subnet, other.subnet) &&
+                    Objects.equals(this.ipRange, other.ipRange) &&
+                    Objects.equals(this.gateway, other.gateway)
+        }
     }
 
     public static final String DEFAULT_NAME = "default"
