@@ -229,7 +229,29 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         service.imageId
     }
 
-    // TODO: add cpu/mem options
+    @Input
+    @Optional
+    Long getMemory() {
+        service.memory
+    }
+
+    @Input
+    @Optional
+    Long getMemswap() {
+        service.memswap
+    }
+
+    @Input
+    @Optional
+    Integer getCpushares() {
+        service.cpushares
+    }
+
+    @Input
+    @Optional
+    String getCpusetcpus() {
+        service.cpusetcpus
+    }
 
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -340,6 +362,22 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             if (restart != null) {
                 def policyParser = loadClass('com.github.dockerjava.api.model.RestartPolicy').getMethod('parse', String)
                 cmd.withRestartPolicy(policyParser.invoke(null, restart as String))
+            }
+
+            if (memory != null) {
+                cmd.withMemory(memory)
+            }
+
+            if (memswap != null) {
+                cmd.withMemorySwap(memswap)
+            }
+
+            if (cpusetcpus != null) {
+                cmd.withCpusetCpus(cpusetcpus as String)
+            }
+
+            if (cpushares != null) {
+                cmd.withCpuShares(cpushares)
             }
 
             if (networkMode) {

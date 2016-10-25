@@ -147,7 +147,7 @@ abstract class Service extends AbstractEntity {
 
     abstract Long getMemswap()
 
-    abstract String getCpushares()
+    abstract Integer getCpushares()
 
     abstract String getCpusetcpus()
 

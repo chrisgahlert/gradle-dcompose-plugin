@@ -494,6 +494,10 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
                     privileged = true
                     networks = null
                     restart = 'always'
+                    memory = 16 * 1024 * 1024
+                    memswap = 32 * 1024 * 1024
+                    cpushares = 10
+                    cpusetcpus = '0'
                 }
             }
 

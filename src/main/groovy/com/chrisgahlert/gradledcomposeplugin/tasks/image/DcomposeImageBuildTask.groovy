@@ -59,7 +59,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
     @Input
     @Optional
-    String getCpushares() {
+    Integer getCpushares() {
         service.cpushares
     }
 
@@ -114,10 +114,10 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
                 cmd.withMemswap(memswap)
             }
             if (cpushares != null) {
-                cmd.withCpushares(cpushares)
+                cmd.withCpushares(cpushares as String)
             }
             if (cpusetcpus != null) {
-                cmd.withCpusetcpus(cpusetcpus)
+                cmd.withCpusetcpus(cpusetcpus as String)
             }
 
             if (buildArgs) {

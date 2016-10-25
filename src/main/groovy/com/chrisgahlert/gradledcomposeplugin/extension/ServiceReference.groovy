@@ -198,7 +198,7 @@ class ServiceReference extends Service {
     }
 
     @Override
-    String getCpushares() {
+    Integer getCpushares() {
         resolved.cpushares
     }
 

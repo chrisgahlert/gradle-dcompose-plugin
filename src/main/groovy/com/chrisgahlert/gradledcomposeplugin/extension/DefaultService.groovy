@@ -115,7 +115,7 @@ class DefaultService extends Service {
     String dockerFilename // optional, Default: "Dockerfile"
     Long memory
     Long memswap
-    String cpushares
+    Integer cpushares
     String cpusetcpus
     Map<String, String> buildArgs
     Boolean forceRemoveImage

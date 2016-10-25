@@ -30,6 +30,10 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
                 buildimg {
                     baseDir = file('docker/')
                     waitForCommand = true
+                    memory = 512 * 1024 * 1024
+                    memswap = 768 * 1024 * 1024
+                    cpushares = 10
+                    cpusetcpus = '0'
                 }
             }
 
