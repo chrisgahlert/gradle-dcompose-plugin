@@ -472,25 +472,13 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             ignoreDockerException('NotFoundException') {
                 def result = client.inspectContainerCmd(containerName).exec()
                 service.containerId = result.id
-                result.state = null
-                result.hostsPath = null
-                result.resolvConfPath = null
-                result.hostnamePath = null
-                result.logPath = null
 
                 def networkData = result.networkSettings?.networks?.collect { name, props ->
                     [name, props.aliases]
                 }
-                result.networkSettings = null
 
-                if (!result.hostConfig?.networkMode) {
-                    result.hostConfig?.networkMode = 'default'
-                }
-                result.mounts = result.mounts?.sort { it.destination?.path }
-                def portData = result.hostConfig?.portBindings?.bindings?.sort { it.key }
-                result.hostConfig?.portBindings = null
-
-                [result, networkData, portData]
+                def hostConf = result.hostConfig
+                [result.id, networkData, hostConf.memory, hostConf.memorySwap, hostConf.cpuShares, hostConf.cpusetCpus]
             }
         }
     }
