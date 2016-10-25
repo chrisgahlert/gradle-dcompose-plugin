@@ -47,4 +47,24 @@ class NetworkReference extends Network {
     String getNetworkName() {
         resolved.networkName
     }
+
+    @Override
+    String getDriver() {
+        resolved.driver
+    }
+
+    @Override
+    Map<String, String> getDriverOpts() {
+        resolved.driverOpts
+    }
+
+    @Override
+    Ipam getIpam() {
+        resolved.ipam
+    }
+
+    @Override
+    Boolean getEnableIpv6() {
+        resolved.enableIpv6
+    }
 }

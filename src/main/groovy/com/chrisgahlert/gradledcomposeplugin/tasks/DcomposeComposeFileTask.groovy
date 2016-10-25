@@ -15,6 +15,7 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks
 
+import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
@@ -183,13 +184,68 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
         }
 
         networks.each {
-            if (it.name != Network.DEFAULT_NAME) {
-                yml.networks[it.name] = [:]
-            }
+            yml.networks[it.name] = generateNetwork(it.name)
         }
 
 
         writeYaml(yml)
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected Map<String, ?> generateNetwork(String networkName) {
+        def network = project.getExtensions().getByType(DcomposeExtension).networks.find { it.name == networkName }
+        def result = [:]
+
+        if (!network) {
+            logger.error("Error: Could not find unknown network named $networkName")
+            return result
+        }
+
+        if (network.driver != null) {
+            result.driver = network.driver
+        }
+
+        if (network.driverOpts != null) {
+            result.driver_opts = network.driverOpts
+        }
+
+        if (network.enableIpv6) {
+            logger.warn('Warning: Enabling ipv6 is not supported at the moment')
+        }
+
+        if (network.ipam != null) {
+            result.ipam = [:]
+
+            if (network.ipam.driver != null) {
+                result.ipam.driver = network.ipam.driver
+            }
+
+            if (network.ipam.options != null) {
+                logger.warn('Warning: Ipam driver options are not supported at the moment')
+            }
+
+            if (network.ipam.configs != null) {
+                result.ipam.config = network.ipam.configs.collect { config ->
+                    def c = [:]
+
+                    if (config.subnet != null) {
+                        c.subnet = config.subnet
+                    }
+
+                    if (config.ipRange != null) {
+                        c.ip_range = config.ipRange
+                    }
+
+                    if (config.gateway != null) {
+                        c.gateway = config.gateway
+                    }
+
+                    c
+                }
+            }
+        }
+
+        result
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)

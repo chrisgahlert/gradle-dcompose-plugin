@@ -16,9 +16,28 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.TypeChecked
+import org.gradle.util.ConfigureUtil
 
 @TypeChecked
 abstract class Network extends AbstractEntity {
+    public static class Ipam implements Serializable {
+        String driver
+        List<IpamConfig> configs = []
+        Map<String, String> options
+
+        IpamConfig config(Closure config) {
+            def ipamConfig = new IpamConfig()
+            configs << ipamConfig
+            ConfigureUtil.configure(config, ipamConfig)
+        }
+    }
+
+    public static class IpamConfig implements Serializable {
+        String subnet
+        String ipRange
+        String gateway
+    }
+
     public static final String DEFAULT_NAME = "default"
 
     final transient Closure<String> dockerPrefix
@@ -35,7 +54,15 @@ abstract class Network extends AbstractEntity {
         "remove${taskLabel}Network"
     }
 
-    abstract String getNetworkName();
+    abstract String getNetworkName()
+
+    abstract String getDriver()
+
+    abstract Map<String, String> getDriverOpts()
+
+    abstract Ipam getIpam()
+
+    abstract Boolean getEnableIpv6()
 
     @Override
     String toString() {

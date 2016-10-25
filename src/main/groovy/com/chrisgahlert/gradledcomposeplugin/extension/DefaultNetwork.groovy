@@ -16,11 +16,17 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.TypeChecked
+import org.gradle.util.ConfigureUtil
 
 @TypeChecked
 public class DefaultNetwork extends Network {
 
     final transient Closure<String> dockerPrefix
+
+    String driver
+    Map<String, String> driverOpts
+    Ipam ipam
+    Boolean enableIpv6
 
     DefaultNetwork(String name, String projectPath, Closure<String> dockerPrefix) {
         super(name, projectPath)
@@ -30,5 +36,13 @@ public class DefaultNetwork extends Network {
     @Override
     String getNetworkName() {
         dockerPrefix() + name
+    }
+
+    Ipam ipam(Closure config) {
+        if (ipam == null) {
+            ipam = new Ipam()
+        }
+
+        ConfigureUtil.configure(config, ipam)
     }
 }

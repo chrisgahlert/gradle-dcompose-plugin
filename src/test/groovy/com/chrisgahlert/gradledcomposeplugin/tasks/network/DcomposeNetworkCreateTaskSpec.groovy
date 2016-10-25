@@ -155,7 +155,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
     def 'different networks should not be able to connect to each other'() {
         given:
         fork = true
-        
+
         buildFile << """
             dcompose {
                 networks {
@@ -254,7 +254,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
     def 'create should work for networked cross project containers'() {
         given:
         fork = true
-        
+
         buildFile.text = ''
 
         addSubproject 'subDatabase', """
@@ -378,5 +378,95 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
 
         then:
         url.toURL().text.trim() == 'tuco'
+    }
+
+    def 'should fail for unknown network driver'() {
+        given:
+        buildFile << """
+            dcompose {
+                networks {
+                    customDriver {
+                        driver = 'other'
+                    }
+                }
+            }
+        """
+
+        when:
+        def result = runTasks 'createCustomDriverNetwork'
+
+        then:
+        result.standardError.contains('plugin not found')
+    }
+
+    def 'should fail adding multiple subnets'() {
+        given:
+        buildFile << """
+            dcompose {
+                networks {
+                    custom {
+                        ipam {
+                            config {
+                                subnet = '10.0.1.0/24'
+                            }
+                            config {
+                                subnet = '10.0.2.0/24'
+                            }
+                        }
+                    }
+                }
+            }
+        """
+
+        when:
+        def result = runTasksWithFailure 'createCustomNetwork'
+
+        then:
+        result.standardError.contains "bridge driver doesn't support multiple subnets"
+    }
+
+    def 'should support other network driver options'() {
+        given:
+        buildFile << """
+            dcompose {
+                networks {
+                    custom {
+                        driverOpts = [test: 'hello']
+                        enableIpv6 = true
+                        ipam {
+                            driver = 'default'
+                            options = [other: 'hello']
+                            config {
+                                subnet = '10.0.1.0/24'
+                                gateway = '10.0.1.138'
+                                ipRange = '10.0.1.128/25'
+                            }
+                        }
+                    }
+                }
+
+                ipecho {
+                    image = '$DEFAULT_IMAGE'
+                    command = 'ifconfig > /test.txt && route >> /test.txt'
+                    waitForCommand = true
+                    networks = [custom]
+                }
+            }
+
+            ${copyTaskConfig('ipecho', '/test.txt')}
+        """
+
+        when:
+        runTasksSuccessfully 'startContainers', 'copy'
+        def netout = file('build/copy/test.txt').text
+
+        then:
+        netout.contains('inet addr:10.0.1.128')
+        netout.contains('''
+            Kernel IP routing table
+            Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+            default         10.0.1.138      0.0.0.0         UG    0      0        0 eth0
+            10.0.1.0        *               255.255.255.0   U     0      0        0 eth0
+        '''.stripIndent())
     }
 }

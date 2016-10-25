@@ -15,10 +15,13 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.tasks.network
 
+import com.chrisgahlert.gradledcomposeplugin.extension.Network
+import com.chrisgahlert.gradledcomposeplugin.extension.Network.IpamConfig
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeNetworkTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
@@ -28,6 +31,30 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
     @Input
     String getNetworkName() {
         network.networkName
+    }
+
+    @Input
+    @Optional
+    String getDriver() {
+        network.driver
+    }
+
+    @Input
+    @Optional
+    Map<String, String> getDriverOpts() {
+        network.driverOpts
+    }
+
+    @Input
+    @Optional
+    Boolean getEnableIpv6() {
+        network.enableIpv6
+    }
+
+    @Input
+    @Optional
+    Network.Ipam getIpam() {
+        network.ipam
     }
 
     @TaskAction
@@ -44,7 +71,58 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
             }
 
             try {
-                client.createNetworkCmd().withName(networkName).exec()
+                def cmd = client.createNetworkCmd().withName(networkName)
+
+                if (driver != null) {
+                    cmd.withDriver(driver as String)
+                }
+
+                if (driverOpts != null) {
+                    cmd.withOptions(driverOpts as Map<String, String>)
+                }
+
+                if (enableIpv6 != null) {
+                    cmd.withEnableIpv6(enableIpv6 as boolean)
+                }
+
+                if (ipam != null) {
+                    def dockerIpam = loadClass('com.github.dockerjava.api.model.Network$Ipam').newInstance()
+
+                    if (ipam.driver != null) {
+                        dockerIpam.driver = ipam.driver as String
+                    }
+
+                    if (ipam.options != null) {
+                        dockerIpam.options = ipam.options as Map<String, String>
+                    }
+
+                    if (ipam.configs != null) {
+                        List dockerConfigs = []
+
+                        ipam.configs.each { IpamConfig config ->
+                            def dockerConfig = loadClass('com.github.dockerjava.api.model.Network$Ipam$Config').newInstance()
+
+                            if (config.subnet != null) {
+                                dockerConfig.withSubnet(config.subnet as String)
+                            }
+
+                            if (config.ipRange != null) {
+                                dockerConfig.withIpRange(config.ipRange as String)
+                            }
+
+                            if (config.gateway != null) {
+                                dockerConfig.withGateway(config.gateway as String)
+                            }
+
+                            dockerConfigs << dockerConfig
+                        }
+
+                        dockerIpam.withConfig(dockerConfigs)
+                    }
+                    cmd.withIpam(dockerIpam)
+                }
+
+                cmd.exec()
             } catch (Exception e) {
                 if (e.getClass() == loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
                         && e.message?.contains('waiting (1s) for it to exit...')) {

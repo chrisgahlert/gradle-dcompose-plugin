@@ -24,7 +24,20 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         buildFile << """
             dcompose {
                 networks {
-                    backend
+                    backend {
+                        driver = 'other'
+                        driverOpts = [test: 'hello']
+                        enableIpv6 = true
+                        ipam {
+                            driver = 'special'
+                            options = [other: 'hello']
+                            config {
+                                subnet = '10.0.1.0/24'
+                                gateway = '10.0.1.138'
+                                ipRange = '10.0.1.128/25'
+                            }
+                        }
+                    }
                 }
                 third {
                     image = "$DEFAULT_IMAGE"
@@ -133,7 +146,17 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                   default:
                     aliases: []
             networks:
-              backend: {}
+              backend:
+                driver: other
+                driver_opts:
+                  test: hello
+                ipam:
+                  driver: special
+                  config:
+                  - subnet: 10.0.1.0/24
+                    ip_range: 10.0.1.128/25
+                    gateway: 10.0.1.138
+              default: {}
             volumes:
               main__data: {}
         """.stripIndent().trim()
@@ -163,7 +186,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
               main:
                 image: busybox@sha256:...
                 network_mode: bridge
-            networks: {}
+            networks:
+              default: {}
             volumes: {}
         """.stripIndent().trim()
 
@@ -234,7 +258,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 networks:
                   default:
                     aliases: []
-            networks: {}
+            networks:
+              default: {}
             volumes:
               namedv: {}
               main__other: {}
