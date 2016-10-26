@@ -107,6 +107,7 @@ class DefaultService extends Service {
     List<? extends Network> networks
     List<String> aliases
     String restart
+    Long memLimit
 
     /**
      * Build image specific properties (can only be used when no image is defined). Properties are optional by default.

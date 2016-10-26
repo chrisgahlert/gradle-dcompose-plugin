@@ -371,4 +371,14 @@ class ServiceReference extends Service {
     String getContainerId() {
         resolved.containerId
     }
+
+    @Override
+    Long getMemLimit() {
+        resolved.memLimit
+    }
+
+    @Override
+    void setMemLimit(Long memLimit) {
+        resolved.memLimit = memLimit
+    }
 }

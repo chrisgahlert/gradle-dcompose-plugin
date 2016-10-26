@@ -227,6 +227,10 @@ abstract class Service extends AbstractEntity {
 
     abstract void setRepository(String repository)
 
+    abstract Long getMemLimit()
+
+    abstract void setMemLimit(Long memLimit)
+
     ServiceDependency link(String alias = null) {
         new ServiceDependency(alias ?: name, this)
     }
