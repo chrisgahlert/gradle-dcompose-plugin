@@ -64,7 +64,7 @@ dcompose {
   }
 }
 
-task copyDockerData(type: Copy) {
+task copyDockerData(type: Sync) {
   from 'src/main/www/' // Contains index.html
   from 'src/main/docker/'
   into dcompose.web.baseDir
