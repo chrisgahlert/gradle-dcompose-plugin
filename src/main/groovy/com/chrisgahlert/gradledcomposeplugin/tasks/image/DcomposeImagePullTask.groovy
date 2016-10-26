@@ -26,11 +26,11 @@ import org.gradle.api.tasks.TaskAction
 class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
 
     DcomposeImagePullTask() {
-        outputs.upToDateWhen {
-            !service.forcePull
-        }
+        outputs.upToDateWhen { !service.forcePull }
 
         enabled = { service.hasImage() }
+
+        onlyIf { getImageId() == null || service.forcePull }
     }
 
     @Input
@@ -55,12 +55,17 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     File getImageState() {
         dockerOutput('image-state') {
-            runInDockerClasspath {
-                ignoreDockerException('NotFoundException') {
-                    def result = client.inspectImageCmd(image).exec()
-                    service.imageId = result.id
-                    result.id
-                }
+            getImageId()
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected String getImageId() {
+        runInDockerClasspath {
+            ignoreDockerException('NotFoundException') {
+                def result = client.inspectImageCmd(image).exec()
+                service.imageId = result.id
+                result.id
             }
         }
     }
