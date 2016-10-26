@@ -447,7 +447,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
 
                 ipecho {
                     image = '$DEFAULT_IMAGE'
-                    command = 'ifconfig > /test.txt && route >> /test.txt'
+                    setCommand 'ifconfig > /test.txt && route >> /test.txt'
                     waitForCommand = true
                     networks = [custom]
                 }
@@ -478,7 +478,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
 
                 ipecho {
                     image = '$DEFAULT_IMAGE'
-                    command = 'ifconfig > /test.txt'
+                    setCommand 'ifconfig > /test.txt'
                     waitForCommand = true
                 }
             }
