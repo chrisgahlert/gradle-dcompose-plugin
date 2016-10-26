@@ -412,7 +412,10 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 networks:
                   default:
                     aliases: []
-            networks: {}
+            networks:
+              default:
+                ipam:
+                  config: []
             volumes: {}
         """.stripIndent().trim()
 
