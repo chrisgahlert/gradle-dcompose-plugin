@@ -51,8 +51,14 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
         network.enableIpv6
     }
 
+    /**
+     * Fix for older Gradle versions
+     */
     @Input
-    @Optional
+    int getIpamHash() {
+        network.ipam.hashCode()
+    }
+
     Network.Ipam getIpam() {
         network.ipam
     }

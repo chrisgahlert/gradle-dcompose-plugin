@@ -42,6 +42,11 @@ abstract class Network extends AbstractEntity {
                     Objects.equals(this.configs, other.configs) &&
                     Objects.equals(this.options, other.options)
         }
+
+        @Override
+        int hashCode() {
+            return Objects.hash(driver, configs, options)
+        }
     }
 
     public static class IpamConfig implements Serializable {
@@ -59,6 +64,11 @@ abstract class Network extends AbstractEntity {
             return Objects.equals(this.subnet, other.subnet) &&
                     Objects.equals(this.ipRange, other.ipRange) &&
                     Objects.equals(this.gateway, other.gateway)
+        }
+
+        @Override
+        int hashCode() {
+            return Objects.hash(subnet, ipRange, gateway)
         }
     }
 
