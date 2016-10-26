@@ -12,12 +12,12 @@ container should be recreated.
 # Prerequisites
 
 This plugin requires: 
-* Gradle >= 2.0
+* Gradle >= 2.1
 * Docker (host) >= 1.10.0
 * **Please note:** Docker for Mac (native) currently doesn't support redirecting standard streams to/from a container.
 
 # Documentation
-For a full documentation head over to the [wiki](https://github.com/chrisgahlert/gradle-dcompose-plugin/wiki)!
+For the full documentation head over to the [wiki](https://github.com/chrisgahlert/gradle-dcompose-plugin/wiki)!
 
 # Example
 
