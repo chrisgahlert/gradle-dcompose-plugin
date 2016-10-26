@@ -35,6 +35,8 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
     List<Closure> beforeSaves = []
 
+    Boolean useAWSCompat
+
     DcomposeComposeFileTask() {
         dependsOn {
             dcomposeServices?.collect { Service service ->
@@ -78,11 +80,15 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
             networks.addAll service.networks
             def imageRef = ImageRef.parse(service.repository)
             def spec = [
-                    image: "$imageRef.registryWithRepository@sha256:$service.imageId" as String
+                    image: useAWSCompat ? imageRef.toString() : "$imageRef.registryWithRepository@sha256:$service.imageId" as String
             ]
 
             if (service.dependsOn) {
-                spec.depends_on = service.dependsOn.collect { it.name }
+                if (useAWSCompat) {
+                    spec.links = service.dependsOn.collect { it.name }
+                } else {
+                    spec.depends_on = service.dependsOn.collect { it.name }
+                }
             }
             if (service.command) {
                 spec.command = service.command
@@ -178,6 +184,10 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
                 if (networksSpec) {
                     spec.networks = networksSpec
                 }
+            }
+
+            if (service.memLimit) {
+                spec.mem_limit = service.memLimit
             }
 
             yml.services[service.name] = spec

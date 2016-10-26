@@ -74,6 +74,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     aliases = ['netalias', 'netalias2']
                     restart = 'always'
                     dependsOn = [other]
+                    memLimit = 1000000000L
                 }
             }
         """
@@ -140,6 +141,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     aliases:
                     - netalias
                     - netalias2
+                mem_limit: 1000000000
               other:
                 image: dcompose.../other@sha256:...
                 networks:
@@ -361,6 +363,61 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         """.stripIndent().trim()
 
         validateComposeFile 'build/docker-compose.yml'
+    }
+
+    def 'should support AWS compatibility flag'() {
+        given:
+        buildFile << """
+            dcompose {
+                networks {
+                    backend
+                }
+                third {
+                    image = "$DEFAULT_IMAGE"
+                }
+                main {
+                    image = "$DEFAULT_IMAGE"
+                    command = ["hello", "world"]
+                    dependsOn = [third]
+                    repository = "repo/test/image:with-tag"
+                    memLimit = 1000000000L
+                }
+            }
+            createComposeFile {
+                useAWSCompat = true
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'createComposeFile'
+        def composeFile = readNormalizedFile('build/docker-compose.yml')
+
+        then:
+        composeFile == """
+            version: '2'
+            services:
+              main:
+                image: repo/test/image:with-tag
+                links:
+                - third
+                command:
+                - hello
+                - world
+                networks:
+                  default:
+                    aliases: []
+                mem_limit: 1000000000
+              third:
+                image: busybox:1.24.2-musl
+                networks:
+                  default:
+                    aliases: []
+            networks: {}
+            volumes: {}
+        """.stripIndent().trim()
+
+        validateComposeFile 'build/docker-compose.yml'
+
     }
 
     private String readNormalizedFile(String s) {
