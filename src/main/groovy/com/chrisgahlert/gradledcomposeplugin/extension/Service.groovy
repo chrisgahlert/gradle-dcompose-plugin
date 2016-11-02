@@ -109,7 +109,7 @@ abstract class Service extends AbstractEntity {
 
     abstract List<String> getVolumes()
 
-    abstract List<String> getBinds()
+    abstract List getBinds()
 
     abstract List getVolumesFrom()
 

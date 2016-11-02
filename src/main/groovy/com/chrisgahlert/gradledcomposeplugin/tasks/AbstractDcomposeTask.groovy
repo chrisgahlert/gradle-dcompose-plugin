@@ -232,4 +232,27 @@ class AbstractDcomposeTask extends DefaultTask {
         new HashSet<>(result)
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected void stopContainer(String containerName) {
+        ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
+            def cmd = client.stopContainerCmd(containerName)
+
+            def service = allServices.find { it.containerName == containerName }
+            if (service && service.stopTimeout != null) {
+                cmd.withTimeout(service.stopTimeout)
+            }
+
+            try {
+                cmd.exec()
+            } catch (Exception e) {
+                if (e.getClass() != loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
+                        || !e.message?.contains('Container does not exist: container destroyed')) {
+                    throw e
+                }
+            }
+
+            logger.quiet("Stopped Docker container named $containerName")
+        }
+    }
+
 }

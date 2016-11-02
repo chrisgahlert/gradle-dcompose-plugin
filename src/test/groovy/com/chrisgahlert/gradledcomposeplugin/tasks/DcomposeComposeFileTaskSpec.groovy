@@ -227,13 +227,22 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         given:
         buildFile << """
             dcompose {
+                volumes {
+                    test {
+                        driver = 'abc'
+                        driverOpts = [a: 'aa', b: 'bb']
+                    }
+                    other
+                }
                 main {
                     baseDir = file('src/main/docker')
                     volumes = ['/data']
                     binds = [
                         '.:/data:ro',
                         'namedv:/data2:rw',
-                        '/home:/data3:ro'
+                        '/home:/data3:ro',
+                        test.bind('/data4:ro'),
+                        other.bind('/data5')
                     ]
                     preserveVolumes = true
                 }
@@ -260,6 +269,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 - .:/data:ro
                 - namedv:/data2:rw
                 - /home:/data3:ro
+                - test:/data4:ro
+                - other:/data5:rw
                 - main__other:/other:rw
                 networks:
                   default:
@@ -270,7 +281,13 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                   config: []
             volumes:
               namedv: {}
+              other: {}
               main__other: {}
+              test:
+                driver: abc
+                driver_opts:
+                  a: aa
+                  b: bb
         """.stripIndent().trim()
 
         validateComposeFile 'build/docker-compose.yml'

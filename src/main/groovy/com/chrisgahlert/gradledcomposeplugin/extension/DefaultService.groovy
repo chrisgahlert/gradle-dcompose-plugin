@@ -89,7 +89,7 @@ class DefaultService extends Service {
     String user
     Boolean readonlyRootfs
     List<String> volumes
-    List<String> binds
+    List binds
     List volumesFrom
     List<String> exposedPorts
     List<String> portBindings
@@ -311,6 +311,12 @@ class DefaultService extends Service {
                             "to $dep.service.projectPath:$dep.service.name: " +
                             "They don't share any networks. Please make sure they are on the same network")
                 }
+            }
+        }
+
+        binds?.each {
+            if (it instanceof Volume) {
+                throw new GradleException("Invalid bind in $name for volume $it.name: Please use ${it.name}.bind('/path')")
             }
         }
 

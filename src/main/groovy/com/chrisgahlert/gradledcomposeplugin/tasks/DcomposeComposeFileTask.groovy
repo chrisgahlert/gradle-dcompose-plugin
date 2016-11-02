@@ -18,6 +18,7 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
+import com.chrisgahlert.gradledcomposeplugin.extension.Volume
 import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -75,6 +76,7 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
         ]
 
         def networks = new HashSet<Network>()
+        def namedVolumes = new HashSet<String>()
 
         dcomposeServices.each { Service service ->
             networks.addAll service.networks
@@ -110,7 +112,7 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
             }
             if (service.volumes || service.binds || service.preserveVolumes) {
                 spec.volumes = []
-                generateVolumes(service, spec.volumes as List<String>, yml.volumes as Map<String, ?>)
+                generateVolumes(service, spec.volumes as List<String>, namedVolumes)
             }
             if (service.volumesFrom) {
                 spec.volumes_from = []
@@ -193,6 +195,10 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
             yml.services[service.name] = spec
         }
 
+        namedVolumes.each {
+            yml.volumes[it] = generateVolume(it)
+        }
+
         networks.each {
             yml.networks[it.name] = generateNetwork(it.name)
         }
@@ -202,8 +208,24 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
+    protected Map<String, ?> generateVolume(String volumeName) {
+        def result = [:]
+        def volume = project.getExtensions().getByType(DcomposeExtension).volumes.findByName(volumeName)
+
+        if (volume?.driver) {
+            result.driver = volume.driver
+        }
+
+        if (volume?.driverOpts) {
+            result.driver_opts = volume.driverOpts
+        }
+
+        result
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
     protected Map<String, ?> generateNetwork(String networkName) {
-        def network = project.getExtensions().getByType(DcomposeExtension).networks.find { it.name == networkName }
+        def network = project.getExtensions().getByType(DcomposeExtension).networks.findByName(networkName)
         def result = [:]
 
         if (!network) {
@@ -275,7 +297,7 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    protected void generateVolumes(Service service, List<String> result, Map<String, ?> namedVolumes) {
+    protected void generateVolumes(Service service, List<String> result, Set<String> namedVolumes) {
         runInDockerClasspath {
             def volumeClass = loadClass('com.github.dockerjava.api.model.Volume')
             def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
@@ -291,7 +313,7 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
             })
 
             def binds = service.binds.collect {
-                bindParser.invoke(null, it)
+                bindParser.invoke(null, (it instanceof Volume.VolumeDependency ? it.serviceDefinition : it) as String)
             }
 
             for (def volume : knownVolumes) {
@@ -304,10 +326,10 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
             }
 
             result.addAll(binds.collect { it as String })
-            binds.findAll {
-                it.path ==~ /^[^\.\/].*/
-            }.each {
-                namedVolumes[it.path] = [:]
+            binds.each {
+                if (it.path =~ /^[^\.\/].*/) {
+                    namedVolumes << it.path
+                }
             }
         }
     }

@@ -16,7 +16,6 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
-import spock.lang.Unroll
 
 class DcomposeExtensionSpec extends AbstractDcomposeSpec {
 
@@ -112,17 +111,19 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         result.standardError.contains('Please make sure they are on the same network')
     }
 
-    @Unroll
     def 'should #successText when container name is #containerName and network name is #networkName'() {
         given:
         buildFile << """
             dcompose {
                 networks {
-                    $networkName
+                    main
                 }
-                $containerName {
+                volumes {
+                    main
+                }
+                main {
                     image = '$DEFAULT_IMAGE'
-                    networks = [$networkReference]
+                    $property
                 }
             }
         """
@@ -141,15 +142,19 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
 
 
         where:
-        containerName || networkName || networkReference   || error
-        'main'        || 'main'      || 'main'             || "The property 'main' is ambiguous"
-        'main'        || 'main'      || 'network("main")'  || false
-        'main'        || 'main'      || 'network(":main")' || false
-        'main'        || 'main'      || '"main"'           || 'Can only set instances of Network on dcompose.main.networks'
+        property                               || error
+        'networks = [main]'                    || "The property 'main' is ambiguous"
+        'binds = [main.bind("/a")]'            || "The property 'main' is ambiguous"
+        'networks = [network("main")]'         || false
+        'networks = [network(":main")]'        || false
+        'binds = [volume("main").bind("/a")]'  || false
+        'binds = [volume(":main").bind("/a")]' || false
+        'networks = ["main"]'                  || 'Can only set instances of Network on dcompose.main.networks'
+        'binds = [volume("main")]'             || 'Invalid bind in main for volume main'
 
         successText = error ? 'fail' : 'succeed'
     }
-    
+
     def 'should be able to change container name prefix'() {
         given:
         buildFile << """
@@ -167,5 +172,5 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         then:
         result.standardOutput.contains('custom_prefix_server')
     }
-            
+
 }

@@ -187,6 +187,12 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
         given:
         buildFile << """
             dcompose {
+                volumes {
+                    v1
+                }
+                networks {
+                    n1
+                }
                 main {
                     image = '$DEFAULT_IMAGE'
                 }
@@ -214,11 +220,13 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
             buildImages
             createContainers
             createNetworks
+            createVolumes
             pullImages
             pushImages
             removeContainers
             removeImages
             removeNetworks
+            removeVolumes
             startContainers
             stopContainers
 
@@ -229,7 +237,14 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
             Dcompose Docker (networks) tasks
             --------------------------------
             createDefaultNetwork
+            createN1Network
             removeDefaultNetwork
+            removeN1Network
+
+            Dcompose Docker (volumes) tasks
+            -------------------------------
+            createV1Volume
+            removeV1Volume
         '''.stripIndent()
     }
 

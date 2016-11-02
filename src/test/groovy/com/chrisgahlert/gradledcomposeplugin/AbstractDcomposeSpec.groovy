@@ -39,7 +39,7 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
         apply plugin: "com.chrisgahlert.gradle-dcompose-plugin"
     '''
 
-    protected String[] cleanupTasks = ['removeContainers', 'removeNetworks']
+    protected String[] cleanupTasks = ['removeContainers', 'removeNetworks', 'removeVolumes']
 
     protected int logCounter = 1
 

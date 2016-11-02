@@ -103,7 +103,7 @@ class ServiceReference extends Service {
     }
 
     @Override
-    List<String> getBinds() {
+    List getBinds() {
         resolved.binds
     }
 

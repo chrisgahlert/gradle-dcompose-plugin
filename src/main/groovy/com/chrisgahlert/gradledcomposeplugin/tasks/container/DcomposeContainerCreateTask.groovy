@@ -17,6 +17,7 @@ package com.chrisgahlert.gradledcomposeplugin.tasks.container
 
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
+import com.chrisgahlert.gradledcomposeplugin.extension.Volume
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -53,6 +54,15 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         dependsOn {
             service.networks.collect { "$it.projectPath:$it.createTaskName" }
         }
+
+        dependsOn {
+            service.binds.findAll {
+                it instanceof Volume.VolumeDependency
+            }.collect {
+                def bind = it as Volume.VolumeDependency
+                "$bind.volume.projectPath:$bind.volume.createTaskName"
+            }
+        }
     }
 
     @Input
@@ -81,7 +91,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
     @Input
     @Optional
     List<String> getBinds() {
-        service.binds
+        service.binds.collect { it.toString() }
     }
 
     @Input

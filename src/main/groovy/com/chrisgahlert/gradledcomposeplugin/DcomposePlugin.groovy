@@ -18,6 +18,7 @@ package com.chrisgahlert.gradledcomposeplugin
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
+import com.chrisgahlert.gradledcomposeplugin.extension.Volume
 import com.chrisgahlert.gradledcomposeplugin.tasks.*
 import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerCreateTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.container.DcomposeContainerRemoveTask
@@ -29,6 +30,8 @@ import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImagePushTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.image.DcomposeImageRemoveTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.network.DcomposeNetworkCreateTask
 import com.chrisgahlert.gradledcomposeplugin.tasks.network.DcomposeNetworkRemoveTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.volume.DcomposeVolumeCreateTask
+import com.chrisgahlert.gradledcomposeplugin.tasks.volume.DcomposeVolumeRemoveTask
 import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import groovy.transform.TypeChecked
@@ -44,6 +47,7 @@ class DcomposePlugin implements Plugin<Project> {
     public static final String TASK_GROUP_ALL = "$TASK_GROUP (all)"
     public static final String TASK_GROUP_DEPLOY = "$TASK_GROUP (deploy)"
     public static final String TASK_GROUP_NETWORKS = "$TASK_GROUP (networks)"
+    public static final String TASK_GROUP_VOLUMES = "$TASK_GROUP (volumes)"
     public static final String TASK_GROUP_SERVICE_TEMPLATE = "$TASK_GROUP '%s' service"
     public static final String CONFIGURATION_NAME = "dcompose"
     public static final String EXTENSION_NAME = "dcompose"
@@ -62,6 +66,7 @@ class DcomposePlugin implements Plugin<Project> {
         validateContainers(project, extension)
         createServiceTasks(project, extension)
         createNetworkTasks(project, extension)
+        createVolumeTasks(project, extension)
     }
 
     private DcomposeExtension createExtension(Project project) {
@@ -100,6 +105,8 @@ class DcomposePlugin implements Plugin<Project> {
                 'createNetworks'  : DcomposeNetworkCreateTask,
                 'removeNetworks'  : DcomposeNetworkRemoveTask,
                 'pushImages'      : DcomposeImagePushTask,
+                'createVolumes'   : DcomposeVolumeCreateTask,
+                'removeVolumes'   : DcomposeVolumeRemoveTask,
         ]
 
         allTaskGroups.each { name, taskClass ->
@@ -128,6 +135,9 @@ class DcomposePlugin implements Plugin<Project> {
             }
             project.tasks.withType(AbstractDcomposeNetworkTask) { AbstractDcomposeNetworkTask task ->
                 task.group = TASK_GROUP_NETWORKS
+            }
+            project.tasks.withType(AbstractDcomposeVolumeTask) { AbstractDcomposeVolumeTask task ->
+                task.group = TASK_GROUP_VOLUMES
             }
             project.tasks.withType(DcomposeComposeFileTask) { DcomposeComposeFileTask task ->
                 task.group = TASK_GROUP_DEPLOY
@@ -167,6 +177,13 @@ class DcomposePlugin implements Plugin<Project> {
         extension.networks.all { Network network ->
             project.tasks.create(network.createTaskName, DcomposeNetworkCreateTask).network = network
             project.tasks.create(network.removeTaskName, DcomposeNetworkRemoveTask).network = network
+        }
+    }
+
+    private void createVolumeTasks(Project project, DcomposeExtension extension) {
+        extension.volumes.all { Volume volume ->
+            project.tasks.create(volume.createTaskName, DcomposeVolumeCreateTask).volume = volume
+            project.tasks.create(volume.removeTaskName, DcomposeVolumeRemoveTask).volume = volume
         }
     }
 }

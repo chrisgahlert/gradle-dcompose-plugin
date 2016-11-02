@@ -30,6 +30,8 @@ class DcomposeExtension {
 
     final private NamedDomainObjectContainer<DefaultNetwork> networks
 
+    final private NamedDomainObjectContainer<DefaultVolume> volumes
+
     String namePrefix
 
     Closure dockerClientConfig
@@ -40,19 +42,23 @@ class DcomposeExtension {
         this.project = project
         this.namePrefix = namePrefix
 
-        services = project.container(DefaultService, { String name ->
+        services = project.container(DefaultService) { String name ->
             def service = new DefaultService(name, project.path, { getNamePrefix() })
             def defaultNetwork = networks.findByName(Network.DEFAULT_NAME)
             if (defaultNetwork) {
                 service.networks = [defaultNetwork]
             }
             service
-        })
+        }
 
-        networks = project.container(DefaultNetwork, { String name ->
+        networks = project.container(DefaultNetwork) { String name ->
             new DefaultNetwork(name, project.path, { getNamePrefix() })
-        })
+        }
         networks.create(Network.DEFAULT_NAME)
+
+        volumes = project.container(DefaultVolume) { String name ->
+            new DefaultVolume(name, project.path, { getNamePrefix() })
+        }
     }
 
     void setDockerClientConfig(Action dockerClientConfig) {
@@ -131,7 +137,20 @@ class DcomposeExtension {
         def name = path.tokenize(Project.PATH_SEPARATOR).last()
         new NetworkReference(name, parseProjectPath(path))
     }
-    
+
+    NamedDomainObjectContainer<DefaultVolume> getVolumes() {
+        volumes
+    }
+
+    NamedDomainObjectContainer<DefaultVolume> volumes(Closure config) {
+        volumes.configure config
+    }
+
+    Volume volume(String path) {
+        def name = path.tokenize(Project.PATH_SEPARATOR).last()
+        new VolumeReference(name, parseProjectPath(path))
+    }
+
     String getNamePrefix() {
         namePrefix
     }
@@ -154,18 +173,18 @@ class DcomposeExtension {
     def propertyMissing(String name) {
         def service = services.findByName(name)
         def network = networks.findByName(name)
+        def volume = volumes.findByName(name)
 
-        if (service && network) {
-            throw new GradleException("The property '$name' is ambiguous - are you referring to the service or the network?\n" +
-                    "Please specify by replacing $name with network('$name') or service('$name')!")
-        }
-        if (service) {
-            return service
-        }
-        if (network) {
-            return network
+        if (!service && !network && !volume) {
+            throw new MissingPropertyException(name, getClass())
         }
 
-        throw new MissingPropertyException(name, getClass())
+        if (!(service != null ^ network != null ^ volume != null)) {
+            throw new GradleException("The property '$name' is ambiguous - are you referring to " +
+                    "the service, the network or the volume?\nPlease specify by replacing $name with " +
+                    "service('$name'), network('$name') or volume('$name')!")
+        }
+
+        service ?: network ?: volume
     }
 }
