@@ -124,6 +124,6 @@ class DcomposeVolumeRemoveTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'removeTestVolume'
 
         then:
-        result.standardError.contains 'Unable to remove volume, volume still in use'
+        result.standardError =~ /volume (still|is) in use/
     }
 }
