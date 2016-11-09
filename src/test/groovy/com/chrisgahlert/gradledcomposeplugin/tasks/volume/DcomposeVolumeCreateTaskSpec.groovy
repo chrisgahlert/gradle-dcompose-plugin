@@ -24,7 +24,9 @@ class DcomposeVolumeCreateTaskSpec extends AbstractDcomposeSpec {
         buildFile << """
             dcompose {
                 volumes {
-                    sample
+                    sample {
+                        driver = 'local'
+                    }
                 }
                 main {
                     image = '$DEFAULT_IMAGE'
@@ -38,6 +40,54 @@ class DcomposeVolumeCreateTaskSpec extends AbstractDcomposeSpec {
 
         then:
         result.wasExecuted(':createSampleVolume')
+    }
+
+    def 'should support custom driver opts'() {
+        given:
+        buildFile << """
+            dcompose {
+                volumes {
+                    sample {
+                        driverOpts = [opt1: 'value1']
+                    }
+                }
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    binds = [sample.bind('/home')]
+                }
+            }
+        """
+
+        when:
+        def result = runTasks 'createMainContainer'
+
+        then:
+        if (result.failure) {
+            assert result.standardError.contains('invalid option key: "opt1"')
+        }
+    }
+
+    def 'should support custom driver'() {
+        given:
+        buildFile << """
+            dcompose {
+                volumes {
+                    sample {
+                        driver = 'custom'
+                    }
+                }
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    binds = [sample.bind('/home')]
+                }
+            }
+        """
+
+        when:
+        def result = runTasksWithFailure 'createMainContainer'
+
+        then:
+        result.standardError.contains 'Error looking up volume plugin custom: plugin not found'
     }
 
     def 'create volume should be up-to-date'() {
@@ -205,4 +255,5 @@ class DcomposeVolumeCreateTaskSpec extends AbstractDcomposeSpec {
         then:
         file('build/copy/test.txt').text.trim() == 'aaa\naaa'
     }
+
 }

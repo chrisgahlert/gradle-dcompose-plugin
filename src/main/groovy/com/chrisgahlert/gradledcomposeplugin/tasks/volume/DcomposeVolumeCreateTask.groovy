@@ -63,7 +63,7 @@ class DcomposeVolumeCreateTask extends AbstractDcomposeVolumeTask {
                 }
 
                 if (driverOpts != null) {
-                    cmd.withOptions(driverOpts as Map<String, String>)
+                    cmd.withDriverOpts(driverOpts as Map<String, String>)
                 }
 
                 cmd.exec()
