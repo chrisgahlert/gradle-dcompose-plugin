@@ -36,7 +36,7 @@ class DcomposeImagePullTaskSpec extends AbstractDcomposeSpec {
             }
         """
 
-        runTasks cleanupTasks
+        runTasks cleanupTasks as String[]
 
         when:
         def result = runTasksSuccessfully 'pullDbImage'
