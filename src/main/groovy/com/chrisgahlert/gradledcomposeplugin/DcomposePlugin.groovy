@@ -100,8 +100,6 @@ class DcomposePlugin implements Plugin<Project> {
                 'stopContainers'  : DcomposeContainerStopTask,
                 'removeContainers': DcomposeContainerRemoveTask,
                 'removeImages'    : DcomposeImageRemoveTask,
-                'buildImages'     : DcomposeImageBuildTask,
-                'pullImages'      : DcomposeImagePullTask,
                 'createNetworks'  : DcomposeNetworkCreateTask,
                 'removeNetworks'  : DcomposeNetworkRemoveTask,
                 'pushImages'      : DcomposeImagePushTask,
@@ -115,6 +113,25 @@ class DcomposePlugin implements Plugin<Project> {
 
             tasks.withType(taskClass as Class) { Task task ->
                 allTask.dependsOn task
+            }
+        }
+
+        tasks.create('buildImages') { Task allTask ->
+            allTask.group = TASK_GROUP_ALL
+
+            allTask.dependsOn {
+                tasks.withType(DcomposeImageBuildTask).findAll { DcomposeImageBuildTask task ->
+                    !task.service.hasImage()
+                }
+            }
+        }
+        tasks.create('pullImages') { Task allTask ->
+            allTask.group = TASK_GROUP_ALL
+
+            allTask.dependsOn {
+                tasks.withType(DcomposeImagePullTask).findAll { DcomposeImagePullTask task ->
+                    task.service.hasImage()
+                }
             }
         }
     }

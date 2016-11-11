@@ -19,17 +19,6 @@ import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
 class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
-    private registryUrl = System.getProperty('testreg.url')
-    private registryUser = System.getProperty('testreg.user')
-    private registryPass = System.getProperty('testreg.pass')
-
-    private dockerClientConfig = """
-        registry ('$registryUrl') {
-            withUsername '$registryUser'
-            withPassword '$registryPass'
-        }
-    """
-
     def setup() {
         assert registryUrl && registryUser && registryPass
     }
@@ -38,7 +27,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         given:
         buildFile << """
             dcompose {
-                $dockerClientConfig
+                $registryClientConfig
 
                 main {
                     image = '$DEFAULT_IMAGE'
@@ -85,7 +74,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         given:
         buildFile << """
             dcompose {
-                $dockerClientConfig
+                $registryClientConfig
 
                 main {
                     baseDir = file('src/main/docker')
@@ -107,7 +96,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
             $DEFAULT_PLUGIN_INIT
 
             dcompose {
-                $dockerClientConfig
+                $registryClientConfig
 
                 pulled {
                     image = '$registryUrl/custom:latest'
@@ -134,7 +123,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         given:
         buildFile << """
             dcompose {
-                $dockerClientConfig
+                $registryClientConfig
 
                 main {
                     baseDir = file('src/main/docker')
@@ -162,7 +151,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
             $DEFAULT_PLUGIN_INIT
 
             dcompose {
-                $dockerClientConfig
+                $registryClientConfig
 
                 built {
                     baseDir = file('src/main/docker')

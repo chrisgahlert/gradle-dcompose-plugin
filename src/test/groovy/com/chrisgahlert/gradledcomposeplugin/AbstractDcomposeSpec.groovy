@@ -39,7 +39,7 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
         apply plugin: "com.chrisgahlert.gradle-dcompose-plugin"
     '''
 
-    protected String[] cleanupTasks = ['removeContainers', 'removeNetworks', 'removeVolumes']
+    protected List<String> cleanupTasks = ['removeContainers', 'removeNetworks', 'removeVolumes']
 
     protected int logCounter = 1
 
@@ -51,6 +51,17 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
             }
         """
     }
+
+    protected registryUrl = System.getProperty('testreg.url')
+    protected registryUser = System.getProperty('testreg.user')
+    protected registryPass = System.getProperty('testreg.pass')
+
+    protected registryClientConfig = """
+        registry ('$registryUrl') {
+            withUsername '$registryUser'
+            withPassword '$registryPass'
+        }
+    """
 
     def setup() {
         buildFile << DEFAULT_PLUGIN_INIT
@@ -104,6 +115,6 @@ $result.standardError
             }
         """
 
-        runTasks cleanupTasks
+        runTasks cleanupTasks as String[]
     }
 }

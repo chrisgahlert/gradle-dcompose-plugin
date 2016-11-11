@@ -18,43 +18,70 @@ package com.chrisgahlert.gradledcomposeplugin
 import spock.lang.Unroll
 
 class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
+    private static final String ALTERNATE_IMAGE = 'busybox:1.25.1-glibc'
 
     @Unroll
     def 'should create the #allTask task'() {
         given:
+        cleanupTasks << 'removeImages'
+
+        assert registryUrl && registryUser && registryPass
+
         buildFile << """
             dcompose {
+                $registryClientConfig
+
+                volumes {
+                    data
+                    other
+                }
+
+                networks {
+                    frontend
+                }
+
                 db {
-                    image = '$DEFAULT_IMAGE'
+                    image = '$ALTERNATE_IMAGE'
+                    repository = '$registryUrl/all-db'
                     command = ['echo']
+                    binds = [data.bind('/home')]
                 }
                 web {
                     baseDir = file('docker')
+                    repository = '$registryUrl/all-web'
                     command = ['echo']
+                    networks = [frontend]
                 }
             }
         """
 
+        file('docker/Dockerfile') << """
+            FROM $ALTERNATE_IMAGE
+            RUN echo abc > /test.txt
+        """.stripIndent()
+
         when:
-        def result = runTasksSuccessfully allTask, '--dry-run'
+        def result = runTasksSuccessfully allTask
 
         then:
-        if (dbTask != null) {
-            assert result.wasSkipped(dbTask)
-        }
-        if (webTask != null) {
-            assert result.wasSkipped(webTask)
+        expectedTasks.each {
+            assert result.wasExecuted(it)
         }
 
         where:
-        allTask            || dbTask              || webTask
-        'createContainers' || 'createDbContainer' || 'createWebContainer'
-        'removeContainers' || 'removeDbContainer' || 'removeWebContainer'
-        'startContainers'  || 'startDbContainer'  || 'startWebContainer'
-        'stopContainers'   || 'stopDbContainer'   || 'stopWebContainer'
-        'buildImages'      || null                || 'buildWebImage'
-        'pullImages'       || 'pullDbImage'       || null
-        'removeImages'     || 'removeDbImage'     || 'removeWebImage'
+        allTask            || expectedTasks
+        'createContainers' || ['pullDbImage', 'createDbContainer', 'createWebContainer', 'createDataVolume', 'createDefaultNetwork', 'createFrontendNetwork']
+        'removeContainers' || ['stopWebContainer', 'stopDbContainer', 'removeDbContainer', 'removeWebContainer']
+        'startContainers'  || ['pullDbImage', 'startDbContainer', 'startWebContainer', 'createDataVolume', 'createDefaultNetwork', 'createFrontendNetwork']
+        'stopContainers'   || ['stopDbContainer', 'stopWebContainer']
+        'buildImages'      || ['buildWebImage']
+        'pullImages'       || ['pullDbImage',]
+        'pushImages'       || ['buildWebImage', 'pullDbImage', 'pushDbImage', 'pushWebImage']
+        'removeImages'     || ['removeDbImage', 'removeWebImage', 'removeDbContainer', 'removeWebContainer']
+        'createNetworks'   || ['createDefaultNetwork', 'createFrontendNetwork']
+        'removeNetworks'   || ['removeDbContainer', 'removeWebContainer', 'removeDefaultNetwork', 'removeFrontendNetwork']
+        'createVolumes'    || ['createDataVolume', 'createOtherVolume']
+        'removeVolumes'    || ['removeDbContainer', 'removeDataVolume', 'removeOtherVolume']
     }
 
     @Unroll
