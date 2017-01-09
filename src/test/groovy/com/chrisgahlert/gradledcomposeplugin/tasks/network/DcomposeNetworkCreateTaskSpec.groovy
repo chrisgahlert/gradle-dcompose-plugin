@@ -432,7 +432,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
                 networks {
                     custom {
                         driverOpts = [test: 'hello']
-                        enableIpv6 = true
+                        enableIpv6 = false
                         ipam {
                             driver = 'default'
                             options = [other: 'hello']
