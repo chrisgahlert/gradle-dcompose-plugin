@@ -19,6 +19,19 @@ import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
 class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
 
+    def setup() {
+        assert registryUrl && registryUser && registryPass
+
+        buildFile << """
+            dcompose {
+                registry ('https://$registryUrl') {
+                    withUsername '$registryUser'
+                    withPassword '$registryPass'
+                }
+            }
+        """
+    }
+
     def 'should create compose file with all possible properties'() {
         given:
         buildFile << """
@@ -46,6 +59,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 other {
                     baseDir = file('src/main/docker')
                     dockerFilename = 'Dockerfile.custom'
+                    repository = '$registryUrl/comfil-all:test'
                 }
                 main {
                     image = "$DEFAULT_IMAGE"
@@ -85,7 +99,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully 'createComposeFile'
+        def result = runTasksSuccessfully 'pushOtherImage', 'createComposeFile'
         def composeFile = readNormalizedFile('build/docker-compose.yml')
 
         then:
@@ -143,7 +157,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     - netalias2
                 mem_limit: 1000000000
               other:
-                image: dcompose.../other@sha256:...
+                image: $registryUrl/comfil-all@sha256:...
                 networks:
                   default:
                     aliases: []
@@ -236,6 +250,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 }
                 main {
                     baseDir = file('src/main/docker')
+                    repository = '$registryUrl/comfil-special:binds'
                     volumes = ['/data']
                     binds = [
                         '.:/data:ro',
@@ -256,7 +271,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully 'createComposeFile'
+        def result = runTasksSuccessfully 'pushMainImage', 'createComposeFile'
         def composeFile = readNormalizedFile('build/docker-compose.yml')
 
         then:
@@ -264,7 +279,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
             version: '2'
             services:
               main:
-                image: dcompose.../main@sha256:...
+                image: $registryUrl/comfil-special@sha256:...
                 volumes:
                 - .:/data:ro
                 - namedv:/data2:rw
@@ -396,7 +411,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     image = "$DEFAULT_IMAGE"
                     command = ["hello", "world"]
                     dependsOn = [third]
-                    repository = "repo/test/image:with-tag"
+                    repository = '$registryUrl/comfil-test/main:with-tag'
                     memLimit = 1000000000L
                 }
             }
@@ -406,7 +421,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         """
 
         when:
-        def result = runTasksSuccessfully 'createComposeFile'
+        def result = runTasksSuccessfully 'pushMainImage', 'createComposeFile'
         def composeFile = readNormalizedFile('build/docker-compose.yml')
 
         then:
@@ -414,7 +429,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
             version: '2'
             services:
               main:
-                image: repo/test/image:with-tag
+                image: $registryUrl/comfil-test/main@sha256:...
                 links:
                 - third
                 command:
@@ -425,7 +440,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     aliases: []
                 mem_limit: 1000000000
               third:
-                image: busybox:1.24.2-musl
+                image: busybox@sha256:...
                 networks:
                   default:
                     aliases: []
@@ -438,6 +453,69 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
 
         validateComposeFile 'build/docker-compose.yml'
 
+    }
+
+    def 'should fail when image has not been pushed'() {
+        given:
+        buildFile << """
+            dcompose {
+                other {
+                    baseDir = file('src/main/docker')
+                    dockerFilename = 'Dockerfile.custom'
+                }
+            }
+        """
+
+        file('src/main/docker/Dockerfile.custom').text = """
+            FROM $DEFAULT_IMAGE
+            CMD ["echo", "hello"]
+        """.stripIndent()
+
+        when:
+        def result = runTasksWithFailure 'createComposeFile'
+
+        then:
+        result.standardError.contains "Cannot determine image digest for service 'other'"
+    }
+
+    def 'should succeed when using tags instead of digests'() {
+        given:
+        buildFile << """
+            dcompose {
+                other {
+                    baseDir = file('src/main/docker')
+                    dockerFilename = 'Dockerfile.custom'
+                }
+            }
+            createComposeFile.useTags = true
+        """
+
+        file('src/main/docker/Dockerfile.custom').text = """
+            FROM $DEFAULT_IMAGE
+            CMD ["echo", "hello"]
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully 'createComposeFile'
+        def composeFile = readNormalizedFile('build/docker-compose.yml')
+
+        then:
+        composeFile == """
+            version: '2'
+            services:
+              other:
+                image: dcompose.../other:latest
+                networks:
+                  default:
+                    aliases: []
+            networks:
+              default:
+                ipam:
+                  config: []
+            volumes: {}
+        """.stripIndent().trim()
+
+        validateComposeFile 'build/docker-compose.yml'
     }
 
     private String readNormalizedFile(String s) {

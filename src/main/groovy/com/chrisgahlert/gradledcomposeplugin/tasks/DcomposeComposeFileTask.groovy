@@ -23,6 +23,7 @@ import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
+import org.gradle.api.GradleException
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.GUtil
@@ -37,6 +38,8 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
     List<Closure> beforeSaves = []
 
     Boolean useAWSCompat
+
+    boolean useTags = false
 
     DcomposeComposeFileTask() {
         dependsOn {
@@ -80,9 +83,8 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
         dcomposeServices.each { Service service ->
             networks.addAll service.networks
-            def imageRef = ImageRef.parse(service.repository)
             def spec = [
-                    image: useAWSCompat ? imageRef.toString() : "$imageRef.registryWithRepository@sha256:$service.imageId" as String
+                    image: useTags ? service.repository : getImageDigest(service)
             ]
 
             if (service.dependsOn) {
@@ -134,7 +136,10 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
                 logger.warn("Warning: publishAllPorts is not supported by docker-compose")
             }
             if (service.links) {
-                spec.links = []
+                if (!spec.links) {
+                    spec.links = []
+                }
+
                 service.links.each {
                     if (it instanceof Service.ServiceDependency) {
                         spec.links << (it as Service.ServiceDependency).serviceDefinition
@@ -205,6 +210,23 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
 
         writeYaml(yml)
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected String getImageDigest(Service service) {
+        def digest = runInDockerClasspath {
+            def imageRef = ImageRef.parse(service.repository)
+            def result = client.inspectImageCmd(service.imageId).exec()
+
+            result.repoDigests.find { it.startsWith(imageRef.registryWithRepository + '@') }
+        }
+
+        if (!digest) {
+            throw new GradleException("Cannot determine image digest for service '$service.name' - has it been pushed yet? " +
+                    "Try running the $service.pushImageTaskName task first or use '${name}.useTags = true' to use tags instead of digests!")
+        }
+
+        digest
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
