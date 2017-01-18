@@ -21,8 +21,8 @@ import nebula.test.functional.ExecutionResult
 
 @TypeChecked
 abstract class AbstractDcomposeSpec extends IntegrationSpec {
-    protected static final String DEFAULT_IMAGE = 'busybox:1.24.2-musl'
-    protected static final String ALTERNATE_IMAGE = 'busybox:1.24.2-glibc'
+    protected static final String DEFAULT_IMAGE = 'busybox:default'
+    protected static final String ALTERNATE_IMAGE = 'busybox:alt'
     protected static final String DEFAULT_BUILD_FILE = """
         dcompose {
             main {

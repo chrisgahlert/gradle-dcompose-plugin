@@ -19,8 +19,8 @@ import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
 class DcomposeImageRemoveTaskSpec extends AbstractDcomposeSpec {
 
-    private static final String REMOVE_IMAGE = 'busybox:1.24.2-glibc'
-    private static final String REMOVE_ALTERNATE_IMAGE = 'busybox:1.24.1-glibc'
+    private static final String REMOVE_IMAGE = 'busybox:imageremove'
+    private static final String REMOVE_ALTERNATE_IMAGE = 'busybox:imageremove-alt'
 
     def 'remove image should run successfully'() {
         given:

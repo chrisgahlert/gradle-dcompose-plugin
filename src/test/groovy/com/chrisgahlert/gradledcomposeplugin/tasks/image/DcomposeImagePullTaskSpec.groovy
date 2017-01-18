@@ -19,8 +19,8 @@ import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
 
 class DcomposeImagePullTaskSpec extends AbstractDcomposeSpec {
 
-    private static final String PULL_IMAGE = 'busybox:1.24.1-musl'
-    private static final String PULL_ALTERNATE_IMAGE = 'busybox:1.24.1-uclibc'
+    private static final String PULL_IMAGE = 'busybox:imagepull'
+    private static final String PULL_ALTERNATE_IMAGE = 'busybox:imagepull-alt'
 
     def setup() {
         cleanupTasks = ['removeImages', 'removeNetworks']

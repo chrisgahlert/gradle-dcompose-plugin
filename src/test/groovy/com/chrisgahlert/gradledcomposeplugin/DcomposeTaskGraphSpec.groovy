@@ -18,7 +18,7 @@ package com.chrisgahlert.gradledcomposeplugin
 import spock.lang.Unroll
 
 class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
-    private static final String ALTERNATE_IMAGE = 'busybox:1.25.1-glibc'
+    private static final String ALTERNATE_IMAGE = 'busybox:taskgraph-alt'
 
     @Unroll
     def 'should create the #allTask task'() {

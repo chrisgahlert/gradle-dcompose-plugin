@@ -68,7 +68,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
     def 'create should not be up-to-date when underlying image changed'() {
         given:
         def dockerFile = file('docker/Dockerfile')
-        dockerFile.text = 'FROM busybox:1.24.2-musl'
+        dockerFile.text = "FROM $DEFAULT_IMAGE"
 
         buildFile << """
             dcompose {

@@ -80,6 +80,11 @@ dcompose {
         dockerFilename = 'Dockerfile.registry'
         aliases = ['testreg']
     }
+    dockerHubMirror {
+        baseDir = file('src/test/docker/')
+        dockerFilename = 'Dockerfile.hub'
+        aliases = ['hub']
+    }
 }
 createDockerDaemonContainer.outputs.upToDateWhen { false }
 createDockerRegistryContainer.outputs.upToDateWhen { false }
@@ -108,8 +113,8 @@ test {
         systemProperties.remove 'networkCreateTaskSpec.testUrl'
     }
 
-    dependsOn startDockerDaemonContainer, startDockerRegistryContainer
-    finalizedBy removeDockerDaemonContainer, removeDockerRegistryContainer
+    dependsOn startDockerDaemonContainer, startDockerRegistryContainer, startDockerHubMirrorContainer
+    finalizedBy removeDockerDaemonContainer, removeDockerRegistryContainer, removeDockerHubMirrorContainer
 }
 
 pluginBundle {
