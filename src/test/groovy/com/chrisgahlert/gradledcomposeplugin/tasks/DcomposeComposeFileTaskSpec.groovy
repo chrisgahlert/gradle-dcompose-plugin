@@ -32,7 +32,158 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         """
     }
 
-    def 'should create compose file with all possible properties'() {
+    def 'should create v2 compose file with all possible properties'() {
+        given:
+        buildFile << """
+            dcompose {
+                networks {
+                    backend {
+                        driver = 'other'
+                        driverOpts = [test: 'hello']
+                        enableIpv6 = true
+                        ipam {
+                            driver = 'special'
+                            options = [other: 'hello']
+                            config {
+                                subnet = '10.0.1.0/24'
+                                gateway = '10.0.1.138'
+                                ipRange = '10.0.1.128/25'
+                            }
+                        }
+                    }
+                }
+                third {
+                    image = "$DEFAULT_IMAGE"
+                    deploy = false
+                }
+                other {
+                    baseDir = file('src/main/docker')
+                    dockerFilename = 'Dockerfile.custom'
+                    repository = '$registryUrl/comfil-all:test'
+                }
+                main {
+                    image = "$DEFAULT_IMAGE"
+                    command = ["hello", "world"]
+                    entrypoints = ['/entrypoint.sh']
+                    env = ['TESTENV=yes', 'OTHER=no']
+                    workingDir = '/work'
+                    user = 'nobody'
+                    readonlyRootfs = true
+                    volumes = ['/data']
+                    binds = ['/hostpath:/containerpath']
+                    volumesFrom = [other, 'non_managed']
+                    exposedPorts = ['8081', '8082-8083']
+                    portBindings = ['8081:8081', '8082']
+                    publishAllPorts = true
+                    links = [other.link('linkalias'), other.link(), 'non_managed']
+                    hostName = 'specialhost'
+                    dns = ['1.2.3.4', '8.8.4.4']
+                    dnsSearch = ['somedomain', 'otherdomain']
+                    extraHosts = ['test:1.4.7.8', 'otheraa:1.2.3.4']
+                    attachStdin = true
+                    attachStdout = true
+                    attachStderr = true
+                    privileged = true
+                    networks += backend
+                    aliases = ['netalias', 'netalias2']
+                    restart = 'always'
+                    dependsOn = [other]
+                    memLimit = 1000000000L
+                }
+            }
+            createComposeFile.version = '2'
+        """
+
+        file('src/main/docker/Dockerfile.custom').text = """
+            FROM $DEFAULT_IMAGE
+            CMD ["echo", "hello"]
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully 'pushOtherImage', 'createComposeFile'
+        def composeFile = readNormalizedFile('build/docker-compose.yml')
+
+        then:
+        composeFile == """
+            version: '2'
+            services:
+              main:
+                image: busybox@sha256:...
+                depends_on:
+                - other
+                command:
+                - hello
+                - world
+                entrypoint:
+                - /entrypoint.sh
+                environment:
+                - TESTENV=yes
+                - OTHER=no
+                working_dir: /work
+                user: nobody
+                volumes:
+                - /hostpath:/containerpath:rw
+                - main__data:/data:rw
+                expose:
+                - '8081'
+                - 8082-8083
+                ports:
+                - 8081:8081
+                - '8082'
+                links:
+                - other:linkalias
+                - other:other
+                hostname: specialhost
+                dns:
+                - 1.2.3.4
+                - 8.8.4.4
+                dns_search:
+                - somedomain
+                - otherdomain
+                extra_hosts:
+                - test:1.4.7.8
+                - otheraa:1.2.3.4
+                privileged: true
+                restart: always
+                networks:
+                  default:
+                    aliases:
+                    - netalias
+                    - netalias2
+                  backend:
+                    aliases:
+                    - netalias
+                    - netalias2
+                volumes_from:
+                - other
+                mem_limit: 1000000000
+              other:
+                image: $registryUrl/comfil-all@sha256:...
+                networks:
+                  default:
+                    aliases: []
+            networks:
+              backend:
+                driver: other
+                driver_opts:
+                  test: hello
+                ipam:
+                  driver: special
+                  config:
+                  - subnet: 10.0.1.0/24
+                    ip_range: 10.0.1.128/25
+                    gateway: 10.0.1.138
+              default:
+                ipam:
+                  config: []
+            volumes:
+              main__data: {}
+        """.stripIndent().trim()
+
+        validateComposeFile 'build/docker-compose.yml'
+    }
+
+    def 'should create v3 compose file with all possible properties'() {
         given:
         buildFile << """
             dcompose {
@@ -104,7 +255,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
 
         then:
         composeFile == """
-            version: '2'
+            version: '3'
             services:
               main:
                 image: busybox@sha256:...
@@ -123,8 +274,6 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 volumes:
                 - /hostpath:/containerpath:rw
                 - main__data:/data:rw
-                volumes_from:
-                - other
                 expose:
                 - '8081'
                 - 8082-8083
@@ -155,12 +304,20 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     aliases:
                     - netalias
                     - netalias2
-                mem_limit: 1000000000
+                deploy:
+                  resources:
+                    limits:
+                      memory: '1000000000'
+                    reservations: {}
               other:
                 image: $registryUrl/comfil-all@sha256:...
                 networks:
                   default:
                     aliases: []
+                deploy:
+                  resources:
+                    limits: {}
+                    reservations: {}
             networks:
               backend:
                 driver: other
@@ -170,8 +327,6 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                   driver: special
                   config:
                   - subnet: 10.0.1.0/24
-                    ip_range: 10.0.1.128/25
-                    gateway: 10.0.1.138
               default:
                 ipam:
                   config: []
@@ -191,6 +346,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     networkMode = 'bridge'
                 }
             }
+            createComposeFile.version = '2'
         """
 
         when:
@@ -227,6 +383,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     networks = [custom]
                 }
             }
+            createComposeFile.version = '2'
         """
 
         when:
@@ -262,6 +419,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     preserveVolumes = true
                 }
             }
+            createComposeFile.version = '2'
         """
 
         file('src/main/docker/Dockerfile').text = """
@@ -323,6 +481,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
             }
 
             createComposeFile {
+                version = '2'
+                
                 beforeSave { config ->
                     config.networks.othernet.driver = 'overlay'
                 }
@@ -361,6 +521,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     image = "$DEFAULT_IMAGE"
                 }
             }
+            createComposeFile.version = '2'
 
             createComposeFile {
                 beforeSave new Action<Map<String, Object>>() {
@@ -416,6 +577,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 }
             }
             createComposeFile {
+                version = '2'
                 useAWSCompat = true
             }
         """
@@ -501,13 +663,17 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
 
         then:
         composeFile == """
-            version: '2'
+            version: '3'
             services:
               other:
                 image: dcompose.../other:latest
                 networks:
                   default:
                     aliases: []
+                deploy:
+                  resources:
+                    limits: {}
+                    reservations: {}
             networks:
               default:
                 ipam:
@@ -525,11 +691,11 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 .trim()
     }
 
-    private boolean validateComposeFile(String f) {
+    private void validateComposeFile(String f) {
         def file = file(f)
         def composeResult = "docker-compose -f $file.name config".execute([], file.parentFile)
         composeResult.errorStream.eachLine { println it }
         composeResult.waitFor()
-        composeResult.exitValue() == 0
+        assert composeResult.exitValue() == 0
     }
 }

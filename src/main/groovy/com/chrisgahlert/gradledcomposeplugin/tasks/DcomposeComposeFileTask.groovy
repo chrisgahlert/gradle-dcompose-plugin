@@ -41,6 +41,8 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
     boolean useTags = false
 
+    String version = '3'
+
     DcomposeComposeFileTask() {
         dependsOn {
             dcomposeServices?.collect { Service service ->
@@ -70,9 +72,10 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
     }
 
     @TaskAction
+    @TypeChecked(TypeCheckingMode.SKIP)
     void createComposeFile() {
         def yml = [
-                version : '2',
+                version : version,
                 services: [:],
                 networks: [:],
                 volumes : [:]
@@ -115,16 +118,6 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
             if (service.volumes || service.binds || service.preserveVolumes) {
                 spec.volumes = []
                 generateVolumes(service, spec.volumes as List<String>, namedVolumes)
-            }
-            if (service.volumesFrom) {
-                spec.volumes_from = []
-                service.volumesFrom.each {
-                    if (it instanceof Service) {
-                        spec.volumes_from << it.name
-                    } else {
-                        logger.warn("Warning: volumesFrom to a non-managed service is not supported by docker-compose")
-                    }
-                }
             }
             if (service.exposedPorts) {
                 spec.expose = service.exposedPorts
@@ -193,8 +186,41 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
                 }
             }
 
-            if (service.memLimit) {
-                spec.mem_limit = service.memLimit
+            switch (version) {
+                case '2':
+                    if (service.volumesFrom) {
+                        spec.volumes_from = []
+                        service.volumesFrom.each {
+                            if (it instanceof Service) {
+                                spec.volumes_from << it.name
+                            } else {
+                                logger.warn("Warning: volumesFrom to a non-managed service is not supported by docker-compose")
+                            }
+                        }
+                    }
+                    if (service.memLimit) {
+                        spec.mem_limit = service.memLimit
+                    }
+                    break;
+
+                case '3':
+                    spec.deploy = [
+                            resources: [
+                                    limits      : [:],
+                                    reservations: [:]
+                            ]
+                    ]
+
+                    if (service.volumesFrom) {
+                        logger.warn('Warning: volumesFrom is not supported by version 3 compose files')
+                    }
+                    if (service.memLimit) {
+                        spec.deploy.resources.limits.memory = service.memLimit.toString()
+                    }
+                    break;
+
+                default:
+                    throw new GradleException("Unrecognized compose file version: '$version'")
             }
 
             yml.services[service.name] = spec
@@ -287,11 +313,19 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
                     }
 
                     if (config.ipRange != null) {
-                        c.ip_range = config.ipRange
+                        if (version == '2') {
+                            c.ip_range = config.ipRange
+                        } else {
+                            logger.warn('Network ipam config for "ip_range" is not supported by compose files version ' + version)
+                        }
                     }
 
                     if (config.gateway != null) {
-                        c.gateway = config.gateway
+                        if (version == '2') {
+                            c.gateway = config.gateway
+                        } else {
+                            logger.warn('Network ipam config for "gateway" is not supported by compose files version ' + version)
+                        }
                     }
 
                     c
