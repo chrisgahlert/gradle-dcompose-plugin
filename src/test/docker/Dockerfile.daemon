@@ -1,4 +1,4 @@
-FROM docker:1.13.0-dind
+FROM docker:1.13.1-dind
 
 COPY registry.crt /etc/docker/certs.d/testreg:5000/ca.crt
 COPY hub.crt /etc/docker/certs.d/hub:5000/ca.crt
