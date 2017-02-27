@@ -208,7 +208,8 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
         then:
         result.wasExecuted(':pushMainImage')
-        result.standardError.contains('Could not push image: unauthorized: authentication required')
+        result.standardError.contains('Could not push image: denied: requested access to the resource is denied') ||
+                result.standardError.contains('Could not push image: unauthorized: authentication required')
     }
 
 }
