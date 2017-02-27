@@ -53,7 +53,7 @@ dependencies {
     } else if (GradleVersion.current().compareTo(GradleVersion.version('3.3')) < 0) {
         testCompile 'com.netflix.nebula:nebula-test:4.2.2'
     } else {
-        testCompile 'com.netflix.nebula:nebula-test:5.0.0'
+        testCompile 'com.netflix.nebula:nebula-test:5.0.1'
     }
 }
 
