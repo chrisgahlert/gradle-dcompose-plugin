@@ -25,18 +25,14 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
     DcomposeImageBuildTask() {
         enabled = { !service.hasImage() }
+        
+        outputs.upToDateWhen { !service.forcePull }
     }
 
     @Input
     @Optional
     Boolean getNoCache() {
         service.buildNoCache
-    }
-
-    @Input
-    @Optional
-    boolean isForcePull() {
-        service.forcePull
     }
 
     @Input
