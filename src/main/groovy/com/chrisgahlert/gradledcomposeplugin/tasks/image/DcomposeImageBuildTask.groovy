@@ -93,7 +93,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
             def cmd = client.buildImageCmd(dockerFile)
                     .withBaseDirectory(baseDir)
                     .withBuildAuthConfigs(authConfigs)
-                    .withPull(forcePull)
+                    .withPull(service.forcePull)
 
             if (noCache != null) {
                 cmd.withNoCache(noCache)
