@@ -130,3 +130,10 @@ pluginBundle {
     }
 }
 publishPlugins.dependsOn test
+
+// FIXME: hotfix for Gradle 4+ - should be removed after using new version
+allprojects { prj ->
+    prj.tasks.withType(com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeTask) { task ->
+        task.dockerClassLoaderFactory.getDefaultInstance()
+    }
+}
