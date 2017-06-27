@@ -88,8 +88,16 @@ class DcomposePlugin implements Plugin<Project> {
 
         def classLoaderFactory = new DockerClassLoaderFactory(config)
 
+        def taskGraph = project.gradle.taskGraph
         project.tasks.withType(AbstractDcomposeTask) { AbstractDcomposeTask task ->
             task.dockerClassLoaderFactory = classLoaderFactory
+
+            // FIXME: fixes resource lock exception for Gradle 4+ - should be more elegant
+            taskGraph.whenReady {
+                if(taskGraph.hasTask(task)) {
+                    classLoaderFactory.getDefaultInstance()
+                }
+            }
         }
     }
 
