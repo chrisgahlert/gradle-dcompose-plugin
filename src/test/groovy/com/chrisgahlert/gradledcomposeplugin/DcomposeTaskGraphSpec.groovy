@@ -96,10 +96,10 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
         """
 
         when:
-        def result = runTasksSuccessfully 'myTask', '--dry-run'
+        def result = runTasksSuccessfully 'myTask'
 
         then:
-        result.wasSkipped(":$taskName")
+        result.wasExecuted(":$taskName")
 
         where:
         taskNameProperty          || taskName
@@ -125,12 +125,13 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                 dependsOn dcompose.main.$taskNameProperty
             }
         """
+        file('docker/Dockerfile').text = "FROM $DEFAULT_IMAGE"
 
         when:
-        def result = runTasksSuccessfully 'myTask', '--dry-run'
+        def result = runTasksSuccessfully 'myTask'
 
         then:
-        result.wasSkipped(":$taskName")
+        result.wasExecuted(":$taskName")
 
         where:
         taskNameProperty          || taskName
@@ -189,8 +190,6 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
 
         when:
         def result = runTasksSuccessfully task, '--configure-on-demand', '--dry-run'
-        println result.standardOutput
-        println result.standardError
 
         then:
         evalA == result.standardOutput.contains('#eval A#')
@@ -230,7 +229,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
         def result = runTasksSuccessfully 'tasks'
 
         then:
-        result.standardOutput.contains '''
+        result.standardOutput.replaceAll("\r\n", "\n").contains '''
             Dcompose Docker 'main' service tasks
             ------------------------------------
             buildMainImage
