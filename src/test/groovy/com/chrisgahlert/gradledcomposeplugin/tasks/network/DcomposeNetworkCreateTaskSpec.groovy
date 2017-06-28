@@ -374,7 +374,6 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksSuccessfully 'url'
         def directUrl = (result.standardOutput =~ /(?m)^URL: (.*)$/)[0][1]
         def url = System.getProperty('networkCreateTaskSpec.testUrl', directUrl)
-        System.err.println url
 
         then:
         url.toURL().text.trim() == 'tuco'
