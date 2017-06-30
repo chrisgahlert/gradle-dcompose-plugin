@@ -35,26 +35,9 @@ repositories {
 
 sourceCompatibility = targetCompatibility = 1.6
 
-configurations {
-    all {
-        resolutionStrategy {
-            force "org.codehaus.groovy:groovy-all:${GroovySystem.getVersion()}"
-        }
-    }
-}
-
 dependencies {
     compile gradleApi()
-
-    if(GradleVersion.current().compareTo(GradleVersion.version('2.6')) < 0) {
-        testCompile 'com.netflix.nebula:nebula-test:2.2.2'
-    } else if(GradleVersion.current().compareTo(GradleVersion.version('2.8')) < 0) {
-        testCompile 'com.netflix.nebula:nebula-test:3.1.0'
-    } else if (GradleVersion.current().compareTo(GradleVersion.version('3.3')) < 0) {
-        testCompile 'com.netflix.nebula:nebula-test:4.2.2'
-    } else {
-        testCompile 'com.netflix.nebula:nebula-test:6.0.0'
-    }
+    testCompile 'com.netflix.nebula:nebula-test:6.0.0'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -96,6 +79,10 @@ test {
     systemProperty 'testreg.url', "testreg:5000"
     systemProperty 'testreg.user', 'reguser'
     systemProperty 'testreg.pass', 'regpass'
+
+    if(project.hasProperty('gradleVersion')) {
+        systemProperty 'gradleVersion', gradleVersion
+    }
 
     maxHeapSize = '128m'
 
