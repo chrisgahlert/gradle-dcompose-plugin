@@ -66,6 +66,8 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
     def setup() {
         buildFile << DEFAULT_PLUGIN_INIT
 
+        file('gradle.properties').text = 'org.gradle.jvmargs=-Xmx64m'
+
         // Fix for Windows?
 //        classpathFilter = new Predicate<URL>() {
 //            @Override
