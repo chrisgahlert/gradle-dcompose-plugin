@@ -97,6 +97,8 @@ test {
     systemProperty 'testreg.user', 'reguser'
     systemProperty 'testreg.pass', 'regpass'
 
+    maxHeapSize = '128m'
+
     doFirst {
         def dockerHost = dcompose.dockerDaemon.dockerHost
         def dockerPort = dcompose.dockerDaemon.findHostPort(2375)
