@@ -192,24 +192,4 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         result.wasSkipped(':pushMainImage')
     }
 
-    def 'push should try to push back already existing images under new name'() {
-        given:
-        buildFile << """
-            dcompose {
-                main {
-                    image = '$DEFAULT_IMAGE'
-                    repository = 'user/image'
-                }
-            }
-        """
-
-        when:
-        def result = runTasks 'pushImages'
-
-        then:
-        result.wasExecuted(':pushMainImage')
-        result.standardError.contains('Could not push image: denied: requested access to the resource is denied') ||
-                result.standardError.contains('Could not push image: unauthorized: authentication required')
-    }
-
 }
