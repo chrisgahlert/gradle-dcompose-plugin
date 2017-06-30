@@ -13,7 +13,7 @@ container should be recreated.
 
 This plugin requires: 
 * Gradle >= 2.8 (older versions possibly working, but not tested)
-* Docker (host) >= 1.10.0
+* Docker (host) >= 1.12.0 (older versions possibly working, but not tested)
 * **Please note:** Docker for Mac (native) currently doesn't support redirecting standard streams to/from a container.
 
 # Documentation
