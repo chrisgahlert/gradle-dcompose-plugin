@@ -88,7 +88,13 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
     def 'should support using the #taskNameProperty property as a dependency for pull containers'() {
         given:
         buildFile << """
-            $DEFAULT_BUILD_FILE
+            dcompose {
+                main {
+                    image = '$ALTERNATE_IMAGE'
+                    command = ['/bin/sleep', '300']
+                    stopTimeout = 0
+                }
+            }
 
             task myTask {
                 dependsOn dcompose.main.$taskNameProperty
@@ -125,7 +131,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                 dependsOn dcompose.main.$taskNameProperty
             }
         """
-        file('docker/Dockerfile').text = "FROM $DEFAULT_IMAGE"
+        file('docker/Dockerfile').text = "FROM $ALTERNATE_IMAGE"
 
         when:
         def result = runTasksSuccessfully 'myTask'
