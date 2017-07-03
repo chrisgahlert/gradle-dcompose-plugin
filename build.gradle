@@ -84,7 +84,7 @@ test {
         systemProperty 'gradleVersion', gradleVersion
     }
 
-    maxHeapSize = '128m'
+    maxHeapSize = '196m'
 
     doFirst {
         def dockerHost = dcompose.dockerDaemon.dockerHost
