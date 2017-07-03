@@ -67,7 +67,7 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
         buildFile << DEFAULT_PLUGIN_INIT
         file('gradle.properties').text = '''
             org.gradle.daemon=true
-            org.gradle.jvmargs=-Xmx128m
+            org.gradle.jvmargs=-Xmx196m
         '''.stripIndent()
 
         gradleVersion = System.getProperty('gradleVersion')
