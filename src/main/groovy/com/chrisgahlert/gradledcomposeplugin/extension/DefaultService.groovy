@@ -32,7 +32,7 @@ class DefaultService extends Service {
      * The name of the pre-existing image that should be pulled and used for creating containers.
      * Cannot be used in combination with baseDir (for building images).
      */
-    private String image
+    String image
 
     /**
      * Whether the "start<Name>Container" command should wait for the container to exit before continuing
