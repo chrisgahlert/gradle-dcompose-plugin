@@ -87,7 +87,7 @@ class DcomposeVolumeCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'createMainContainer'
 
         then:
-        result.standardError.contains 'Error looking up volume plugin custom:'
+        result.standardError.toLowerCase().contains 'error looking up volume plugin custom:'
     }
 
     def 'create volume should be up-to-date'() {

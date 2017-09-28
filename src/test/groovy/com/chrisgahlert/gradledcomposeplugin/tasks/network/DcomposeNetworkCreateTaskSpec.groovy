@@ -395,7 +395,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasks 'createCustomDriverNetwork'
 
         then:
-        result.standardError.contains('plugin not found')
+        result.standardError.contains('plugin not found') || result.standardError.contains('plugin "other" not found')
     }
 
     def 'should fail adding multiple subnets'() {
