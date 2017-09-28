@@ -80,4 +80,5 @@ to re-run this build and everything, that needs to be recreated will be.
 
 # Mentions
 
-* Blog entry [Don't use In-Memory Databases (like H2) for Tests](https://deref-web-02.de/mail/client/gQzD4_c9zXU/dereferrer/?redirectUrl=https%3A%2F%2Fblog.philipphauer.de%2Fdont-use-in-memory-databases-tests-h2%2F) by Philipp Hauer  
+* Blog entry [Don't use In-Memory Databases (like H2) for Tests](https://deref-web-02.de/mail/client/gQzD4_c9zXU/dereferrer/?redirectUrl=https%3A%2F%2Fblog.philipphauer.de%2Fdont-use-in-memory-databases-tests-h2%2F) by Philipp Hauer
+* Talk [TESTUMGEBUNGEN VERSCHIFFEN - DOCKER FÜR INTEGRATIONSTESTS](https://consulting.hildebrandt.tk/vortraege/docker-fuer-integrationstests/slides/index.html#/67) by Stefan Hildebrandt   
