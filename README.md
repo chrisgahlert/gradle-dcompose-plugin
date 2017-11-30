@@ -80,5 +80,6 @@ to re-run this build and everything, that needs to be recreated will be.
 
 # Mentions
 
+* Blog entry [Using a containerized database for testing Spring Boot applications](http://sanchezdale.me/using-a-containerized-database-for-testing-spring-boot-applications/) by Daniel Sanchez
 * Blog entry [Don't use In-Memory Databases (like H2) for Tests](https://blog.philipphauer.de/dont-use-in-memory-databases-tests-h2/) by Philipp Hauer
 * Talk [TESTUMGEBUNGEN VERSCHIFFEN - DOCKER FÜR INTEGRATIONSTESTS](https://consulting.hildebrandt.tk/vortraege/docker-fuer-integrationstests/slides/index.html#/67) by Stefan Hildebrandt   
