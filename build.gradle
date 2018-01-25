@@ -84,6 +84,9 @@ test {
         systemProperty 'gradleVersion', gradleVersion
     }
 
+    // ignore deprecation warnings found by nebula-test
+    systemProperty 'ignoreDeprecations', 'true'
+
     maxHeapSize = '196m'
 
     doFirst {
