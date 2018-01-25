@@ -1,8 +1,8 @@
 FROM registry:2.6.1
 
-COPY registry.* /certs/
-ENV REGISTRY_HTTP_TLS_CERTIFICATE /certs/registry.crt
-ENV REGISTRY_HTTP_TLS_KEY /certs/registry.key
+COPY testreg.* /certs/
+ENV REGISTRY_HTTP_TLS_CERTIFICATE /certs/testreg.crt
+ENV REGISTRY_HTTP_TLS_KEY /certs/testreg.key
 
 COPY htpasswd /auth/
 ENV REGISTRY_AUTH htpasswd
