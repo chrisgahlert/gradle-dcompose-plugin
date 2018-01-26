@@ -16,6 +16,8 @@ This plugin requires:
 * Docker (host) >= 1.12.0 (older versions possibly working, but not tested)
 * **Please note:** Docker for Mac (native) currently doesn't support redirecting standard streams to/from a container.
 
+However, you don't need the Docker commandline tools nor the docker-compose command to be installed, as this plugin talks directly to the Docker host effectively replacing them.
+
 # Documentation
 For the full documentation head over to the [wiki](https://github.com/chrisgahlert/gradle-dcompose-plugin/wiki)!
 
