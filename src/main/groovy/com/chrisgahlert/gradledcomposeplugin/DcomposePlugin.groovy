@@ -158,7 +158,7 @@ class DcomposePlugin implements Plugin<Project> {
     private void updateTaskGroups(Project project) {
         project.afterEvaluate {
             project.tasks.withType(AbstractDcomposeServiceTask) { AbstractDcomposeServiceTask task ->
-                task.group = String.format(TASK_GROUP_SERVICE_TEMPLATE, task.service.name)
+                task.group = String.format(TASK_GROUP_SERVICE_TEMPLATE, task.service?.name)
             }
             project.tasks.withType(AbstractDcomposeNetworkTask) { AbstractDcomposeNetworkTask task ->
                 task.group = TASK_GROUP_NETWORKS
