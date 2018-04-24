@@ -18,6 +18,7 @@ package com.chrisgahlert.gradledcomposeplugin.extension
 import groovy.transform.TypeChecked
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.file.CopySpec
 
 @TypeChecked
 class ServiceReference extends Service {
@@ -180,6 +181,11 @@ class ServiceReference extends Service {
     @Override
     File getBaseDir() {
         resolved.baseDir
+    }
+
+    @Override
+    CopySpec getBuildFiles() {
+        resolved.buildFiles
     }
 
     @Override

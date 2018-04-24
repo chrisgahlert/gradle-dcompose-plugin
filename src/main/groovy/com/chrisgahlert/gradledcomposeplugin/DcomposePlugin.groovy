@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin
 
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
+import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.extension.Volume
@@ -38,6 +39,7 @@ import groovy.transform.TypeChecked
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskContainer
 
 @TypeChecked
@@ -195,6 +197,24 @@ class DcomposePlugin implements Plugin<Project> {
             project.tasks.create(service.removeContainerTaskName, DcomposeContainerRemoveTask).service = service
             project.tasks.create(service.removeImageTaskName, DcomposeImageRemoveTask).service = service
             project.tasks.create(service.pushImageTaskName, DcomposeImagePushTask).service = service
+        }
+
+        project.afterEvaluate {
+            extension.services.all { Service service ->
+                if(service.baseDir == null && service instanceof DefaultService) {
+                    ((DefaultService) service).baseDir = new File(project.buildDir, "dcompose-build/$service.name")
+                }
+
+                if(service.buildFiles != null && service.baseDir != null) {
+                    project.tasks.create(service.copyBuildFilesTaskName, Sync) { Sync task ->
+                        task.group = String.format(TASK_GROUP_SERVICE_TEMPLATE, service.name)
+                        task.into service.baseDir
+                        task.with service.buildFiles
+                    }
+
+                    project.tasks.getByName(service.buildImageTaskName).dependsOn service.copyBuildFilesTaskName
+                }
+            }
         }
     }
 

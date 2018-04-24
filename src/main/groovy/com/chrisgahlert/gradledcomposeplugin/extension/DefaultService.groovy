@@ -19,6 +19,7 @@ import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
+import org.gradle.api.file.CopySpec
 
 @TypeChecked
 class DefaultService extends Service {
@@ -113,6 +114,7 @@ class DefaultService extends Service {
      * Build image specific properties (can only be used when no image is defined). Properties are optional by default.
      */
     File baseDir          // Required
+    CopySpec buildFiles
     String dockerFilename // optional, Default: "Dockerfile"
     Long memory
     Long memswap
@@ -286,14 +288,16 @@ class DefaultService extends Service {
 
     @Override
     void validate() {
-        if (!(baseDir == null ^ image == null)) {
-            throw new GradleException("Either dockerFile or image must be provided for dcompose service '$name'")
+        if (!(baseDir == null ^ image == null) && buildFiles == null) {
+            throw new GradleException("Either dockerFile or baseDir or buildFiles must be provided for dcompose service '$name'")
         }
 
         if (baseDir == null) {
             if (dockerFilename != null) {
                 throw new GradleException("Cannot set baseDir when image in use for dcompose service '$name'")
             }
+        } else if(buildFiles != null) {
+            throw new GradleException("Cannot set buildFiles, when using image property for dcompose service '$name'")
         }
 
         links?.each {

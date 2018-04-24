@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.TypeChecked
+import org.gradle.api.file.CopySpec
 
 @TypeChecked
 abstract class Service extends AbstractEntity {
@@ -80,6 +81,10 @@ abstract class Service extends AbstractEntity {
         buildImageTaskName
     }
 
+    String getCopyBuildFilesTaskName() {
+        "copy${taskLabel}BuildFiles"
+    }
+
     @Override
     String toString() {
         containerName
@@ -140,6 +145,8 @@ abstract class Service extends AbstractEntity {
     abstract Boolean getPrivileged()
 
     abstract File getBaseDir()
+
+    abstract CopySpec getBuildFiles()
 
     abstract String getDockerFilename()
 
