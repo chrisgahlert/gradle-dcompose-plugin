@@ -288,17 +288,24 @@ class DefaultService extends Service {
 
     @Override
     void validate() {
-        if (!(baseDir == null ^ image == null) && buildFiles == null) {
-            throw new GradleException("Either dockerFile or baseDir or buildFiles must be provided for dcompose service '$name'")
+        if (baseDir != null && image != null) {
+            throw new GradleException("Either image '$image' or baseDir '$baseDir' (but not both) can be provided for dcompose service '$name'")
         }
 
-        if (baseDir == null) {
-            if (dockerFilename != null) {
-                throw new GradleException("Cannot set baseDir when image in use for dcompose service '$name'")
-            }
-        } else if(buildFiles != null) {
-            throw new GradleException("Cannot set buildFiles, when using image property for dcompose service '$name'")
+        if (baseDir == null && image == null && buildFiles == null) {
+            throw new GradleException("At least one of image, baseDir or buildFiles property must be provided for dcompose service '$name'")
         }
+
+        if (image != null) {
+            if (dockerFilename != null) {
+                throw new GradleException("Cannot set baseDir when image is used for dcompose service '$name'")
+            }
+
+            if(buildFiles != null) {
+                throw new GradleException("Cannot set buildFiles, when using image property for dcompose service '$name'")
+            }
+        }
+
 
         links?.each {
             if (it instanceof Service) {

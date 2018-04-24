@@ -201,18 +201,20 @@ class DcomposePlugin implements Plugin<Project> {
 
         project.afterEvaluate {
             extension.services.all { Service service ->
-                if(service.baseDir == null && service instanceof DefaultService) {
-                    ((DefaultService) service).baseDir = new File(project.buildDir, "dcompose-build/$service.name")
-                }
-
-                if(service.buildFiles != null && service.baseDir != null) {
-                    project.tasks.create(service.copyBuildFilesTaskName, Sync) { Sync task ->
-                        task.group = String.format(TASK_GROUP_SERVICE_TEMPLATE, service.name)
-                        task.into service.baseDir
-                        task.with service.buildFiles
+                if(!service.hasImage()) {
+                    if (service.baseDir == null && service instanceof DefaultService) {
+                        ((DefaultService) service).baseDir = new File(project.buildDir, "dcompose-build/$service.name")
                     }
 
-                    project.tasks.getByName(service.buildImageTaskName).dependsOn service.copyBuildFilesTaskName
+                    if (service.buildFiles != null && service.baseDir != null) {
+                        project.tasks.create(service.copyBuildFilesTaskName, Sync) { Sync task ->
+                            task.group = String.format(TASK_GROUP_SERVICE_TEMPLATE, service.name)
+                            task.into service.baseDir
+                            task.with service.buildFiles
+                        }
+
+                        project.tasks.getByName(service.buildImageTaskName).dependsOn service.copyBuildFilesTaskName
+                    }
                 }
             }
         }
