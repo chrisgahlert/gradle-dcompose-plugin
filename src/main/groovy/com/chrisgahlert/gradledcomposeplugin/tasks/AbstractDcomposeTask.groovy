@@ -82,6 +82,7 @@ class AbstractDcomposeTask extends DefaultTask {
     protected void addAuthConfig(String image, cmd) {
         def imageRef = ImageRef.parse(image)
         def registryAddress = imageRef.registry ?: defaultRegistryAddress
+        def extension = project.extensions.getByType(DcomposeExtension)
 
         def authConfig = getAuthConfigs().configs.find { authRegistryAddress, authConfig ->
             def registryUri
@@ -96,11 +97,20 @@ class AbstractDcomposeTask extends DefaultTask {
                     registryUri?.host + ':' + registryUri?.port == registryAddress
         }?.value
 
-        if (authConfig) {
-            cmd.withAuthConfig(authConfig)
-        } else {
-            logger.info("Cannot find auth config for registry '$registryAddress' - trying to use config.json")
+        if(!authConfig && extension.dockerConfigPath?.isDirectory()) {
+            logger.info("Cannot find auth config for registry '$registryAddress' - trying to use auth config from $extension.dockerConfigPath.canonicalPath")
+
+            def dockerConfigFileClass = loadClass('com.github.dockerjava.core.DockerConfigFile')
+            def loadConfigMethod = dockerConfigFileClass.getMethod('loadConfig', File)
+            def dockerConfigFile = loadConfigMethod.invoke(null, extension.dockerConfigPath)
+            authConfig = dockerConfigFile.resolveAuthConfig(registryAddress)
         }
+
+        if (!authConfig) {
+            throw new GradleException("Cannot find auth config for registry '$registryAddress'")
+        }
+
+        cmd.withAuthConfig(authConfig)
     }
 
     protected String getDefaultRegistryAddress() {

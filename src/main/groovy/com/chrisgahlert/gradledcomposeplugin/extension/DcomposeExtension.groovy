@@ -38,6 +38,8 @@ class DcomposeExtension {
 
     Map<String, Closure> registries = [:]
 
+    File dockerConfigPath = new File(System.getProperty("user.home"), '.docker/')
+
     DcomposeExtension(Project project, String namePrefix) {
         this.project = project
         this.namePrefix = namePrefix
