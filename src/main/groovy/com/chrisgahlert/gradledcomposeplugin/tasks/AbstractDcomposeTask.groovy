@@ -130,22 +130,6 @@ class AbstractDcomposeTask extends DefaultTask {
             result.addConfig(authConfig)
         }
 
-        if(extension.dockerAuthFile?.isFile()) {
-            def config = new JsonSlurper().parse(extension.dockerAuthFile)
-            if(config.credsStore) {
-                logger.warn("Cannot use custom cred store in $extension.dockerAuthFile.canonicalPath - try disabling to store credentials in the OS' keychain when using Docker For Win/Mac")
-            } else if(config.auths) {
-                config.auths.each { registryAddress, registryConfig ->
-                    if(!result.configs.any { it.value.registryAddress == registryAddress } && registryConfig.auth) {
-                        def authConfig = authConfigClass.newInstance()
-                        authConfig.withRegistryAddress(registryAddress)
-                        authConfig.withAuth(registryConfig.auth)
-                        result.addConfig(authConfig)
-                    }
-                }
-            }
-        }
-
         result
     }
 
