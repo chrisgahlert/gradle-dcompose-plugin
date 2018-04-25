@@ -96,11 +96,11 @@ class AbstractDcomposeTask extends DefaultTask {
                     registryUri?.host + ':' + registryUri?.port == registryAddress
         }?.value
 
-        if (!authConfig) {
-            throw new GradleException("Cannot find auth config for registry '$registryAddress'")
+        if (authConfig) {
+            cmd.withAuthConfig(authConfig)
+        } else {
+            logger.info("Cannot find auth config for registry '$registryAddress' - trying to use config.json")
         }
-
-        cmd.withAuthConfig(authConfig)
     }
 
     protected String getDefaultRegistryAddress() {
