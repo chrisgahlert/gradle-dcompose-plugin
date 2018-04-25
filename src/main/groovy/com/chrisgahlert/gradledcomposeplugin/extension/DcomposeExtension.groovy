@@ -38,7 +38,7 @@ class DcomposeExtension {
 
     Map<String, Closure> registries = [:]
 
-    File dockerAuthFile = new File('~/.docker/config.json')
+    File dockerAuthFile = new File(System.getProperty("user.home"), '.docker/config.json')
 
     DcomposeExtension(Project project, String namePrefix) {
         this.project = project
