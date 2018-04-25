@@ -22,6 +22,7 @@ import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
@@ -128,6 +129,22 @@ class AbstractDcomposeTask extends DefaultTask {
             ConfigureUtil.configure(config, authConfig)
 
             result.addConfig(authConfig)
+        }
+
+        if(extension.dockerAuthFile?.isFile()) {
+            def config = new JsonSlurper().parse(extension.dockerAuthFile)
+            if(config.credsStore) {
+                logger.warn("Cannot use custom cred store in $extension.dockerAuthFile.canonicalPath - try disabling to store credentials in the OS' keychain when using Docker For Win/Mac")
+            } else if(config.auths) {
+                config.auths.each { registryAddress, base64Auth ->
+                    if(!result.any { it.registryAddress == registryAddress }) {
+                        def authConfig = authConfigClass.newInstance()
+                        authConfig.withRegistryAddress(name)
+                        authConfig.withAuth(base64Auth)
+                        result.addConfig(authConfig)
+                    }
+                }
+            }
         }
 
         result
