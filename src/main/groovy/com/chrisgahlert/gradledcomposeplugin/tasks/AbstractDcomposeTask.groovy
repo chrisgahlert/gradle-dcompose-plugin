@@ -139,7 +139,7 @@ class AbstractDcomposeTask extends DefaultTask {
                 config.auths.each { registryAddress, registryConfig ->
                     if(!result.configs.any { it.value.registryAddress == registryAddress } && registryConfig.auth) {
                         def authConfig = authConfigClass.newInstance()
-                        authConfig.withRegistryAddress(name)
+                        authConfig.withRegistryAddress(registryAddress)
                         authConfig.withAuth(registryConfig.auth)
                         result.addConfig(authConfig)
                     }
