@@ -31,6 +31,9 @@ https://github.com/chrisgahlert/gradle-dcompose-sample
 Make sure that you have Docker installed. Also make sure that the environment variable `DOCKER_HOST` is correctly
 populated if using either a remote Docker daemon or something like Docker toolbox.
 
+**Tip:** If you are using Docker for Win/Mac and have trouble authenticating against a private registry: Try 
+disabling the option to store password in the OS' keychain (via Settings -> General)!
+
 Next, add the following to your build.gradle file:
 
 ```gradle
