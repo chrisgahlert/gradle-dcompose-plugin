@@ -20,6 +20,7 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
 import org.gradle.api.file.CopySpec
+import org.gradle.util.GUtil
 
 @TypeChecked
 class DefaultService extends Service {
@@ -138,6 +139,7 @@ class DefaultService extends Service {
     DefaultService(String name, String projectPath, Closure<String> dockerPrefix) {
         super(name, projectPath)
         this.dockerPrefix = dockerPrefix
+        this.aliases = [GUtil.toWords(name, '-' as char)]
     }
 
     void setCommand(String command) {
