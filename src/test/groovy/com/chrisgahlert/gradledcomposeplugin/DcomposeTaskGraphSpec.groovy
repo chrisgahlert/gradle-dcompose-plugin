@@ -226,7 +226,9 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
                     n1
                 }
                 main {
-                    image = '$DEFAULT_IMAGE'
+                    buildFiles = project.copySpec {
+                        from 'src/main/docker'
+                    }
                 }
             }
         """
@@ -239,6 +241,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
             Dcompose Docker 'main' service tasks
             ------------------------------------
             buildMainImage
+            copyMainBuildFiles
             createMainContainer
             pullMainImage
             pushMainImage
