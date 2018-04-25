@@ -26,6 +26,28 @@ For the full documentation head over to the [wiki](https://github.com/chrisgahle
 An example project says more than a thousand words:
 https://github.com/chrisgahlert/gradle-dcompose-sample
 
+# Quickstart
+
+Make sure that you have Docker installed. Also make sure that the environment variable `DOCKER_HOST` is correctly
+populated if using either a remote Docker daemon or something like Docker toolbox.
+
+Next, add the following to your build.gradle file:
+
+```gradle
+plugins {
+  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.9.1"
+}
+
+dcompose {
+  web {
+    image = 'nginx:latest'
+    portBindings = ['8080:80']
+  }
+}
+```
+
+Now launch the build with `gradle startWebContainer` and head over to http://localhost:8080
+
 # Advanced example 
 
 #### src/main/docker/Dockerfile
@@ -59,19 +81,16 @@ dcompose {
     networks = [backend]
   }
   web {
-    baseDir = file("$buildDir/docker/")
+    buildFiles = project.copySpec {
+      from 'src/main/www/' // Contains index.html
+      from 'src/main/docker/'
+    }
     env = ['MONGO_HOST=mongo_db', 'REDIS_HOST=cache']
     repository = 'someuser/mywebimage:latest'
     networks = [frontend, backend]
   }
 }
 
-task copyDockerData(type: Sync) {
-  from 'src/main/www/' // Contains index.html
-  from 'src/main/docker/'
-  into dcompose.web.baseDir
-}
-buildWebImage.dependsOn copyDockerData
 ```
 
 #### Running

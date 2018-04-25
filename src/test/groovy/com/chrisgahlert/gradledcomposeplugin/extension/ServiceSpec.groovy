@@ -33,7 +33,27 @@ class ServiceSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardError.contains("Either dockerFile or image must be provided for dcompose service 'main'")
+        result.standardError.contains("At least one of the image, baseDir or buildFiles properties must be provided")
+    }
+
+    def 'should validate correctly on buildFiles defintion'() {
+        given:
+        buildFile << """
+            dcompose {
+                main {
+                    buildFiles = project.copySpec {
+                        from 'docker/'
+                    }
+                }
+            }
+        """
+        file('docker/Dockerfile').text = "FROM $DEFAULT_IMAGE"
+
+        when:
+        def result = runTasksSuccessfully 'tasks'
+
+        then:
+        result.standardOutput.contains("copyMainBuildFiles")
     }
 
     def 'should validate correctly on duplicate defintion'() {
@@ -51,7 +71,7 @@ class ServiceSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardError.contains("Either dockerFile or image must be provided for dcompose service 'main'")
+        result.standardError.contains("Either image or baseDir (but not both) can be provided")
     }
 
     def 'should validate direct container link'() {

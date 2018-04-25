@@ -289,11 +289,11 @@ class DefaultService extends Service {
     @Override
     void validate() {
         if (baseDir != null && image != null) {
-            throw new GradleException("Either image '$image' or baseDir '$baseDir' (but not both) can be provided for dcompose service '$name'")
+            throw new GradleException("Either image or baseDir (but not both) can be provided for dcompose service '$name'")
         }
 
         if (baseDir == null && image == null && buildFiles == null) {
-            throw new GradleException("At least one of image, baseDir or buildFiles property must be provided for dcompose service '$name'")
+            throw new GradleException("At least one of the image, baseDir or buildFiles properties must be provided for dcompose service '$name'")
         }
 
         if (image != null) {

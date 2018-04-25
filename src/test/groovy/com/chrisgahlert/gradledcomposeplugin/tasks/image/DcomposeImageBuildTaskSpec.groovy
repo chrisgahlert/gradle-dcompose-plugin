@@ -55,6 +55,41 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
         file('build/copy/test').text.trim() == 'built'
     }
 
+    def 'should be able to build image with buildFiles'() {
+        given:
+        buildFile << """
+            dcompose {
+                buildimg {
+                    buildFiles = project.copySpec {
+                        from 'docker/'
+                    }
+                    waitForCommand = true
+                    memory = 512 * 1024 * 1024
+                    memswap = 768 * 1024 * 1024
+                    cpushares = 10
+                    cpusetcpus = '0'
+                }
+            }
+
+            ${copyTaskConfig('buildimg', '/test')}
+        """
+
+        file('docker/Dockerfile').text = """
+            FROM $DEFAULT_IMAGE
+            CMD ["sh", "-c", "echo built > /test"]
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully 'startBuildimgContainer', 'copy'
+
+        then:
+        result.wasExecuted(':copyBuildimgBuildFiles')
+        result.wasExecuted(':buildBuildimgImage')
+        result.wasExecuted(':createBuildimgContainer')
+        result.wasExecuted(':startBuildimgContainer')
+        file('build/copy/test').text.trim() == 'built'
+    }
+
     def 'should be able to build image with custom dockerfile name'() {
         given:
         buildFile << """
