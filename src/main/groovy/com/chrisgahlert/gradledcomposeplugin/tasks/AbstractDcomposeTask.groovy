@@ -22,7 +22,6 @@ import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
 import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.json.JsonBuilder
-import groovy.json.JsonSlurper
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
