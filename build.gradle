@@ -37,7 +37,7 @@ sourceCompatibility = targetCompatibility = 1.6
 
 dependencies {
     compile gradleApi()
-    testCompile 'com.netflix.nebula:nebula-test:6.2.0'
+    testCompile 'com.netflix.nebula:nebula-test:6.3.0'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
