@@ -28,8 +28,12 @@ class AbstractEntity {
         this.projectPath = projectPath
     }
 
-    protected String getTaskLabel() {
+    String getNameCamelCase() {
         GUtil.toCamelCase(name)
+    }
+
+    String getNameDashed() {
+        GUtil.toWords(name, '-' as char)
     }
 
     @Override

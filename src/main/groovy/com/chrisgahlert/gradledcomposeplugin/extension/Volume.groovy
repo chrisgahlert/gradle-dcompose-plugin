@@ -24,11 +24,11 @@ abstract class Volume extends AbstractEntity {
     }
 
     String getCreateTaskName() {
-        "create${taskLabel}Volume"
+        "create${nameCamelCase}Volume"
     }
 
     String getRemoveTaskName() {
-        "remove${taskLabel}Volume"
+        "remove${nameCamelCase}Volume"
     }
 
     abstract String getVolumeName()

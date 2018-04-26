@@ -81,11 +81,11 @@ abstract class Network extends AbstractEntity {
     }
 
     String getCreateTaskName() {
-        "create${taskLabel}Network"
+        "create${nameCamelCase}Network"
     }
 
     String getRemoveTaskName() {
-        "remove${taskLabel}Network"
+        "remove${nameCamelCase}Network"
     }
 
     abstract String getNetworkName()

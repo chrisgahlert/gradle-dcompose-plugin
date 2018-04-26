@@ -25,7 +25,7 @@ abstract class Service extends AbstractEntity {
     }
 
     String getPullImageTaskName() {
-        "pull${taskLabel}Image"
+        "pull${nameCamelCase}Image"
     }
 
     @Deprecated
@@ -34,7 +34,7 @@ abstract class Service extends AbstractEntity {
     }
 
     String getCreateContainerTaskName() {
-        "create${taskLabel}Container"
+        "create${nameCamelCase}Container"
     }
 
     @Deprecated
@@ -43,7 +43,7 @@ abstract class Service extends AbstractEntity {
     }
 
     String getStartContainerTaskName() {
-        "start${taskLabel}Container"
+        "start${nameCamelCase}Container"
     }
 
     @Deprecated
@@ -52,7 +52,7 @@ abstract class Service extends AbstractEntity {
     }
 
     String getStopContainerTaskName() {
-        "stop${taskLabel}Container"
+        "stop${nameCamelCase}Container"
     }
 
     @Deprecated
@@ -61,19 +61,19 @@ abstract class Service extends AbstractEntity {
     }
 
     String getRemoveContainerTaskName() {
-        "remove${taskLabel}Container"
+        "remove${nameCamelCase}Container"
     }
 
     String getRemoveImageTaskName() {
-        "remove${taskLabel}Image"
+        "remove${nameCamelCase}Image"
     }
 
     String getBuildImageTaskName() {
-        "build${taskLabel}Image"
+        "build${nameCamelCase}Image"
     }
 
     String getPushImageTaskName() {
-        "push${taskLabel}Image"
+        "push${nameCamelCase}Image"
     }
 
     @Deprecated
@@ -82,7 +82,7 @@ abstract class Service extends AbstractEntity {
     }
 
     String getCopyBuildFilesTaskName() {
-        "copy${taskLabel}BuildFiles"
+        "copy${nameCamelCase}BuildFiles"
     }
 
     @Override
