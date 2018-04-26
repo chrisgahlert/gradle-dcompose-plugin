@@ -98,7 +98,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
                     }
                 }
 
-                logger.quiet "Starting Docker container with name $containerName"
+                logger.info "Starting Docker container with name $containerName"
                 client.startContainerCmd(containerId).exec()
 
                 outHandler?.awaitCompletion(service.waitTimeout)

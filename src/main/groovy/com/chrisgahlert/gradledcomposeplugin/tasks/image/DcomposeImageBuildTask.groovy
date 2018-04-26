@@ -126,10 +126,10 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
             def response = cmd.exec(loadClass('com.github.dockerjava.core.command.BuildImageResultCallback').newInstance())
 
             service.imageId = response.awaitImageId()
-            logger.quiet("Built Docker image with id $service.imageId")
+            logger.info("Built Docker image with id $service.imageId")
 
             client.tagImageCmd(service.imageId, buildTag.registryWithRepository, buildTag.tag).exec()
-            logger.quiet("Tagged Docker image with id $service.imageId as $buildTag")
+            logger.info("Tagged Docker image with id $service.imageId as $buildTag")
         }
     }
 

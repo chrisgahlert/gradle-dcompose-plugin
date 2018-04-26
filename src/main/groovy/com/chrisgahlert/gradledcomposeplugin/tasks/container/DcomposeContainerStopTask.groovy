@@ -86,7 +86,7 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
                     }
                 }
 
-                logger.quiet("Stopped Docker container named $containerName")
+                logger.info("Stopped Docker container named $containerName")
             }
         }
     }

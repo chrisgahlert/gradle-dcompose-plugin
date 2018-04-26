@@ -56,7 +56,7 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
         runInDockerClasspath {
             if (service.hasImage()) {
                 // Tagging only needed when image has been pulled, as building it automatically sets the tag
-                logger.quiet("Tagging image $imageId with $repositoryRef")
+                logger.info("Tagging image $imageId with $repositoryRef")
                 client.tagImageCmd(imageId, repositoryRef.registryWithRepository, repositoryRef.tag).exec()
             }
 
@@ -67,7 +67,7 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
             addAuthConfig(repositoryRef.toString(), pushCmd)
 
             def callback = loadClass('com.github.dockerjava.core.command.PushImageResultCallback').newInstance()
-            logger.quiet("Pushing image $imageId to $repositoryRef")
+            logger.info("Pushing image $imageId to $repositoryRef")
             pushCmd.exec(callback)
             callback.awaitSuccess()
         }

@@ -396,7 +396,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
             def result = cmd.withName(containerName).exec()
             service.containerId = result.id
-            logger.quiet("Created new container with id $result.id ($containerName)")
+            logger.info("Created new container with id $result.id ($containerName)")
 
             if (!networkMode) {
                 ignoreDockerException('NotFoundException') {
@@ -425,7 +425,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                             .withContainerNetwork(networkSettings)
                             .exec()
 
-                    logger.quiet("Connected container $containerName to network $network")
+                    logger.info("Connected container $containerName to network $network")
                 }
             }
         }
@@ -472,7 +472,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                     .exec()
 
 
-            logger.quiet("Removed old container with id $result.id ($oldContainer.containerName)" +
+            logger.info("Removed old container with id $result.id ($oldContainer.containerName)" +
                     (linkedFromContainer != null ? " as it depends on $linkedFromContainer.containerName" : ""))
         }
     }

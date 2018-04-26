@@ -48,7 +48,7 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
             addAuthConfig(image, cmd)
             def result = cmd.exec(callback)
             result.awaitSuccess()
-            logger.quiet("Successfully pulled image $image")
+            logger.info("Successfully pulled image $image")
         }
     }
 

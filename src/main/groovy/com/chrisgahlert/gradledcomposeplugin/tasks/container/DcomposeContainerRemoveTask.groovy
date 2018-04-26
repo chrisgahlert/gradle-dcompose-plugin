@@ -86,7 +86,7 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeServiceTask {
                         .withRemoveVolumes(!preserveVolumes)
                         .exec()
 
-                logger.quiet("Removed Docker container with name $containerName")
+                logger.info("Removed Docker container with name $containerName")
             }
         }
     }
