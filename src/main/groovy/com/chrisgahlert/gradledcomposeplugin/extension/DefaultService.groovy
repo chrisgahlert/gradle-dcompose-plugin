@@ -177,7 +177,7 @@ class DefaultService extends Service {
     @Override
     String getRepositoryDigest() {
         if (!repositoryDigest) {
-            throw new GradleException("Cannot determine image digest for service '$name' - has it been pushed yet? " +
+            throw new GradleException("Cannot determine image digest for service '$name' - has it been pulled/pushed yet? " +
                     "Try running the $pushImageTaskName task first or use 'createComposeFile.useTags = true' to use tags instead of digests!")
         }
 

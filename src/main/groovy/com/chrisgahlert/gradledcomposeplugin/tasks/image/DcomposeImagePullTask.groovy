@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks.image
 
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
+import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
@@ -65,6 +66,13 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
             ignoreDockerException('NotFoundException') {
                 def result = client.inspectImageCmd(image).exec()
                 service.imageId = result.id
+
+                def repositoryRef = ImageRef.parse(service.repository)
+                if(ImageRef.parse(service.image) == repositoryRef) {
+                    def digest = result.repoDigests.find { it.startsWith(repositoryRef.registryWithRepository + '@') }
+                    service.repositoryDigest = digest
+                }
+
                 result.id
             }
         }
