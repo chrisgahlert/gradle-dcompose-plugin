@@ -73,7 +73,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':createDefaultNetwork')
         result.wasExecuted(':createFrontendNetwork')
         result.wasExecuted(':createServerContainer')
-        !result.wasUpToDate(':createServerContainer')
+        result.wasUpToDate(':createServerContainer')
         result.wasExecuted(':startServerContainer')
         !result.wasUpToDate(':startServerContainer')
         result.wasExecuted(':createClientContainer')
