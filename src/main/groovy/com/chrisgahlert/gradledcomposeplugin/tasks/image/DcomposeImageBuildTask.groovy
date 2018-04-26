@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks.image
 
 import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
+import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -67,7 +68,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
     @InputDirectory
     File getBaseDir() {
-        service.baseDir
+        service.baseDir ?: DcomposeUtils.getDefaultBaseDir(service, project)
     }
 
     @InputFile

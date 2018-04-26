@@ -15,6 +15,9 @@
  */
 package com.chrisgahlert.gradledcomposeplugin.utils
 
+import com.chrisgahlert.gradledcomposeplugin.extension.Service
+import org.gradle.api.Project
+
 import java.security.MessageDigest
 
 class DcomposeUtils {
@@ -23,5 +26,9 @@ class DcomposeUtils {
         def digest = sha1.digest(source.bytes)
         def hash = new BigInteger(1, digest).toString(16)
         hash
+    }
+
+    static File getDefaultBaseDir(Service service, Project project) {
+        new File(project.buildDir, "dcompose-build/$service.name")
     }
 }
