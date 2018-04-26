@@ -511,7 +511,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         then:
         result.wasExecuted(':createMainContainer')
         result.wasExecuted(':startMainContainer')
-        result.standardError.contains("sh: can't create /etc/test: Read-only file system")
+        result.standardOutput.contains("sh: can't create /etc/test: Read-only file system")
         file('build/copyResult/result').text.trim() == "yes\n/somewhere"
         file('build/copy/hostname').text.trim() == 'yeehaw'
         file('build/copy/resolv.conf').text.contains('search somedomain')

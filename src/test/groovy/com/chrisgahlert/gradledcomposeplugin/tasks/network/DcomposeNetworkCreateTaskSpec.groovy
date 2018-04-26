@@ -180,7 +180,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'startServerContainer', 'startClientContainer'
 
         then:
-        result.standardError.contains("nc: bad address 'server'")
+        result.standardOutput.contains("nc: bad address 'server'")
     }
 
     def 'custom networks should be able to connect to each other'() {
@@ -345,7 +345,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksSuccessfully ':subClient:startClientContainer'
 
         then:
-        result.standardError.contains("nc: bad address 'server'")
+        result.standardOutput.contains("nc: bad address 'server'")
 
         result.wasExecuted(':subServer:createOtherNetwork')
         result.wasExecuted(':subClient:createDefaultNetwork')

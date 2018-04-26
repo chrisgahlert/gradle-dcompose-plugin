@@ -599,6 +599,26 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                     attachStderr = $stderr
                 }
             }
+
+            startAppContainer {
+                stdErr = new PipedOutputStream()
+
+                doFirst {
+                    // redirect stream to see, if it was actually attached to stdErr
+                    new Thread({
+                        def bfReader = new BufferedReader(new InputStreamReader(new PipedInputStream(stdErr)))
+                        def line
+                        while((line = bfReader.readLine()) != null) {
+                            println "err: \$line"
+                        }
+                        println 'err: done forwarding'
+                    }).start()
+                }
+
+                doLast {
+                    stdErr.close()
+                }
+            }
         """
 
         when:
@@ -606,7 +626,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
         then:
         stdout == (result.standardOutput ==~ /(?ms).*^rid.+^dick.*/)
-        stderr == result.standardError.contains('kicksass')
+        stderr == result.standardOutput.contains('err: kicksass')
 
         where:
         stderr || stdout
