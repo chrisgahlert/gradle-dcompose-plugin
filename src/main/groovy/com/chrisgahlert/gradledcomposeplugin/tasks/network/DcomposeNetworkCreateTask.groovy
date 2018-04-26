@@ -71,6 +71,11 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
                 def connectedContainers = client.inspectNetworkCmd().withNetworkId(networkName).exec().containers
                 connectedContainers?.keySet().each { String containerName ->
                     stopContainer(containerName)
+                    client.disconnectFromNetworkCmd()
+                            .withNetworkId(networkName)
+                            .withContainerId(containerName)
+                            .withForce(true)
+                            .exec()
                 }
 
                 client.removeNetworkCmd().withNetworkId(networkName).exec()

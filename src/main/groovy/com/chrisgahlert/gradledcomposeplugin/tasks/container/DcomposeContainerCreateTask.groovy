@@ -489,6 +489,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                     [name, props.aliases]
                 }
 
+                // Work around strange bug in Docker 18.03.0-ce not returning infos about connected networks
+                if(result.networkSettings?.networks == null && service.networks) {
+                    networkData = System.currentTimeMillis()
+                }
+
                 def hostConf = result.hostConfig
                 [result.id, networkData, hostConf.memory, hostConf.memorySwap, hostConf.cpuShares, hostConf.cpusetCpus]
             }
