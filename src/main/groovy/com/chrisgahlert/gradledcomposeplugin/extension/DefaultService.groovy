@@ -135,6 +135,7 @@ class DefaultService extends Service {
     Integer exitCode
     String imageId
     String containerId
+    String repositoryDigest
 
     DefaultService(String name, String projectPath, Closure<String> dockerPrefix) {
         super(name, projectPath)
@@ -173,6 +174,16 @@ class DefaultService extends Service {
         ImageRef.parse(repository ?: (hasImage() ? image : (dockerPrefix() + '/' + name).replace('_', '')))
                 .toString()
                 .toLowerCase()
+    }
+
+    @Override
+    String getRepositoryDigest() {
+        if (!repositoryDigest) {
+            throw new GradleException("Cannot determine image digest for service '$name' - has it been pushed yet? " +
+                    "Try running the $pushImageTaskName task first or use 'createComposeFile.useTags = true' to use tags instead of digests!")
+        }
+
+        repositoryDigest
     }
 
     @Deprecated

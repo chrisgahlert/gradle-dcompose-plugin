@@ -87,7 +87,7 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
         dcomposeServices.each { Service service ->
             networks.addAll service.networks
             def spec = [
-                    image: useTags ? service.repository : getImageDigest(service)
+                    image: useTags ? service.repository : service.repositoryDigest
             ]
 
             if (service.dependsOn) {
@@ -236,23 +236,6 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
 
         writeYaml(yml)
-    }
-
-    @TypeChecked(TypeCheckingMode.SKIP)
-    protected String getImageDigest(Service service) {
-        def digest = runInDockerClasspath {
-            def imageRef = ImageRef.parse(service.repository)
-            def result = client.inspectImageCmd(service.imageId).exec()
-
-            result.repoDigests.find { it.startsWith(imageRef.registryWithRepository + '@') }
-        }
-
-        if (!digest) {
-            throw new GradleException("Cannot determine image digest for service '$service.name' - has it been pushed yet? " +
-                    "Try running the $service.pushImageTaskName task first or use '${name}.useTags = true' to use tags instead of digests!")
-        }
-
-        digest
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)

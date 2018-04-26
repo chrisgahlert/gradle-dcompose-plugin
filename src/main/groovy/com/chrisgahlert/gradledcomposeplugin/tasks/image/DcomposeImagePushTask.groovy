@@ -20,6 +20,7 @@ import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 @TypeChecked
@@ -71,6 +72,20 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
             logger.quiet("Pushing image $imageId to $repositoryRef")
             pushCmd.exec(callback)
             callback.awaitSuccess()
+        }
+    }
+
+    @OutputFile
+    @TypeChecked(TypeCheckingMode.SKIP)
+    File getRepositoryDigest() {
+        dockerOutput('repository-digest') {
+            ignoreDockerException('NotFoundException') {
+                def result = client.inspectImageCmd(imageId).exec()
+                def digest = result.repoDigests.find { it.startsWith(repositoryRef.registryWithRepository + '@') }
+                service.repositoryDigest = digest
+
+                digest
+            }
         }
     }
 

@@ -234,6 +234,10 @@ abstract class Service extends AbstractEntity {
 
     abstract void setRepository(String repository)
 
+    abstract String getRepositoryDigest()
+
+    abstract void setRepositoryDigest(String repositoryDigest)
+
     abstract Long getMemLimit()
 
     abstract void setMemLimit(Long memLimit)

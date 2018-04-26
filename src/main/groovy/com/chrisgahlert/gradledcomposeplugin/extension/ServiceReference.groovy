@@ -369,6 +369,16 @@ class ServiceReference extends Service {
     }
 
     @Override
+    String getRepositoryDigest() {
+        resolved.repositoryDigest
+    }
+
+    @Override
+    void setRepositoryDigest(String repositoryDigest) {
+        resolved.repositoryDigest = repositoryDigest
+    }
+
+    @Override
     void setContainerId(String containerId) {
         resolved.containerId = containerId
     }
