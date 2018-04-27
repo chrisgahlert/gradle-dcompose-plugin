@@ -71,6 +71,9 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
                 def connectedContainers = client.inspectNetworkCmd().withNetworkId(networkName).exec().containers
                 connectedContainers?.keySet().each { String containerName ->
                     stopContainer(containerName)
+
+                    // Workaround bug in docker-java not returning a container's connected networks via inspect container command
+                    client.removeContainerCmd(containerName).withRemoveVolumes(false).exec()
                 }
 
                 client.removeNetworkCmd().withNetworkId(networkName).exec()
