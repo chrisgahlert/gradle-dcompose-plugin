@@ -259,7 +259,7 @@ class ServiceReference extends Service {
     }
 
     @Override
-    def findHostPort(Map<String, String> properties, int containerPort) {
+    def findHostPort(Map<String, String> properties = [:], int containerPort) {
         resolved.findHostPort(properties, containerPort)
     }
 

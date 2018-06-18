@@ -186,7 +186,7 @@ abstract class Service extends AbstractEntity {
 
     abstract void setHostPortBindings(Map hostPortBindings)
 
-    abstract def findHostPort(Map<String, String> properties, int containerPort)
+    abstract def findHostPort(Map<String, String> properties = [:], int containerPort)
 
     abstract void setDockerHost(URI uri)
 
