@@ -143,7 +143,7 @@ class ServiceSpec extends AbstractDcomposeSpec {
         1001                        || true    || 'any'        || null
         1002                        || false   || null         || 'server has multiple host ports bound'
         "1002, hostIp: '127.0.0.2'" || true    || 10002        || null
-        "1002, hostIp: '127.0.0.1'" || true    || 'any'         || null
+        "1002, hostIp: '127.0.0.1'" || true    || 'any'        || null
         "1002, hostIp: '0.0.0.0'"   || true    || 9002         || null
         1003                        || true    || 10003        || null
         1004                        || false   || null         || 'has not been bound to a host port'
@@ -151,5 +151,24 @@ class ServiceSpec extends AbstractDcomposeSpec {
 
         expectedLabel = expectedPort ?: 'dynamic'
         successLabel = success ? 'succeed' : 'fail'
+    }
+
+    def 'should fail validation if waitForCommand and waitForHealthcheck have been enabled'() {
+        given:
+        buildFile << """
+            dcompose {
+                app {
+                    image = '$DEFAULT_IMAGE'
+                    waitForCommand = true
+                    waitForHealthcheck = true
+                }
+            }
+        """
+
+        when:
+        def result = runTasksWithFailure 'help'
+
+        then:
+        result.standardError.contains('Can either wait for the healthcheck to pass or the command to complete for dcompose service \'app\' - not both')
     }
 }

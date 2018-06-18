@@ -115,6 +115,19 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
                 }
             }
 
+            if (service.waitForHealthcheck) {
+                def healthStatus = waitForHealthcheck()
+                if (!healthStatus) {
+                    logger.warn("Docker container with name $containerName doesn't provide a health state - ignoring")
+                } else if (healthStatus == 'unhealthy') {
+                    throw new GradleException("Container $containerName failed it's healthcheck")
+                } else if (healthStatus == 'healthy') {
+                    logger.info("Docker container with name $containerName passed it's healthcheck")
+                } else {
+                    logger.warn("Unknown health status '$healthStatus' for container with name $containerName")
+                }
+            }
+
             updateServiceState()
         }
     }
@@ -129,6 +142,22 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
             callback.awaitStatusCode(timeout, TimeUnit.MILLISECONDS)
         } else {
             callback.awaitStatusCode()
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected String waitForHealthcheck() {
+        while (true) {
+            logger.debug("Checking health state for container $containerName")
+            def result = client.inspectContainerCmd(containerName).exec()
+            def status = result.state.health?.status
+
+            if (!status || status != 'starting') {
+                return status
+            }
+
+            logger.debug("Health state for $containerName is '$status' - continue waiting...")
+            sleep(1000)
         }
     }
 

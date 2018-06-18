@@ -94,6 +94,8 @@ abstract class Service extends AbstractEntity {
 
     abstract boolean isWaitForCommand()
 
+    abstract boolean isWaitForHealthcheck()
+
     abstract boolean isIgnoreExitCode()
 
     abstract int getWaitTimeout()

@@ -54,6 +54,11 @@ class ServiceReference extends Service {
     }
 
     @Override
+    boolean isWaitForHealthcheck() {
+        resolved.waitForHealthcheck
+    }
+
+    @Override
     boolean isIgnoreExitCode() {
         resolved.ignoreExitCode
     }

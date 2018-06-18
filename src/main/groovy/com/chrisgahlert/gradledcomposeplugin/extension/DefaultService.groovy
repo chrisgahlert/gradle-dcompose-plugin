@@ -41,6 +41,11 @@ class DefaultService extends Service {
     boolean waitForCommand
 
     /**
+     * Whether we should wait for the health check to succeed (if any) before continuing
+     */
+    boolean waitForHealthcheck
+
+    /**
      * Whether the exit code will be checked after running the container. (Only applies if waitForCommand is true.)
      */
     boolean ignoreExitCode
@@ -312,9 +317,13 @@ class DefaultService extends Service {
                 throw new GradleException("Cannot set baseDir when image is used for dcompose service '$name'")
             }
 
-            if(buildFiles != null) {
+            if (buildFiles != null) {
                 throw new GradleException("Cannot set buildFiles, when using image property for dcompose service '$name'")
             }
+        }
+
+        if (waitForHealthcheck && waitForCommand) {
+            throw new GradleException("Can either wait for the healthcheck to pass or the command to complete for dcompose service '$name' - not both")
         }
 
 
