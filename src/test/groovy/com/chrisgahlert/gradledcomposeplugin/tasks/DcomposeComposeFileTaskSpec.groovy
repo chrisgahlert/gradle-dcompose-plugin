@@ -391,7 +391,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         def composeFile = readNormalizedFile('build/docker-compose.yml')
 
         then:
-        result.standardError.contains('Cannot combine networkMode and networks for service main')
+        result.standardOutput.contains('Cannot combine networkMode and networks for service main')
     }
 
     def 'should support preserved volumes and special binds'() {
@@ -637,7 +637,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'createComposeFile'
 
         then:
-        result.standardError.contains "Cannot determine image digest for service 'other'"
+        result.standardOutput.contains "Cannot determine image digest for service 'other'"
     }
 
     def 'should succeed when using tags instead of digests'() {
