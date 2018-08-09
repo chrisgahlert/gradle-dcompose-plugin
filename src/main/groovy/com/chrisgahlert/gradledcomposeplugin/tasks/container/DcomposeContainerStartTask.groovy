@@ -86,7 +86,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void startContainer() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             def start = System.currentTimeMillis()
 
             ignoreDockerException('NotModifiedException') {
@@ -99,7 +99,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
                 }
 
                 logger.info "Starting Docker container with name $containerName"
-                client.startContainerCmd(containerId).exec()
+                dockerExecutor.client.startContainerCmd(containerId).exec()
 
                 outHandler?.awaitCompletion(service.waitTimeout)
             }
@@ -134,8 +134,8 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected Integer waitForExitCode(long startTime) {
-        def callbackClass = loadClass('com.github.dockerjava.core.command.WaitContainerResultCallback')
-        def callback = client.waitContainerCmd(containerId).exec(callbackClass.newInstance())
+        def callbackClass = dockerExecutor.loadClass('com.github.dockerjava.core.command.WaitContainerResultCallback')
+        def callback = dockerExecutor.client.waitContainerCmd(containerId).exec(callbackClass.newInstance())
 
         if (service.waitTimeout > 0) {
             def timeout = service.waitTimeout * 1000L - System.currentTimeMillis() + startTime
@@ -149,7 +149,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
     protected String waitForHealthcheck() {
         while (true) {
             logger.debug("Checking health state for container $containerName")
-            def result = client.inspectContainerCmd(containerName).exec()
+            def result = dockerExecutor.client.inspectContainerCmd(containerName).exec()
             def status = result.state.health?.status
 
             if (!status || status != 'starting') {
@@ -163,7 +163,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected StreamOutputHandler attachStreams() {
-        def attachCmd = getClient(useNetty: true).attachContainerCmd(containerId)
+        def attachCmd = dockerExecutor.getClient(useNetty: true).attachContainerCmd(containerId)
                 .withFollowStream(true)
 
         if (attachStdout) {
@@ -179,8 +179,8 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
         def outHandler = new StreamOutputHandler()
 
         def proxy = Proxy.newProxyInstance(
-                dockerClassLoaderFactory.getDefaultInstance(),
-                [loadClass('com.github.dockerjava.api.async.ResultCallback')] as Class[],
+                dockerExecutor.dockerClassLoader,
+                [dockerExecutor.loadClass('com.github.dockerjava.api.async.ResultCallback')] as Class[],
                 new InvocationHandler() {
                     @Override
                     Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -197,15 +197,13 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
     @Input
     boolean updateServiceState() {
         def result = ignoreDockerException('NotFoundException') {
-            client.inspectContainerCmd(containerName).exec()
+            dockerExecutor.client.inspectContainerCmd(containerName).exec()
         }
 
         if (result?.state?.running) {
             service.hostPortBindings = result?.networkSettings?.ports?.bindings
-            service.dockerHost = buildClientConfig().dockerHost
         } else {
             service.hostPortBindings = null
-            service.dockerHost = null
         }
 
         // Always return true - just hijacking this method to update container state
@@ -273,7 +271,8 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
             }
 
             if (firstError != null) {
-                loadClass('com.google.common.base.Throwables').invokeMethod('propagate', [firstError] as Object[])
+                dockerExecutor.loadClass('com.google.common.base.Throwables')
+                        .invokeMethod('propagate', [firstError] as Object[])
             }
         }
 

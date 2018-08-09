@@ -53,9 +53,9 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean imageExists() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectImageCmd(imageRef).exec()
+                dockerExecutor.client.inspectImageCmd(imageRef).exec()
                 true
             }
         }
@@ -64,9 +64,9 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void removeImage() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                def cmd = client.removeImageCmd(imageRef)
+                def cmd = dockerExecutor.client.removeImageCmd(imageRef)
 
                 if (force != null) {
                     cmd.withForce(force)

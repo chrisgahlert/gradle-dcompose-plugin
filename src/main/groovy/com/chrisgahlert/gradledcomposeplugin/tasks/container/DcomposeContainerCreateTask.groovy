@@ -266,13 +266,14 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void createNewContainer() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             removeOldContainer(service)
 
-            def cmd = client.createContainerCmd(imageId)
+            def cmd = dockerExecutor.client.createContainerCmd(imageId)
 
             if (portBindings) {
-                def portParser = loadClass('com.github.dockerjava.api.model.PortBinding').getMethod('parse', String)
+                def portParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.PortBinding')
+                        .getMethod('parse', String)
                 cmd.withPortBindings(portBindings.collect { portParser.invoke(null, it as String) })
             }
 
@@ -281,13 +282,14 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (volumes) {
-                def volumeClass = loadClass('com.github.dockerjava.api.model.Volume')
+                def volumeClass = dockerExecutor.loadClass('com.github.dockerjava.api.model.Volume')
                 cmd.withVolumes(volumes.collect { volumeClass.newInstance(it as String) })
             }
 
             def allBinds = []
             if (binds) {
-                def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
+                def bindParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.Bind')
+                        .getMethod('parse', String)
                 allBinds.addAll(binds.collect { bindParser.invoke(null, it as String) })
             }
 
@@ -300,12 +302,14 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (exposedPorts) {
-                def ePortParser = loadClass('com.github.dockerjava.api.model.ExposedPort').getMethod('parse', String)
+                def ePortParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.ExposedPort')
+                        .getMethod('parse', String)
                 cmd.withExposedPorts(exposedPorts.collect { ePortParser.invoke(null, it as String) })
             }
 
             if (volumesFrom) {
-                def volumesFromParser = loadClass('com.github.dockerjava.api.model.VolumesFrom').getMethod('parse', String)
+                def volumesFromParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.VolumesFrom')
+                        .getMethod('parse', String)
                 cmd.withVolumesFrom(volumesFrom.collect { volumesFromParser.invoke(null, it as String) })
             }
 
@@ -370,7 +374,8 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (restart != null) {
-                def policyParser = loadClass('com.github.dockerjava.api.model.RestartPolicy').getMethod('parse', String)
+                def policyParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.RestartPolicy')
+                        .getMethod('parse', String)
                 cmd.withRestartPolicy(policyParser.invoke(null, restart as String))
             }
 
@@ -400,7 +405,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
             if (!networkMode) {
                 ignoreDockerException('NotFoundException') {
-                    client.disconnectFromNetworkCmd()
+                    dockerExecutor.client.disconnectFromNetworkCmd()
                             .withNetworkId('bridge')
                             .withContainerId(service.containerId)
                             .exec()
@@ -411,15 +416,17 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                     def serviceAliases = service.aliases ?: []
                     def aliases = (serviceAliases + defaultAliases).unique()
 
-                    def networkSettings = loadClass('com.github.dockerjava.api.model.ContainerNetwork').newInstance()
+                    def networkSettings = dockerExecutor.loadClass('com.github.dockerjava.api.model.ContainerNetwork')
+                            .newInstance()
                             .withAliases(aliases.collect { it as String })
 
                     if (links) {
-                        def linkParser = loadClass('com.github.dockerjava.api.model.Link').getMethod('parse', String)
+                        def linkParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.Link')
+                                .getMethod('parse', String)
                         networkSettings.withLinks(links.collect { linkParser.invoke(null, it as String) })
                     }
 
-                    client.connectToNetworkCmd()
+                    dockerExecutor.client.connectToNetworkCmd()
                             .withNetworkId(network.networkName)
                             .withContainerId(service.containerId)
                             .withContainerNetwork(networkSettings)
@@ -433,11 +440,12 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected void createMissingBinds(ArrayList allBinds, commandVolumes) {
-        def volumeClass = loadClass('com.github.dockerjava.api.model.Volume')
-        def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
+        def volumeClass = dockerExecutor.loadClass('com.github.dockerjava.api.model.Volume')
+        def bindParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.Bind')
+                .getMethod('parse', String)
 
         def imageVolumes = []
-        client.inspectImageCmd(imageId).exec().config.volumes?.keySet().each {
+        dockerExecutor.client.inspectImageCmd(imageId).exec().config.volumes?.keySet().each {
             imageVolumes << volumeClass.newInstance(it)
         }
 
@@ -458,7 +466,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     protected void removeOldContainer(Service oldContainer, Service linkedFromContainer = null) {
         ignoreDockerException('NotFoundException') {
-            def result = client.inspectContainerCmd(oldContainer.containerName).exec()
+            def result = dockerExecutor.client.inspectContainerCmd(oldContainer.containerName).exec()
 
             otherServices.each {
                 if (it.linkDependencies.contains(oldContainer) || it.volumesFromDependencies.contains(oldContainer)) {
@@ -466,7 +474,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 }
             }
 
-            client.removeContainerCmd(oldContainer.containerName)
+            dockerExecutor.client.removeContainerCmd(oldContainer.containerName)
                     .withForce(true)
                     .withRemoveVolumes(!oldContainer.preserveVolumes)
                     .exec()
@@ -482,7 +490,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
     File getContainerState() {
         dockerOutput('container-state') {
             ignoreDockerException('NotFoundException') {
-                def result = client.inspectContainerCmd(containerName).exec()
+                def result = dockerExecutor.client.inspectContainerCmd(containerName).exec()
                 service.containerId = result.id
 
                 def networkData = result.networkSettings?.networks?.collect { name, props ->

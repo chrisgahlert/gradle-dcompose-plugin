@@ -29,6 +29,9 @@ class DefaultService extends Service {
      */
     final Closure<String> dockerPrefix
 
+    @Deprecated
+    private final Closure<String> dockerHost
+
     /**
      * The name of the pre-existing image that should be pulled and used for creating containers.
      * Cannot be used in combination with baseDir (for building images).
@@ -135,15 +138,15 @@ class DefaultService extends Service {
      * Results populated after starting a container
      */
     Map hostPortBindings
-    String dockerHost
     Integer exitCode
     String imageId
     String containerId
     String repositoryDigest
 
-    DefaultService(String name, String projectPath, Closure<String> dockerPrefix) {
+    DefaultService(String name, String projectPath, Closure<String> dockerPrefix, Closure<String> dockerHost) {
         super(name, projectPath)
         this.dockerPrefix = dockerPrefix
+        this.dockerHost = dockerHost
     }
 
     void setCommand(String command) {
@@ -269,12 +272,9 @@ class DefaultService extends Service {
     }
 
     @Override
+    @Deprecated
     String getDockerHost() {
-        if (!dockerHost) {
-            throw new GradleException("Docker hostname not available for service $name - has it been started?")
-        }
-
-        dockerHost
+        dockerHost()
     }
 
     @Override
@@ -284,17 +284,6 @@ class DefaultService extends Service {
         }
 
         containerId
-    }
-
-    @Override
-    void setDockerHost(URI uri) {
-        if (uri == null) {
-            dockerHost = null
-        } else if (uri.scheme == 'unix') {
-            dockerHost = 'localhost'
-        } else {
-            dockerHost = uri.host
-        }
     }
 
     @Override
@@ -365,10 +354,6 @@ class DefaultService extends Service {
 
         if (hostPortBindings != null) {
             throw new ReadOnlyPropertyException('hostPortBindings', getClass())
-        }
-
-        if (dockerHost != null) {
-            throw new ReadOnlyPropertyException('dockerHost', getClass())
         }
 
         if (networks.find { !(it instanceof Network) }) {

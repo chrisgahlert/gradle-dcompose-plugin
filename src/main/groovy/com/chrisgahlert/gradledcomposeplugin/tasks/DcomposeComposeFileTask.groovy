@@ -19,7 +19,6 @@ import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.extension.Volume
-import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
@@ -326,10 +325,10 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
         }
 
         target.withWriter { out ->
-            runInDockerClasspath {
-                def options = loadClass('org.yaml.snakeyaml.DumperOptions').newInstance()
-                options.defaultFlowStyle = loadClass('org.yaml.snakeyaml.DumperOptions$FlowStyle').BLOCK
-                def snakeYaml = loadClass('org.yaml.snakeyaml.Yaml').newInstance(options)
+            dockerExecutor.runInDockerClasspath {
+                def options = dockerExecutor.loadClass('org.yaml.snakeyaml.DumperOptions').newInstance()
+                options.defaultFlowStyle = dockerExecutor.loadClass('org.yaml.snakeyaml.DumperOptions$FlowStyle').BLOCK
+                def snakeYaml = dockerExecutor.loadClass('org.yaml.snakeyaml.Yaml').newInstance(options)
                 snakeYaml.dump(yml, out);
             }
         }
@@ -337,12 +336,13 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected void generateVolumes(Service service, List<String> result, Set<String> namedVolumes) {
-        runInDockerClasspath {
-            def volumeClass = loadClass('com.github.dockerjava.api.model.Volume')
-            def bindParser = loadClass('com.github.dockerjava.api.model.Bind').getMethod('parse', String)
+        dockerExecutor.runInDockerClasspath {
+            def volumeClass = dockerExecutor.loadClass('com.github.dockerjava.api.model.Volume')
+            def bindParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.Bind')
+                    .getMethod('parse', String)
 
             def imageVolumes = []
-            client.inspectImageCmd(service.imageId).exec().config.volumes?.keySet().each {
+            dockerExecutor.client.inspectImageCmd(service.imageId).exec().config.volumes?.keySet().each {
                 imageVolumes << volumeClass.newInstance(it as String)
             }
 

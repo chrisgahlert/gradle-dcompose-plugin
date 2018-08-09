@@ -19,7 +19,7 @@ import com.chrisgahlert.gradledcomposeplugin.DcomposePlugin
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
 import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
-import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
+import com.chrisgahlert.gradledcomposeplugin.utils.DockerExecutor
 import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.json.JsonBuilder
 import groovy.transform.TypeChecked
@@ -32,50 +32,16 @@ import org.gradle.util.ConfigureUtil
 
 @TypeChecked
 class AbstractDcomposeTask extends DefaultTask {
-    public static final String DOCKER_API_VERSION = '1.20'
 
     private Set<String> initializedOutputs = []
 
-    DockerClassLoaderFactory dockerClassLoaderFactory
+    DockerExecutor dockerExecutor
 
     @Input
     def getDockerClientConfig() {
-        runInDockerClasspath {
-            buildClientConfig().toString()
+        dockerExecutor.runInDockerClasspath {
+            dockerExecutor.buildClientConfig().toString()
         }
-    }
-
-    @TypeChecked(TypeCheckingMode.SKIP)
-    protected def getClient(def properties = [:]) {
-        def clientConfig = buildClientConfig()
-        def clientConfigClass = loadClass('com.github.dockerjava.core.DockerClientConfig')
-        def clientBuilderClass = loadClass('com.github.dockerjava.core.DockerClientBuilder')
-        def getInstanceMethod = clientBuilderClass.getMethod('getInstance', clientConfigClass)
-        def clientBuilder = getInstanceMethod.invoke(null, clientConfig)
-
-        def execFactory
-        if (properties.useNetty) {
-            execFactory = loadClass('com.github.dockerjava.netty.NettyDockerCmdExecFactory').newInstance()
-        } else {
-            execFactory = clientBuilder.getDefaultDockerCmdExecFactory()
-        }
-        clientBuilder.withDockerCmdExecFactory(execFactory)
-
-        clientBuilder.build()
-    }
-
-    @TypeChecked(TypeCheckingMode.SKIP)
-    protected def buildClientConfig() {
-        def configBuilderClass = loadClass('com.github.dockerjava.core.DefaultDockerClientConfig')
-        def configBuilder = configBuilderClass.getMethod('createDefaultConfigBuilder').invoke(null)
-        configBuilder.withApiVersion(DOCKER_API_VERSION)
-
-        def extension = project.extensions.getByType(DcomposeExtension)
-        if (extension.dockerClientConfig != null) {
-            ConfigureUtil.configure(extension.dockerClientConfig, configBuilder)
-        }
-
-        configBuilder.build()
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -97,10 +63,10 @@ class AbstractDcomposeTask extends DefaultTask {
                     registryUri?.host + ':' + registryUri?.port == registryAddress
         }?.value
 
-        if(!authConfig && extension.dockerConfigPath?.isDirectory()) {
+        if (!authConfig && extension.dockerConfigPath?.isDirectory()) {
             logger.info("Cannot find auth config for registry '$registryAddress' - trying to use auth config from $extension.dockerConfigPath.canonicalPath")
 
-            def dockerConfigFileClass = loadClass('com.github.dockerjava.core.DockerConfigFile')
+            def dockerConfigFileClass = dockerExecutor.loadClass('com.github.dockerjava.core.DockerConfigFile')
             def loadConfigMethod = dockerConfigFileClass.getMethod('loadConfig', File)
             def dockerConfigFile = loadConfigMethod.invoke(null, extension.dockerConfigPath)
             authConfig = dockerConfigFile.resolveAuthConfig(registryAddress)
@@ -114,17 +80,18 @@ class AbstractDcomposeTask extends DefaultTask {
     }
 
     protected String getDefaultRegistryAddress() {
-        def authConfigClass = loadClass('com.github.dockerjava.api.model.AuthConfig')
+        def authConfigClass = dockerExecutor.loadClass('com.github.dockerjava.api.model.AuthConfig')
         authConfigClass.getDeclaredField('DEFAULT_SERVER_ADDRESS').get(null)
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected def getAuthConfigs() {
-        def result = loadClass('com.github.dockerjava.api.model.AuthConfigurations').newInstance()
+        def result = dockerExecutor.loadClass('com.github.dockerjava.api.model.AuthConfigurations')
+                .newInstance()
         def extension = project.extensions.getByType(DcomposeExtension)
-        def authConfigClass = loadClass('com.github.dockerjava.api.model.AuthConfig')
+        def authConfigClass = dockerExecutor.loadClass('com.github.dockerjava.api.model.AuthConfig')
 
-        def clientConfig = buildClientConfig()
+        def clientConfig = dockerExecutor.buildClientConfig()
         def clientConfigAuth = authConfigClass.newInstance().withRegistryAddress(defaultRegistryAddress)
         if (clientConfig.registryUsername) clientConfigAuth.withUsername(clientConfig.registryUsername)
         if (clientConfig.registryPassword) clientConfigAuth.withPassword(clientConfig.registryPassword)
@@ -143,10 +110,6 @@ class AbstractDcomposeTask extends DefaultTask {
         result
     }
 
-    protected Class loadClass(String name) {
-        Thread.currentThread().contextClassLoader.loadClass(name)
-    }
-
     protected def ignoreDockerException(String exceptionClassName, Closure action) {
         ignoreDockerExceptions([exceptionClassName], action)
     }
@@ -156,7 +119,7 @@ class AbstractDcomposeTask extends DefaultTask {
             return action()
         } catch (Throwable t) {
             def exceptionMatched = exceptionClassNames.find { exceptionClassName ->
-                t.getClass() == loadClass("com.github.dockerjava.api.exception.$exceptionClassName")
+                t.getClass() == dockerExecutor.loadClass("com.github.dockerjava.api.exception.$exceptionClassName")
             }
 
             if (exceptionMatched) {
@@ -166,22 +129,6 @@ class AbstractDcomposeTask extends DefaultTask {
 
             throw t
         }
-    }
-
-    protected def runInDockerClasspath(Closure action) {
-        def originalClassLoader = getClass().classLoader
-
-        try {
-            Thread.currentThread().contextClassLoader = dockerClassLoaderFactory.getDefaultInstance()
-
-            return action()
-        } catch (Exception e) {
-            throw new GradleException("Docker command failed: $e.message", e)
-        } finally {
-            Thread.currentThread().contextClassLoader = originalClassLoader
-        }
-
-        return null
     }
 
     protected String toJson(Object input) {
@@ -194,13 +141,13 @@ class AbstractDcomposeTask extends DefaultTask {
         if (!initializedOutputs.contains(name)) {
             initializedOutputs << name
 
-            runInDockerClasspath {
+            dockerExecutor.runInDockerClasspath {
                 outputFile.text = toJson(value())
                 saveDebugOutput(outputFile, "before")
                 logger.debug("Initialzed Docker output file $outputFile for coming up-to-date checks")
             }
             doLast {
-                runInDockerClasspath {
+                dockerExecutor.runInDockerClasspath {
                     outputFile.text = toJson(value())
                     saveDebugOutput(outputFile, "after")
                     logger.debug("Updated Docker output file $outputFile for persisting output state")
@@ -245,7 +192,7 @@ class AbstractDcomposeTask extends DefaultTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     protected void stopContainer(String containerName) {
         ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
-            def cmd = client.stopContainerCmd(containerName)
+            def cmd = dockerExecutor.client.stopContainerCmd(containerName)
 
             def service = allServices.find { it.containerName == containerName }
             if (service && service.stopTimeout != null) {
@@ -255,7 +202,7 @@ class AbstractDcomposeTask extends DefaultTask {
             try {
                 cmd.exec()
             } catch (Exception e) {
-                if (e.getClass() != loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
+                if (e.getClass() != dockerExecutor.loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
                         || !e.message?.contains('Container does not exist: container destroyed')) {
                     throw e
                 }

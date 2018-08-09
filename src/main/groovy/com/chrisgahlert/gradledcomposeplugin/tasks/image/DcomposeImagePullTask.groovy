@@ -42,9 +42,10 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void pullImage() {
-        runInDockerClasspath {
-            def callback = loadClass('com.github.dockerjava.core.command.PullImageResultCallback').newInstance()
-            def cmd = client.pullImageCmd(image)
+        dockerExecutor.runInDockerClasspath {
+            def callback = dockerExecutor.loadClass('com.github.dockerjava.core.command.PullImageResultCallback')
+                    .newInstance()
+            def cmd = dockerExecutor.client.pullImageCmd(image)
             addAuthConfig(image, cmd)
             def result = cmd.exec(callback)
             result.awaitSuccess()
@@ -62,13 +63,13 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     protected String getImageId() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                def result = client.inspectImageCmd(image).exec()
+                def result = dockerExecutor.client.inspectImageCmd(image).exec()
                 service.imageId = result.id
 
                 def repositoryRef = ImageRef.parse(service.repository)
-                if(ImageRef.parse(service.image) == repositoryRef) {
+                if (ImageRef.parse(service.image) == repositoryRef) {
                     def digest = result.repoDigests.find { it.startsWith(repositoryRef.registryWithRepository + '@') }
                     service.repositoryDigest = digest
                 }

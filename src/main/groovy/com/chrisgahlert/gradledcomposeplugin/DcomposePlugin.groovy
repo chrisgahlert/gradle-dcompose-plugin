@@ -16,7 +16,6 @@
 package com.chrisgahlert.gradledcomposeplugin
 
 import com.chrisgahlert.gradledcomposeplugin.extension.DcomposeExtension
-import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import com.chrisgahlert.gradledcomposeplugin.extension.Volume
@@ -35,10 +34,13 @@ import com.chrisgahlert.gradledcomposeplugin.tasks.volume.DcomposeVolumeCreateTa
 import com.chrisgahlert.gradledcomposeplugin.tasks.volume.DcomposeVolumeRemoveTask
 import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import com.chrisgahlert.gradledcomposeplugin.utils.DockerClassLoaderFactory
+import com.chrisgahlert.gradledcomposeplugin.utils.DockerExecutor
 import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskContainer
 
@@ -59,9 +61,17 @@ class DcomposePlugin implements Plugin<Project> {
     public static final String ACTIVATION_DEPENDENCY = 'javax.activation:activation:1.1.1'
 
     @Override
+    @TypeChecked(TypeCheckingMode.SKIP)
     void apply(Project project) {
         def extension = createExtension(project)
-        createDockerConfiguration(project)
+
+        def config = createDockerConfiguration(project, extension)
+
+        def classLoaderFactory = new DockerClassLoaderFactory(config)
+        def dockerExecutor = new DockerExecutor(classLoaderFactory.defaultInstance, extension)
+        extension.setDockerHost(dockerExecutor.buildClientConfig().dockerHost)
+
+        injectClassLoaderUtil(project, dockerExecutor)
         createAllTasks(project.tasks)
         createDeployTasks(project, extension)
         updateTaskGroups(project)
@@ -80,7 +90,7 @@ class DcomposePlugin implements Plugin<Project> {
         project.extensions.create(EXTENSION_NAME, DcomposeExtension, project, namePrefix as String)
     }
 
-    private void createDockerConfiguration(Project project) {
+    private Configuration createDockerConfiguration(Project project, DcomposeExtension extension) {
         def config = project.configurations.create(CONFIGURATION_NAME)
                 .setVisible(false)
                 .setTransitive(true)
@@ -90,18 +100,12 @@ class DcomposePlugin implements Plugin<Project> {
         config.dependencies.add(project.dependencies.create(SNAKEYAML_DEPENDENCY))
         config.dependencies.add(project.dependencies.create(ACTIVATION_DEPENDENCY))
 
-        def classLoaderFactory = new DockerClassLoaderFactory(config)
+        config
+    }
 
-        def taskGraph = project.gradle.taskGraph
+    private injectClassLoaderUtil(Project project, DockerExecutor dockerExecutor) {
         project.tasks.withType(AbstractDcomposeTask) { AbstractDcomposeTask task ->
-            task.dockerClassLoaderFactory = classLoaderFactory
-
-            // FIXME: fixes resource lock exception for Gradle 4+ - should be more elegant
-            taskGraph.whenReady {
-                if(taskGraph.hasTask(task)) {
-                    classLoaderFactory.getDefaultInstance()
-                }
-            }
+            task.dockerExecutor = dockerExecutor
         }
     }
 
@@ -203,7 +207,7 @@ class DcomposePlugin implements Plugin<Project> {
 
         project.afterEvaluate {
             extension.services.all { Service service ->
-                if(!service.hasImage()) {
+                if (!service.hasImage()) {
                     if (service.buildFiles != null) {
                         project.tasks.create(service.copyBuildFilesTaskName, Sync) { Sync task ->
                             task.group = String.format(TASK_GROUP_SERVICE_TEMPLATE, service.name)

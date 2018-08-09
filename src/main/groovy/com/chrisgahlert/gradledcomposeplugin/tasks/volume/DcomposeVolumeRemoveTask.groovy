@@ -42,12 +42,12 @@ class DcomposeVolumeRemoveTask extends AbstractDcomposeVolumeTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void removeVolume() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
                 try {
-                    client.removeVolumeCmd(volumeName).exec()
+                    dockerExecutor.client.removeVolumeCmd(volumeName).exec()
                 } catch (Exception e) {
-                    if (e.getClass() == loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
+                    if (e.getClass() == dockerExecutor.loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
                             && e.message?.contains('waiting (1s) for it to exit...')) {
                         removeVolume()
                     } else {
@@ -60,9 +60,9 @@ class DcomposeVolumeRemoveTask extends AbstractDcomposeVolumeTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean volumeExists() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectVolumeCmd(volumeName).exec()
+                dockerExecutor.client.inspectVolumeCmd(volumeName).exec()
                 true
             }
         }

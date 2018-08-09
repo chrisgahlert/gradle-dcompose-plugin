@@ -173,4 +173,17 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         result.standardOutput.contains('custom_prefix_server')
     }
 
+    def 'should be able to get docker host even before a container was started'() {
+        given:
+        buildFile << '''
+            println "dockerHost: $dcompose.dockerHost"
+        '''
+
+        when:
+        def result = runTasksSuccessfully 'help'
+
+        then:
+        result.standardOutput.contains('dockerHost: localhost')
+    }
+
 }

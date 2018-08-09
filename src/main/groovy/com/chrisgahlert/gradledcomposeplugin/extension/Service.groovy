@@ -188,9 +188,7 @@ abstract class Service extends AbstractEntity {
 
     abstract def findHostPort(Map<String, String> properties = [:], int containerPort)
 
-    abstract void setDockerHost(URI uri)
-
-    abstract String getDockerHost();
+    abstract String getDockerHost()
 
     abstract Set<Service> getLinkDependencies()
 

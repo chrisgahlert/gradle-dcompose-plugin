@@ -53,7 +53,7 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeServiceTask {
         }
 
         onlyIf {
-            containerExist()
+            containerExist() ?: false
         }
     }
 
@@ -69,9 +69,9 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeServiceTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean containerExist() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectContainerCmd(containerName).exec()
+                dockerExecutor.client.inspectContainerCmd(containerName).exec()
                 true
             }
         }
@@ -80,9 +80,9 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeServiceTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void removeContainer() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
-                client.removeContainerCmd(containerName)
+                dockerExecutor.client.removeContainerCmd(containerName)
                         .withRemoveVolumes(!preserveVolumes)
                         .exec()
 

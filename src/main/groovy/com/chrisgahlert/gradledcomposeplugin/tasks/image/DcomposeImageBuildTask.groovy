@@ -26,7 +26,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
     DcomposeImageBuildTask() {
         enabled = { !service.hasImage() }
-        
+
         outputs.upToDateWhen { !service.forcePull }
     }
 
@@ -90,8 +90,8 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void buildImage() {
-        runInDockerClasspath {
-            def cmd = client.buildImageCmd(dockerFile)
+        dockerExecutor.runInDockerClasspath {
+            def cmd = dockerExecutor.client.buildImageCmd(dockerFile)
                     .withBaseDirectory(baseDir)
                     .withBuildAuthConfigs(authConfigs)
                     .withPull(service.forcePull)
@@ -123,12 +123,13 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
                 }
             }
 
-            def response = cmd.exec(loadClass('com.github.dockerjava.core.command.BuildImageResultCallback').newInstance())
+            def resultCallbackClass = dockerExecutor.loadClass('com.github.dockerjava.core.command.BuildImageResultCallback')
+            def response = cmd.exec(resultCallbackClass.newInstance())
 
             service.imageId = response.awaitImageId()
             logger.info("Built Docker image with id $service.imageId")
 
-            client.tagImageCmd(service.imageId, buildTag.registryWithRepository, buildTag.tag).exec()
+            dockerExecutor.client.tagImageCmd(service.imageId, buildTag.registryWithRepository, buildTag.tag).exec()
             logger.info("Tagged Docker image with id $service.imageId as $buildTag")
         }
     }
@@ -138,7 +139,7 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
     File getImageState() {
         dockerOutput('image-state') {
             ignoreDockerException('NotFoundException') {
-                def result = client.inspectImageCmd(buildTag as String).exec()
+                def result = dockerExecutor.client.inspectImageCmd(buildTag as String).exec()
                 service.imageId = result.id
                 result.id
             }

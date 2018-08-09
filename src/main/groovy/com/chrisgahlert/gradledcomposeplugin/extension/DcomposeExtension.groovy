@@ -32,6 +32,8 @@ class DcomposeExtension {
 
     final private NamedDomainObjectContainer<DefaultVolume> volumes
 
+    private String dockerHost
+
     String namePrefix
 
     Closure dockerClientConfig
@@ -45,7 +47,7 @@ class DcomposeExtension {
         this.namePrefix = namePrefix
 
         services = project.container(DefaultService) { String name ->
-            def service = new DefaultService(name, project.path, { getNamePrefix() })
+            def service = new DefaultService(name, project.path, { getNamePrefix() }, { getDockerHost() })
             def defaultNetwork = networks.findByName(Network.DEFAULT_NAME)
             if (defaultNetwork) {
                 service.networks = [defaultNetwork]
@@ -69,6 +71,24 @@ class DcomposeExtension {
 
     void setDockerClientConfig(Closure dockerClientConfig) {
         this.dockerClientConfig = dockerClientConfig
+    }
+
+    String getDockerHost() {
+        if (dockerHost == null) {
+            throw new RuntimeException('dockerHost variable should have been initialized')
+        }
+
+        return dockerHost
+    }
+
+    void setDockerHost(URI uri) {
+        if (uri == null) {
+            dockerHost = null
+        } else if (uri.scheme == 'unix') {
+            dockerHost = 'localhost'
+        } else {
+            dockerHost = uri.host
+        }
     }
 
     @Deprecated

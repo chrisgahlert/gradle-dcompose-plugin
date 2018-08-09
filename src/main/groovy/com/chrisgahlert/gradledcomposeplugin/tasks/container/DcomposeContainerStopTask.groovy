@@ -59,9 +59,9 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean containerRunning() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectContainerCmd(containerName).exec().state.running
+                dockerExecutor.client.inspectContainerCmd(containerName).exec().state.running
             }
         }
     }
@@ -69,9 +69,9 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void stopContainer() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerExceptions(['NotFoundException', 'NotModifiedException']) {
-                def cmd = client.stopContainerCmd(containerName)
+                def cmd = dockerExecutor.client.stopContainerCmd(containerName)
 
                 if (stopTimeout != null) {
                     cmd.withTimeout(stopTimeout)
@@ -80,7 +80,7 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
                 try {
                     cmd.exec()
                 } catch (Exception e) {
-                    if (e.getClass() != loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
+                    if (e.getClass() != dockerExecutor.loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
                             || !e.message?.contains('Container does not exist: container destroyed')) {
                         throw e
                     }

@@ -53,20 +53,21 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void pushImage() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             if (service.hasImage()) {
                 // Tagging only needed when image has been pulled, as building it automatically sets the tag
                 logger.info("Tagging image $imageId with $repositoryRef")
-                client.tagImageCmd(imageId, repositoryRef.registryWithRepository, repositoryRef.tag).exec()
+                dockerExecutor.client.tagImageCmd(imageId, repositoryRef.registryWithRepository, repositoryRef.tag).exec()
             }
 
-            def pushCmd = client.pushImageCmd(imageId)
+            def pushCmd = dockerExecutor.client.pushImageCmd(imageId)
                     .withName(repositoryRef.registryWithRepository)
                     .withTag(repositoryRef.tag)
 
             addAuthConfig(repositoryRef.toString(), pushCmd)
 
-            def callback = loadClass('com.github.dockerjava.core.command.PushImageResultCallback').newInstance()
+            def callback = dockerExecutor.loadClass('com.github.dockerjava.core.command.PushImageResultCallback')
+                    .newInstance()
             logger.info("Pushing image $imageId to $repositoryRef")
             pushCmd.exec(callback)
             callback.awaitSuccess()
@@ -78,7 +79,7 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
     File getRepositoryDigest() {
         dockerOutput('repository-digest') {
             ignoreDockerException('NotFoundException') {
-                def result = client.inspectImageCmd(imageId).exec()
+                def result = dockerExecutor.client.inspectImageCmd(imageId).exec()
                 def digest = result.repoDigests.find { it.startsWith(repositoryRef.registryWithRepository + '@') }
                 service.repositoryDigest = digest
 

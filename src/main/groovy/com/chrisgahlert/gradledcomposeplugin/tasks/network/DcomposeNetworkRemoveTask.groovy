@@ -42,12 +42,12 @@ class DcomposeNetworkRemoveTask extends AbstractDcomposeNetworkTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void removeNetwork() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
                 try {
-                    client.removeNetworkCmd().withNetworkId(networkName).exec()
+                    dockerExecutor.client.removeNetworkCmd().withNetworkId(networkName).exec()
                 } catch (Exception e) {
-                    if (e.getClass() == loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
+                    if (e.getClass() == dockerExecutor.loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
                             && e.message?.contains('waiting (1s) for it to exit...')) {
                         removeNetwork()
                     } else {
@@ -60,9 +60,9 @@ class DcomposeNetworkRemoveTask extends AbstractDcomposeNetworkTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     boolean networkExists() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectNetworkCmd().withNetworkId(networkName).exec()
+                dockerExecutor.client.inspectNetworkCmd().withNetworkId(networkName).exec()
                 true
             }
         }

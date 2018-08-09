@@ -46,17 +46,17 @@ class DcomposeVolumeCreateTask extends AbstractDcomposeVolumeTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void createVolume() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                client.inspectVolumeCmd(volumeName).exec()
+                dockerExecutor.client.inspectVolumeCmd(volumeName).exec()
                 servicesUsingVolume.each {
                     stopContainer(it.containerName)
                 }
-                client.removeVolumeCmd(volumeName).exec()
+                dockerExecutor.client.removeVolumeCmd(volumeName).exec()
             }
 
             try {
-                def cmd = client.createVolumeCmd().withName(volumeName)
+                def cmd = dockerExecutor.client.createVolumeCmd().withName(volumeName)
 
                 if (driver != null) {
                     cmd.withDriver(driver as String)
@@ -68,7 +68,7 @@ class DcomposeVolumeCreateTask extends AbstractDcomposeVolumeTask {
 
                 cmd.exec()
             } catch (Exception e) {
-                if (e.getClass() == loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
+                if (e.getClass() == dockerExecutor.loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
                         && e.message?.contains('waiting (1s) for it to exit...')) {
                     createVolume()
                 } else {
@@ -83,7 +83,7 @@ class DcomposeVolumeCreateTask extends AbstractDcomposeVolumeTask {
     File getVolumeState() {
         dockerOutput('volume-state') {
             ignoreDockerException('NotFoundException') {
-                client.inspectVolumeCmd(volumeName).exec()
+                dockerExecutor.client.inspectVolumeCmd(volumeName).exec()
             }
         }
     }

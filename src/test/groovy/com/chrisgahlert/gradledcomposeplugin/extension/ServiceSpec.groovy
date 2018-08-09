@@ -171,4 +171,23 @@ class ServiceSpec extends AbstractDcomposeSpec {
         then:
         result.standardOutput.contains('Can either wait for the healthcheck to pass or the command to complete for dcompose service \'app\' - not both')
     }
+
+    def 'should be able to get docker host from container even before it was started'() {
+        given:
+        buildFile << """
+            dcompose {
+                app {
+                    image = '$DEFAULT_IMAGE'
+                }
+            }
+            
+            println "dockerHost: \$dcompose.app.dockerHost"
+        """
+
+        when:
+        def result = runTasksSuccessfully 'help'
+
+        then:
+        result.standardOutput.contains('dockerHost: localhost')
+    }
 }

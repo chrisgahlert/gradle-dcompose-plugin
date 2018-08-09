@@ -29,7 +29,7 @@ class DcomposeCopyFileFromContainerTask extends AbstractDcomposeServiceTask {
     DcomposeCopyFileFromContainerTask() {
         outputs.upToDateWhen { false }
         dependsOn {
-            if(!service) {
+            if (!service) {
                 throw new GradleException("The task $path is missing the 'service' property")
             }
 
@@ -65,22 +65,22 @@ class DcomposeCopyFileFromContainerTask extends AbstractDcomposeServiceTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void copyFromContainer() {
-        runInDockerClasspath {
-            def cmd = client.copyFileFromContainerCmd(containerName, containerPath)
+        dockerExecutor.runInDockerClasspath {
+            def cmd = dockerExecutor.client.copyFileFromContainerCmd(containerName, containerPath)
 
             def tarStream
             try {
                 tarStream = cmd.exec()
 
                 def tarFile = new File(temporaryDir, 'docker-copy-stream.tar')
-                if(tarFile.exists() && !tarFile.delete()) {
+                if (tarFile.exists() && !tarFile.delete()) {
                     throw new GradleException("Could not delete $tarFile")
                 }
 
                 tarFile.withOutputStream { it << tarStream }
 
                 def tarDir = new File(temporaryDir, 'extracted/')
-                if(tarDir.exists() && !project.delete(tarDir)) {
+                if (tarDir.exists() && !project.delete(tarDir)) {
                     throw new GradleException("Could not delete $tarDir")
                 }
 
@@ -89,7 +89,7 @@ class DcomposeCopyFileFromContainerTask extends AbstractDcomposeServiceTask {
                     into tarDir
                 }
 
-                if(cleanDestinationDir) {
+                if (cleanDestinationDir) {
                     project.delete(getDestinationDir())
                 }
 

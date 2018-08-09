@@ -264,11 +264,6 @@ class ServiceReference extends Service {
     }
 
     @Override
-    void setDockerHost(URI uri) {
-        resolved.dockerHost = uri
-    }
-
-    @Override
     String getDockerHost() {
         resolved.dockerHost
     }

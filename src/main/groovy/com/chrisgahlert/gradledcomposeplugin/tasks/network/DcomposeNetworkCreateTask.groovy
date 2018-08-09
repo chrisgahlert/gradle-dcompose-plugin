@@ -66,21 +66,26 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void createNetwork() {
-        runInDockerClasspath {
+        dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                def connectedContainers = client.inspectNetworkCmd().withNetworkId(networkName).exec().containers
+                def connectedContainers = dockerExecutor.client
+                        .inspectNetworkCmd()
+                        .withNetworkId(networkName)
+                        .exec()
+                        .containers
+
                 connectedContainers?.keySet().each { String containerName ->
                     stopContainer(containerName)
 
                     // Workaround bug in docker-java not returning a container's connected networks via inspect container command
-                    client.removeContainerCmd(containerName).withRemoveVolumes(false).exec()
+                    dockerExecutor.client.removeContainerCmd(containerName).withRemoveVolumes(false).exec()
                 }
 
-                client.removeNetworkCmd().withNetworkId(networkName).exec()
+                dockerExecutor.client.removeNetworkCmd().withNetworkId(networkName).exec()
             }
 
             try {
-                def cmd = client.createNetworkCmd().withName(networkName)
+                def cmd = dockerExecutor.client.createNetworkCmd().withName(networkName)
 
                 if (driver != null) {
                     cmd.withDriver(driver as String)
@@ -95,7 +100,8 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
                 }
 
                 if (ipam != null) {
-                    def dockerIpam = loadClass('com.github.dockerjava.api.model.Network$Ipam').newInstance()
+                    def dockerIpam = dockerExecutor.loadClass('com.github.dockerjava.api.model.Network$Ipam')
+                            .newInstance()
 
                     if (ipam.driver != null) {
                         dockerIpam.driver = ipam.driver as String
@@ -109,7 +115,8 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
                         List dockerConfigs = []
 
                         ipam.configs.each { IpamConfig config ->
-                            def dockerConfig = loadClass('com.github.dockerjava.api.model.Network$Ipam$Config').newInstance()
+                            def dockerConfig = dockerExecutor.loadClass('com.github.dockerjava.api.model.Network$Ipam$Config')
+                                    .newInstance()
 
                             if (config.subnet != null) {
                                 dockerConfig.withSubnet(config.subnet as String)
@@ -133,7 +140,7 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
 
                 cmd.exec()
             } catch (Exception e) {
-                if (e.getClass() == loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
+                if (e.getClass() == dockerExecutor.loadClass('com.github.dockerjava.api.exception.InternalServerErrorException')
                         && e.message?.contains('waiting (1s) for it to exit...')) {
                     createNetwork()
                 } else {
@@ -148,7 +155,7 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
     File getNetworkState() {
         dockerOutput('network-state') {
             ignoreDockerException('NotFoundException') {
-                def result = client.inspectNetworkCmd().withNetworkId(networkName).exec()
+                def result = dockerExecutor.client.inspectNetworkCmd().withNetworkId(networkName).exec()
                 result.containers = [:]
 
                 result
