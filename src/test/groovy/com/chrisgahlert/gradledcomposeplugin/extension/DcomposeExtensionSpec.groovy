@@ -37,7 +37,7 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'createMainContainer'
 
         then:
-        result.standardError.contains 'Unsupported protocol scheme found: \'ftp://abc'
+        result.standardOutput.contains 'Unsupported protocol scheme found: \'ftp://abc'
     }
 
     def 'should be able to reference parent properties'() {
@@ -108,7 +108,7 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardError.contains('Please make sure they are on the same network')
+        result.standardOutput.contains('Please make sure they are on the same network')
     }
 
     def 'should #successText when container name is #containerName and network name is #networkName'() {
@@ -134,7 +134,7 @@ class DcomposeExtensionSpec extends AbstractDcomposeSpec {
         then:
         if (error) {
             assert !result.success
-            assert result.standardError.contains(error)
+            assert result.standardOutput.contains(error)
         } else {
             assert result.success
         }

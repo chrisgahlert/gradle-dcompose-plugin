@@ -395,7 +395,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasks 'createCustomDriverNetwork'
 
         then:
-        result.standardError.contains('plugin not found') || result.standardError.contains('plugin "other" not found')
+        result.standardOutput.contains('plugin not found') || result.standardOutput.contains('plugin "other" not found')
     }
 
     def 'should fail adding multiple subnets'() {
@@ -421,7 +421,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'createCustomNetwork'
 
         then:
-        result.standardError =~ /bridge driver doesn'?t support multiple subnets/
+        result.standardOutput =~ /bridge driver doesn'?t support multiple subnets/
     }
 
     def 'should support other network driver options'() {

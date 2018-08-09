@@ -710,7 +710,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'startAppContainer'
 
         then:
-        result.standardError.contains("did not return with a '0' exit code")
+        result.standardOutput.contains("did not return with a '0' exit code")
     }
 
     def 'should not react to return code when ignored'() {
@@ -783,7 +783,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
         then:
         result.wasExecuted('startAppContainer')
-        result.standardError.contains('_app failed it\'s healthcheck')
+        result.standardOutput.contains('_app failed it\'s healthcheck')
     }
 
     def 'should succeed waiting for healthcheck'() {
