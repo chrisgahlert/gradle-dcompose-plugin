@@ -68,8 +68,8 @@ class DcomposePlugin implements Plugin<Project> {
         def config = createDockerConfiguration(project, extension)
 
         def classLoaderFactory = new DockerClassLoaderFactory(config)
-        def dockerExecutor = new DockerExecutor(classLoaderFactory.defaultInstance, extension)
-        extension.setDockerHost(dockerExecutor.buildClientConfig().dockerHost)
+        def dockerExecutor = new DockerExecutor(classLoaderFactory, extension)
+        extension.setDockerHostUri({ dockerExecutor.buildClientConfig().dockerHost })
 
         injectClassLoaderUtil(project, dockerExecutor)
         createAllTasks(project.tasks)
@@ -104,8 +104,17 @@ class DcomposePlugin implements Plugin<Project> {
     }
 
     private injectClassLoaderUtil(Project project, DockerExecutor dockerExecutor) {
+        def taskGraph = project.gradle.taskGraph
+
         project.tasks.withType(AbstractDcomposeTask) { AbstractDcomposeTask task ->
             task.dockerExecutor = dockerExecutor
+
+            // FIXME: fixes resource lock exception for Gradle 4+ - should be more elegant
+            taskGraph.whenReady {
+                if (taskGraph.hasTask(task)) {
+                    dockerExecutor.getDockerClassLoader()
+                }
+            }
         }
     }
 

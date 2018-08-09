@@ -32,7 +32,7 @@ class DcomposeExtension {
 
     final private NamedDomainObjectContainer<DefaultVolume> volumes
 
-    private String dockerHost
+    private Closure<URI> dockerHostUri
 
     String namePrefix
 
@@ -74,21 +74,22 @@ class DcomposeExtension {
     }
 
     String getDockerHost() {
-        if (dockerHost == null) {
-            throw new RuntimeException('dockerHost variable should have been initialized')
+        if (dockerHostUri == null) {
+            throw new RuntimeException('dockerHostUri variable should have been initialized')
         }
 
-        return dockerHost
+        def uri = dockerHostUri()
+        if (uri == null) {
+            return null
+        } else if (uri.scheme == 'unix') {
+            return 'localhost'
+        } else {
+            return uri.host
+        }
     }
 
-    void setDockerHost(URI uri) {
-        if (uri == null) {
-            dockerHost = null
-        } else if (uri.scheme == 'unix') {
-            dockerHost = 'localhost'
-        } else {
-            dockerHost = uri.host
-        }
+    void setDockerHostUri(Closure<URI> dockerHostUri) {
+        this.dockerHostUri = dockerHostUri
     }
 
     @Deprecated

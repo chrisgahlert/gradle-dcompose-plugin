@@ -10,17 +10,17 @@ import org.gradle.util.ConfigureUtil
 class DockerExecutor {
     public static final String DOCKER_API_VERSION = '1.20'
 
-    private ClassLoader dockerClassLoader
+    private DockerClassLoaderFactory dockerClassLoaderFactory
 
     private DcomposeExtension extension
 
-    DockerExecutor(ClassLoader dockerClassLoader, DcomposeExtension extension) {
-        this.dockerClassLoader = dockerClassLoader
+    DockerExecutor(DockerClassLoaderFactory dockerClassLoaderFactory, DcomposeExtension extension) {
+        this.dockerClassLoaderFactory = dockerClassLoaderFactory
         this.extension = extension
     }
 
     ClassLoader getDockerClassLoader() {
-        return dockerClassLoader
+        return dockerClassLoaderFactory.defaultInstance
     }
 
     def runInDockerClasspath(Closure action) {
