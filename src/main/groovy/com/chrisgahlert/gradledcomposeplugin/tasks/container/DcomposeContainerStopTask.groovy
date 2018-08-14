@@ -61,7 +61,7 @@ public class DcomposeContainerStopTask extends AbstractDcomposeServiceTask {
     boolean containerRunning() {
         dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {
-                dockerExecutor.client.inspectContainerCmd(containerName).exec()?.state?.running
+                dockerExecutor.client.inspectContainerCmd(containerName).exec()?.state?.running ?: false
             }
         }
     }
