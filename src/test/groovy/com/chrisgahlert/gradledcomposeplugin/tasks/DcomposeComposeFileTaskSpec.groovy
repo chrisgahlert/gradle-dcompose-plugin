@@ -89,6 +89,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     restart = 'always'
                     dependsOn = [other]
                     memLimit = 1000000000L
+                    logConfig = 'json-file'
                 }
             }
             createComposeFile.version = '2'
@@ -157,6 +158,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 volumes_from:
                 - other
                 mem_limit: 1000000000
+                logging:
+                  driver: json-file
               other:
                 image: $registryUrl/comfil-all@sha256:...
                 networks:
@@ -240,6 +243,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     restart = 'always'
                     dependsOn = [other]
                     memLimit = 1000000000L
+                    logConfig = 'json-file'
                 }
             }
         """
@@ -574,6 +578,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     dependsOn = [third]
                     repository = '$registryUrl/comfil-test/main:with-tag'
                     memLimit = 1000000000L
+                    logConfig = 'json-file'
                 }
             }
             createComposeFile {
@@ -601,6 +606,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                   default:
                     aliases: []
                 mem_limit: 1000000000
+                logging:
+                  driver: json-file
               third:
                 image: busybox@sha256:...
                 networks:
