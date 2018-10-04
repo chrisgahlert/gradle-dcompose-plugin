@@ -106,7 +106,9 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
 
             if (service.waitForCommand) {
                 service.exitCode = waitForExitCode(start)
-                extensions.exitCode = service.exitCode
+                if (!extensions.hasProperty('exitCode')) {
+                    extensions.exitCode = service.exitCode
+                }
                 logger.info "Docker container with name $containerName returned with a '$service.exitCode' exit code"
 
                 if (service.exitCode != 0 && !ignoreExitCode) {
