@@ -41,6 +41,12 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
 
     @Input
     @Optional
+    List<String> getAdditionalImageRefs() {
+        service.additionalRepositories
+    }
+
+    @Input
+    @Optional
     Boolean getForce() {
         service.forceRemoveImage
     }
@@ -65,20 +71,28 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     void removeImage() {
         dockerExecutor.runInDockerClasspath {
-            ignoreDockerException('NotFoundException') {
-                def cmd = dockerExecutor.client.removeImageCmd(imageRef)
+            removeImageInternal(imageRef)
 
-                if (force != null) {
-                    cmd.withForce(force)
-                }
-
-                if (noPrune != null) {
-                    cmd.withNoPrune(noPrune)
-                }
-
-                cmd.exec()
-                logger.info("Successfully removed image $imageRef")
+            additionalImageRefs?.each {
+                removeImageInternal(it)
             }
+        }
+    }
+
+    protected removeImageInternal(String image) {
+        ignoreDockerException('NotFoundException') {
+            def cmd = dockerExecutor.client.removeImageCmd(image)
+
+            if (force != null) {
+                cmd.withForce(force)
+            }
+
+            if (noPrune != null) {
+                cmd.withNoPrune(noPrune)
+            }
+
+            cmd.exec()
+            logger.info("Successfully removed image $image")
         }
     }
 }

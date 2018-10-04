@@ -84,6 +84,11 @@ class DefaultService extends Service {
     String repository
 
     /**
+     * An optional array of additional repositories, this image should be published to
+     */
+    List<String> additionalRepositories
+
+    /**
      * Whether the image pull should be forced when pulling/building an image
      */
     boolean forcePull = false
@@ -180,6 +185,11 @@ class DefaultService extends Service {
         ImageRef.parse(repository ?: (hasImage() ? image : (dockerPrefix() + '/' + name).replace('_', '')))
                 .toString()
                 .toLowerCase()
+    }
+
+    @Override
+    List<String> getAdditionalRepositories() {
+        additionalRepositories?.collect { ImageRef.parse(it).toString().toLowerCase() }
     }
 
     @Override

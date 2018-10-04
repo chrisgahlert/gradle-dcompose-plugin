@@ -369,6 +369,16 @@ class ServiceReference extends Service {
     }
 
     @Override
+    List<String> getAdditionalRepositories() {
+        resolved.additionalRepositories
+    }
+
+    @Override
+    void setAdditionalRepositories(List<String> additionalRepositories) {
+        resolved.additionalRepositories = additionalRepositories
+    }
+
+    @Override
     String getRepositoryDigest() {
         resolved.repositoryDigest
     }

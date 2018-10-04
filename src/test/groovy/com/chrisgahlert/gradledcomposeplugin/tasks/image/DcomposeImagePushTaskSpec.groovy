@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.tasks.image
 
 import com.chrisgahlert.gradledcomposeplugin.AbstractDcomposeSpec
+import spock.lang.Unroll
 
 class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
@@ -70,8 +71,10 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         !result.wasUpToDate(':pushMainImage')
     }
 
-    def 'should be able to pull published image from private reg'() {
+    @Unroll
+    def 'should be able to pull published image from private reg using #repoTag'() {
         given:
+        def testStr = UUID.randomUUID()
         buildFile << """
             dcompose {
                 $registryClientConfig
@@ -79,13 +82,14 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
                 main {
                     baseDir = file('src/main/docker')
                     repository = '$registryUrl/custom'
+                    additionalRepositories = ['$registryUrl/custom:v123', '$registryUrl/other', '$registryUrl/other:test']
                 }
             }
         """
 
         file('src/main/docker/Dockerfile').text = """
             FROM $DEFAULT_IMAGE
-            RUN echo hello custom image for pushing > /test.txt
+            RUN echo hello custom image for pushing $testStr > /test.txt
             CMD ["cat", "/test.txt"]
         """.stripIndent()
 
@@ -99,7 +103,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
                 $registryClientConfig
 
                 pulled {
-                    image = '$registryUrl/custom:latest'
+                    image = '$registryUrl/$repoTag'
                     waitForCommand = true
                 }
             }
@@ -115,8 +119,11 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':pullPulledImage')
         !result.wasSkipped(':pullPulledImage')
         !result.wasUpToDate(':pullPulledImage')
-        testFile.text.trim() == 'hello custom image for pushing'
-        result.standardOutput.contains("Successfully pulled image $registryUrl/custom:latest")
+        testFile.text.trim() == "hello custom image for pushing $testStr"
+        result.standardOutput.contains("Successfully pulled image $registryUrl/$repoTag")
+
+        where:
+        repoTag << ['custom:latest', 'custom:v123', 'other:latest', 'other:test']
     }
 
     def 'should be able to pull published image from private reg during build'() {

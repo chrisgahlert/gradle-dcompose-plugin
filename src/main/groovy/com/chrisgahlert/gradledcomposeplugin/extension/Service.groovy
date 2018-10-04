@@ -234,6 +234,10 @@ abstract class Service extends AbstractEntity {
 
     abstract void setRepository(String repository)
 
+    abstract List<String> getAdditionalRepositories()
+
+    abstract void setAdditionalRepositories(List<String> additionalRepositories)
+
     abstract String getRepositoryDigest()
 
     abstract void setRepositoryDigest(String repositoryDigest)

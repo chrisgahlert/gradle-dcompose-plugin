@@ -83,6 +83,12 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
     @Input
     @Optional
+    List<ImageRef> getAdditionalTags() {
+        service.additionalRepositories?.collect { ImageRef.parse(it) }
+    }
+
+    @Input
+    @Optional
     Map<String, String> getBuildArgs() {
         service.buildArgs
     }
@@ -129,9 +135,16 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
             service.imageId = response.awaitImageId()
             logger.info("Built Docker image with id $service.imageId")
 
-            dockerExecutor.client.tagImageCmd(service.imageId, buildTag.registryWithRepository, buildTag.tag).exec()
-            logger.info("Tagged Docker image with id $service.imageId as $buildTag")
+            tagImageInternal(service.imageId, buildTag)
+            additionalTags?.each {
+                tagImageInternal(service.imageId, it)
+            }
         }
+    }
+
+    protected void tagImageInternal(String imageId, ImageRef imageTag) {
+        dockerExecutor.client.tagImageCmd(imageId, imageTag.registryWithRepository, imageTag.tag).exec()
+        logger.info("Tagged Docker image with id $imageId as $imageTag")
     }
 
     @OutputFile

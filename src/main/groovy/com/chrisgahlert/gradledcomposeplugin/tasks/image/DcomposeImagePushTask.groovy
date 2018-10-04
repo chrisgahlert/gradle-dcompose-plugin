@@ -20,6 +20,7 @@ import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
@@ -34,6 +35,12 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
     @Input
     ImageRef getRepositoryRef() {
         ImageRef.parse(service.repository)
+    }
+
+    @Input
+    @Optional
+    List<ImageRef> getAdditionalRepositoryRefs() {
+        service.additionalRepositories?.collect { ImageRef.parse(it) }
     }
 
     DcomposeImagePushTask() {
@@ -56,22 +63,39 @@ class DcomposeImagePushTask extends AbstractDcomposeServiceTask {
         dockerExecutor.runInDockerClasspath {
             if (service.hasImage()) {
                 // Tagging only needed when image has been pulled, as building it automatically sets the tag
-                logger.info("Tagging image $imageId with $repositoryRef")
-                dockerExecutor.client.tagImageCmd(imageId, repositoryRef.registryWithRepository, repositoryRef.tag).exec()
+                tagImageInternal(repositoryRef)
+
+                additionalRepositoryRefs?.each {
+                    tagImageInternal(it)
+                }
             }
 
-            def pushCmd = dockerExecutor.client.pushImageCmd(imageId)
-                    .withName(repositoryRef.registryWithRepository)
-                    .withTag(repositoryRef.tag)
-
-            addAuthConfig(repositoryRef.toString(), pushCmd)
-
-            def callback = dockerExecutor.loadClass('com.github.dockerjava.core.command.PushImageResultCallback')
-                    .newInstance()
-            logger.info("Pushing image $imageId to $repositoryRef")
-            pushCmd.exec(callback)
-            callback.awaitSuccess()
+            pushImageInternal(repositoryRef)
+            additionalRepositoryRefs?.each {
+                pushImageInternal(it)
+            }
         }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected void tagImageInternal(ImageRef repo) {
+        logger.info("Tagging image $imageId with $repo")
+        dockerExecutor.client.tagImageCmd(imageId, repo.registryWithRepository, repo.tag).exec()
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    protected void pushImageInternal(ImageRef repo) {
+        def pushCmd = dockerExecutor.client.pushImageCmd(imageId)
+                .withName(repo.registryWithRepository)
+                .withTag(repo.tag)
+
+        addAuthConfig(repo.toString(), pushCmd)
+
+        def callback = dockerExecutor.loadClass('com.github.dockerjava.core.command.PushImageResultCallback')
+                .newInstance()
+        logger.info("Pushing image $imageId to $repo")
+        pushCmd.exec(callback)
+        callback.awaitSuccess()
     }
 
     @OutputFile
