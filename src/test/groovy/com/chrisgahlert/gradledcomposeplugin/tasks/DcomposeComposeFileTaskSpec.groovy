@@ -313,6 +313,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     limits:
                       memory: '1000000000'
                     reservations: {}
+                logging:
+                  driver: json-file
               other:
                 image: $registryUrl/comfil-all@sha256:...
                 networks:
