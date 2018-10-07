@@ -407,4 +407,14 @@ class ServiceReference extends Service {
     void setLogConfig(String logConfig) {
         resolved.logConfig = logConfig
     }
+
+    @Override
+    Map<String, String> getLogOpts() {
+        resolved.logOpts
+    }
+
+    @Override
+    void setLogOpts(Map<String, String> logOpts) {
+        resolved.logOpts = logOpts
+    }
 }

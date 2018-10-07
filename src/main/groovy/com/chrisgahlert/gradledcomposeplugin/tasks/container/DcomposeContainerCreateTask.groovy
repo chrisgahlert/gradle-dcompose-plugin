@@ -269,6 +269,12 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         service.logConfig
     }
 
+    @Input
+    @Optional
+    Map<String, String> getLogOpts() {
+        service.logOpts
+    }
+
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void createNewContainer() {
@@ -409,7 +415,9 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 def loggingType = dockerExecutor.loadClass('com.github.dockerjava.api.model.LogConfig$LoggingType').values().find {
                     it.type == logConfig
                 }
-                cmd.withLogConfig(dockerExecutor.loadClass('com.github.dockerjava.api.model.LogConfig').newInstance(loggingType))
+                def logConfClass = dockerExecutor.loadClass('com.github.dockerjava.api.model.LogConfig')
+                def args = logOpts ? [loggingType, logOpts] : [loggingType]
+                cmd.withLogConfig(logConfClass.newInstance(*args))
             }
 
             def result = cmd.withName(containerName).exec()

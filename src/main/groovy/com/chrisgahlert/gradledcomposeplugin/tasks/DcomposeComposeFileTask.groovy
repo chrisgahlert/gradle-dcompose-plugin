@@ -184,6 +184,10 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
                     spec.networks = networksSpec
                 }
             }
+            if (service.logConfig) {
+                spec.logging = [driver: service.logConfig]
+                if (service.logOpts) spec.logging << [options: service.logOpts]
+            }
 
             switch (version) {
                 case '2':
@@ -200,9 +204,6 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
                     if (service.memLimit) {
                         spec.mem_limit = service.memLimit
                     }
-                    if (service.logConfig) {
-                        spec.logging = [driver: service.logConfig]
-                    }
                     break;
 
                 case '3':
@@ -218,9 +219,6 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
                     }
                     if (service.memLimit) {
                         spec.deploy.resources.limits.memory = service.memLimit.toString()
-                    }
-                    if (service.logConfig) {
-                        spec.logging = [driver: service.logConfig]
                     }
                     break;
 

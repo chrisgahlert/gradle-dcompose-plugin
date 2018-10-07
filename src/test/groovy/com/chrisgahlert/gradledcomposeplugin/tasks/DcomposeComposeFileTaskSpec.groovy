@@ -89,7 +89,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     restart = 'always'
                     dependsOn = [other]
                     memLimit = 1000000000L
-                    logConfig = 'json-file'
+                    logConfig = 'syslog'
+                    logOpts = ['syslog-address': 'tcp://192.168.0.42:123']
                 }
             }
             createComposeFile.version = '2'
@@ -155,11 +156,13 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     aliases:
                     - netalias
                     - netalias2
+                logging:
+                  driver: syslog
+                  options:
+                    syslog-address: tcp://192.168.0.42:123
                 volumes_from:
                 - other
                 mem_limit: 1000000000
-                logging:
-                  driver: json-file
               other:
                 image: $registryUrl/comfil-all@sha256:...
                 networks:
@@ -243,7 +246,8 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     restart = 'always'
                     dependsOn = [other]
                     memLimit = 1000000000L
-                    logConfig = 'json-file'
+                    logConfig = 'fluentd'
+                    logOpts = ['fluentd-address': 'fluentdhost:24224']
                 }
             }
         """
@@ -308,13 +312,15 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     aliases:
                     - netalias
                     - netalias2
+                logging:
+                  driver: fluentd
+                  options:
+                    fluentd-address: fluentdhost:24224
                 deploy:
                   resources:
                     limits:
                       memory: '1000000000'
                     reservations: {}
-                logging:
-                  driver: json-file
               other:
                 image: $registryUrl/comfil-all@sha256:...
                 networks:
@@ -581,6 +587,7 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                     repository = '$registryUrl/comfil-test/main:with-tag'
                     memLimit = 1000000000L
                     logConfig = 'json-file'
+                    logOpts = ['max-size': '200k', 'max-file': '10']
                 }
             }
             createComposeFile {
@@ -607,9 +614,12 @@ class DcomposeComposeFileTaskSpec extends AbstractDcomposeSpec {
                 networks:
                   default:
                     aliases: []
-                mem_limit: 1000000000
                 logging:
                   driver: json-file
+                  options:
+                    max-size: 200k
+                    max-file: '10'
+                mem_limit: 1000000000
               third:
                 image: busybox@sha256:...
                 networks:
