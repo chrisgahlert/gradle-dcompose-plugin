@@ -407,4 +407,24 @@ class ServiceReference extends Service {
     void setMemLimit(Long memLimit) {
         resolved.memLimit = memLimit
     }
+
+    @Override
+    String getLogConfig() {
+        resolved.logConfig
+    }
+
+    @Override
+    void setLogConfig(String logConfig) {
+        resolved.logConfig = logConfig
+    }
+
+    @Override
+    Map<String, String> getLogOpts() {
+        resolved.logOpts
+    }
+
+    @Override
+    void setLogOpts(Map<String, String> logOpts) {
+        resolved.logOpts = logOpts
+    }
 }

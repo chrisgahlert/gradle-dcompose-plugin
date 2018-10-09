@@ -184,6 +184,10 @@ class DcomposeComposeFileTask extends AbstractDcomposeTask {
                     spec.networks = networksSpec
                 }
             }
+            if (service.logConfig) {
+                spec.logging = [driver: service.logConfig]
+                if (service.logOpts) spec.logging << [options: service.logOpts]
+            }
 
             switch (version) {
                 case '2':

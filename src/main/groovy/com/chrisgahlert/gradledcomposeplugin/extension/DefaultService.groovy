@@ -122,6 +122,8 @@ class DefaultService extends Service {
     List<String> aliases
     String restart
     Long memLimit
+    String logConfig
+    Map<String, String> logOpts
 
     /**
      * Build image specific properties (can only be used when no image is defined). Properties are optional by default.

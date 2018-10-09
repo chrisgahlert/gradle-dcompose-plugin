@@ -246,6 +246,14 @@ abstract class Service extends AbstractEntity {
 
     abstract void setMemLimit(Long memLimit)
 
+    abstract String getLogConfig()
+
+    abstract void setLogConfig(String logConfig)
+
+    abstract Map<String, String> getLogOpts()
+
+    abstract void setLogOpts(Map<String, String> logOpts)
+
     ServiceDependency link(String alias = null) {
         new ServiceDependency(alias ?: name, this)
     }
