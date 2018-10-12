@@ -141,17 +141,14 @@ class AbstractDcomposeTask extends DefaultTask {
         if (!initializedOutputs.contains(name)) {
             initializedOutputs << name
 
-            dockerExecutor.runInDockerClasspath {
-                outputFile.text = toJson(value())
-                saveDebugOutput(outputFile, "before")
-                logger.debug("Initialzed Docker output file $outputFile for coming up-to-date checks")
-            }
+            outputFile.text = toJson(dockerExecutor.runInDockerClasspath(value))
+            saveDebugOutput(outputFile, "before")
+            logger.debug("Initialzed Docker output file $outputFile for coming up-to-date checks")
+
             doLast {
-                dockerExecutor.runInDockerClasspath {
-                    outputFile.text = toJson(value())
-                    saveDebugOutput(outputFile, "after")
-                    logger.debug("Updated Docker output file $outputFile for persisting output state")
-                }
+                outputFile.text = toJson(dockerExecutor.runInDockerClasspath(value))
+                saveDebugOutput(outputFile, "after")
+                logger.debug("Updated Docker output file $outputFile for persisting output state")
             }
         }
 
