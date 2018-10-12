@@ -23,8 +23,8 @@ class ImageRef implements Serializable {
     final String tag
 
     ImageRef(String registry, String repository, String tag) {
-        this.registry = registry
-        this.repository = repository
+        this.registry = registry?.toLowerCase()
+        this.repository = repository?.toLowerCase()
         this.tag = tag
     }
 

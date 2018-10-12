@@ -186,12 +186,11 @@ class DefaultService extends Service {
     String getRepository() {
         ImageRef.parse(repository ?: (hasImage() ? image : (dockerPrefix() + '/' + name).replace('_', '')))
                 .toString()
-                .toLowerCase()
     }
 
     @Override
     List<String> getAdditionalRepositories() {
-        additionalRepositories?.collect { ImageRef.parse(it).toString().toLowerCase() }
+        additionalRepositories?.collect { ImageRef.parse(it).toString() }
     }
 
     @Override

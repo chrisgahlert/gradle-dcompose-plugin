@@ -81,8 +81,8 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
                 main {
                     baseDir = file('src/main/docker')
-                    repository = '$registryUrl/custom'
-                    additionalRepositories = ['$registryUrl/custom:v123', '$registryUrl/other', '$registryUrl/other:test']
+                    repository = '$registryUrl/custom:V123'
+                    additionalRepositories = ['$registryUrl/CUSTOM', '$registryUrl/other', '$registryUrl/other:test']
                 }
             }
         """
@@ -123,7 +123,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         result.standardOutput.contains("Successfully pulled image $registryUrl/$repoTag")
 
         where:
-        repoTag << ['custom:latest', 'custom:v123', 'other:latest', 'other:test']
+        repoTag << ['custom:latest', 'custom:V123', 'other:latest', 'other:test']
     }
 
     def 'should be able to pull published image from private reg during build'() {
