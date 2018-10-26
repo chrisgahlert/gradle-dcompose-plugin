@@ -365,8 +365,10 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
                 }
             }
 
-            task url(dependsOn: startServerContainer) << {
-                logger.warn "URL: http://\${dcompose.server.dockerHost}:\${dcompose.server.findHostPort(1500)}"
+            task url(dependsOn: startServerContainer) {
+                doFirst {
+                    logger.warn "URL: http://\${dcompose.server.dockerHost}:\${dcompose.server.findHostPort(1500)}"
+                }
             }
         """
 

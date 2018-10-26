@@ -116,8 +116,10 @@ class ServiceSpec extends AbstractDcomposeSpec {
               }
             }
 
-            task findBindings(dependsOn: dcompose.server.startContainerTaskName) << {
-                file('result').text = dcompose.server.findHostPort($find)
+            task findBindings(dependsOn: dcompose.server.startContainerTaskName) {
+                doFirst {
+                    file('result').text = dcompose.server.findHostPort($find)
+                }
             }
         """
 
