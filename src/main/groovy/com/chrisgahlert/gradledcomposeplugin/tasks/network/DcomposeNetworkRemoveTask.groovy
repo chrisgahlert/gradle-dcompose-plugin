@@ -65,6 +65,6 @@ class DcomposeNetworkRemoveTask extends AbstractDcomposeNetworkTask {
                 dockerExecutor.client.inspectNetworkCmd().withNetworkId(networkName).exec()
                 true
             }
-        }
+        } ?: false
     }
 }

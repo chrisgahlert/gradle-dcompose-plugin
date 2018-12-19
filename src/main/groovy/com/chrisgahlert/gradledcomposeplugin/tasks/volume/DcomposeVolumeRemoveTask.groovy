@@ -65,6 +65,6 @@ class DcomposeVolumeRemoveTask extends AbstractDcomposeVolumeTask {
                 dockerExecutor.client.inspectVolumeCmd(volumeName).exec()
                 true
             }
-        }
+        } ?: false
     }
 }

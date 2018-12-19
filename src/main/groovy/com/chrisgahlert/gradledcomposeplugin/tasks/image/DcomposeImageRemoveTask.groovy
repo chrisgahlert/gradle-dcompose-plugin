@@ -64,7 +64,7 @@ class DcomposeImageRemoveTask extends AbstractDcomposeServiceTask {
                 dockerExecutor.client.inspectImageCmd(imageRef).exec()
                 true
             }
-        }
+        } ?: false
     }
 
     @TaskAction

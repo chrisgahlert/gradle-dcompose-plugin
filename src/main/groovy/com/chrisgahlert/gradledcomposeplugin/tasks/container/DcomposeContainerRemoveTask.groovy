@@ -53,7 +53,7 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeServiceTask {
         }
 
         onlyIf {
-            containerExist() ?: false
+            containerExist()
         }
     }
 
@@ -74,7 +74,7 @@ class DcomposeContainerRemoveTask extends AbstractDcomposeServiceTask {
                 dockerExecutor.client.inspectContainerCmd(containerName).exec()
                 true
             }
-        }
+        } ?: false
     }
 
     @TaskAction
