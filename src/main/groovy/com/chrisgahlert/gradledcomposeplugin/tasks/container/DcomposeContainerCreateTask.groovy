@@ -63,6 +63,14 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 "$bind.volume.projectPath:$bind.volume.createTaskName"
             }
         }
+
+        outputs.upToDateWhen {
+            def dependantServices = service.linkDependencies + service.volumesFromDependencies + service.dependsOn
+            def anyTaskDidWork = dependantServices.any {
+                project.tasks.findByPath("$it.projectPath:$it.createContainerTaskName")?.didWork
+            }
+            return !anyTaskDidWork
+        }
     }
 
     @Input

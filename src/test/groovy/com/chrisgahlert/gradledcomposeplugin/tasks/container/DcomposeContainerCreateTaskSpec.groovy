@@ -65,6 +65,63 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':createMainContainer')
     }
 
+    def 'create should not be up-to-date when dependant container changed'() {
+        given:
+        buildFile << """
+            dcompose {
+                other {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'hello world']
+                }
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    dependsOn = [other]
+                    command = ['/bin/sleep', '300']
+                    stopTimeout = 0
+                }
+            }
+        """
+
+        runTasksSuccessfully 'createMainContainer'
+        buildFile << "dcompose.other.command = ['echo', 'yeehaw']"
+
+        when:
+        def result = runTasksSuccessfully 'createMainContainer'
+
+        then:
+        !result.wasUpToDate(':createOtherContainer')
+        result.wasExecuted(':createOtherContainer')
+        !result.wasUpToDate(':createMainContainer')
+        result.wasExecuted(':createMainContainer')
+    }
+
+    def 'create should be up-to-date when dependant container did not change'() {
+        given:
+        buildFile << """
+            dcompose {
+                other {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['echo', 'hello world']
+                }
+                main {
+                    image = '$DEFAULT_IMAGE'
+                    dependsOn = [other]
+                    command = ['/bin/sleep', '300']
+                    stopTimeout = 0
+                }
+            }
+        """
+
+        runTasksSuccessfully 'createMainContainer'
+
+        when:
+        def result = runTasksSuccessfully 'createMainContainer'
+
+        then:
+        result.wasUpToDate(':createOtherContainer')
+        result.wasUpToDate(':createMainContainer')
+    }
+
     def 'create should not be up-to-date when underlying image changed'() {
         given:
         def dockerFile = file('docker/Dockerfile')
