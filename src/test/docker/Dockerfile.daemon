@@ -1,4 +1,4 @@
-FROM docker:18.06.1-ce-dind
+FROM docker:18.09.6-dind
 
 COPY testreg.crt /etc/docker/certs.d/testreg:5000/ca.crt
 COPY hub.crt /etc/docker/certs.d/hub:5000/ca.crt
