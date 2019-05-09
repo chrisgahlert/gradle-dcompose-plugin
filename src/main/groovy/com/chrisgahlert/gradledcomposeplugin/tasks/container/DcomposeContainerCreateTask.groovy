@@ -289,12 +289,14 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         dockerExecutor.runInDockerClasspath {
             removeOldContainer(service)
 
+            def hostConfig = dockerExecutor.loadClass('com.github.dockerjava.api.model.HostConfig').newInstance()
             def cmd = dockerExecutor.client.createContainerCmd(imageId)
+                    .withHostConfig(hostConfig)
 
             if (portBindings) {
                 def portParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.PortBinding')
                         .getMethod('parse', String)
-                cmd.withPortBindings(portBindings.collect { portParser.invoke(null, it as String) })
+                hostConfig.withPortBindings(portBindings.collect { portParser.invoke(null, it as String) })
             }
 
             if (command) {
@@ -318,7 +320,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (allBinds) {
-                cmd.withBinds(allBinds)
+                hostConfig.withBinds(allBinds)
             }
 
             if (exposedPorts) {
@@ -330,11 +332,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             if (volumesFrom) {
                 def volumesFromParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.VolumesFrom')
                         .getMethod('parse', String)
-                cmd.withVolumesFrom(volumesFrom.collect { volumesFromParser.invoke(null, it as String) })
+                hostConfig.withVolumesFrom(volumesFrom.collect { volumesFromParser.invoke(null, it as String) })
             }
 
             if (extraHosts) {
-                cmd.withExtraHosts(extraHosts as String[])
+                hostConfig.withExtraHosts(extraHosts as String[])
             }
 
             if (workingDir) {
@@ -342,11 +344,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (dns) {
-                cmd.withDns(dns as String[])
+                hostConfig.withDns(dns as String[])
             }
 
             if (dnsSearch) {
-                cmd.withDnsSearch(dnsSearch as String[])
+                hostConfig.withDnsSearch(dnsSearch as String[])
             }
 
             if (hostName) {
@@ -366,11 +368,11 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (publishAllPorts != null) {
-                cmd.withPublishAllPorts(publishAllPorts)
+                hostConfig.withPublishAllPorts(publishAllPorts)
             }
 
             if (readonlyRootfs != null) {
-                cmd.withReadonlyRootfs(readonlyRootfs)
+                hostConfig.withReadonlyRootfs(readonlyRootfs)
             }
 
             if (attachStdin != null) {
@@ -390,33 +392,33 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             }
 
             if (privileged != null) {
-                cmd.withPrivileged(privileged)
+                hostConfig.withPrivileged(privileged)
             }
 
             if (restart != null) {
                 def policyParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.RestartPolicy')
                         .getMethod('parse', String)
-                cmd.withRestartPolicy(policyParser.invoke(null, restart as String))
+                hostConfig.withRestartPolicy(policyParser.invoke(null, restart as String))
             }
 
             if (memory != null) {
-                cmd.withMemory(memory)
+                hostConfig.withMemory(memory)
             }
 
             if (memswap != null) {
-                cmd.withMemorySwap(memswap)
+                hostConfig.withMemorySwap(memswap)
             }
 
             if (cpusetcpus != null) {
-                cmd.withCpusetCpus(cpusetcpus as String)
+                hostConfig.withCpusetCpus(cpusetcpus as String)
             }
 
             if (cpushares != null) {
-                cmd.withCpuShares(cpushares)
+                hostConfig.withCpuShares(cpushares)
             }
 
             if (networkMode) {
-                cmd.withNetworkMode(networkMode)
+                hostConfig.withNetworkMode(networkMode)
             }
 
             if (logConfig) {
@@ -425,7 +427,7 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 }
                 def logConfClass = dockerExecutor.loadClass('com.github.dockerjava.api.model.LogConfig')
                 def args = logOpts ? [loggingType, logOpts] : [loggingType]
-                cmd.withLogConfig(logConfClass.newInstance(*args))
+                hostConfig.withLogConfig(logConfClass.newInstance(*args))
             }
 
             def result = cmd.withName(containerName).exec()
