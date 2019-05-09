@@ -33,7 +33,8 @@ class ServiceSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardOutput.contains("At least one of the image, baseDir or buildFiles properties must be provided")
+        (result.standardOutput + result.standardError)
+                .contains("At least one of the image, baseDir or buildFiles properties must be provided")
     }
 
     def 'should validate correctly on buildFiles defintion'() {
@@ -71,7 +72,7 @@ class ServiceSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardOutput.contains("Either image or baseDir (but not both) can be provided")
+        (result.standardOutput + result.standardError).contains("Either image or baseDir (but not both) can be provided")
     }
 
     def 'should validate direct container link'() {
@@ -92,7 +93,7 @@ class ServiceSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardOutput.contains("Invalid service link from client to server")
+        (result.standardOutput + result.standardError).contains("Invalid service link from client to server")
     }
 
     @Unroll
@@ -137,7 +138,7 @@ class ServiceSpec extends AbstractDcomposeSpec {
             assert file('result').text.isInteger()
         }
         if (errorMessage) {
-            assert result.standardOutput.contains(errorMessage)
+            assert (result.standardOutput + result.standardError).contains(errorMessage)
         }
 
         where:
@@ -171,7 +172,8 @@ class ServiceSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'help'
 
         then:
-        result.standardOutput.contains('Can either wait for the healthcheck to pass or the command to complete for dcompose service \'app\' - not both')
+        (result.standardOutput + result.standardError)
+                .contains('Can either wait for the healthcheck to pass or the command to complete for dcompose service \'app\' - not both')
     }
 
     def 'should be able to get docker host from container even before it was started'() {

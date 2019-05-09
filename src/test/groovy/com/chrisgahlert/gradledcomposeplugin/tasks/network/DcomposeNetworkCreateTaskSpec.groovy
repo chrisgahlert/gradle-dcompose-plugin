@@ -180,7 +180,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'startServerContainer', 'startClientContainer'
 
         then:
-        result.standardOutput.contains("nc: bad address 'server'")
+        (result.standardOutput + result.standardError).contains("nc: bad address 'server'")
     }
 
     def 'custom networks should be able to connect to each other'() {
@@ -345,7 +345,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksSuccessfully ':subClient:startClientContainer'
 
         then:
-        result.standardOutput.contains("nc: bad address 'server'")
+        (result.standardOutput + result.standardError).contains("nc: bad address 'server'")
 
         result.wasExecuted(':subServer:createOtherNetwork')
         result.wasExecuted(':subClient:createDefaultNetwork')
@@ -397,7 +397,8 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasks 'createCustomDriverNetwork'
 
         then:
-        result.standardOutput.contains('plugin not found') || result.standardOutput.contains('plugin "other" not found')
+        (result.standardOutput + result.standardError).contains('plugin not found') ||
+                (result.standardOutput + result.standardError).contains('plugin "other" not found')
     }
 
     def 'should fail adding multiple subnets'() {
@@ -423,7 +424,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'createCustomNetwork'
 
         then:
-        result.standardOutput =~ /bridge driver doesn'?t support multiple subnets/
+        (result.standardOutput + result.standardError) =~ /bridge driver doesn'?t support multiple subnets/
     }
 
     def 'should support other network driver options'() {

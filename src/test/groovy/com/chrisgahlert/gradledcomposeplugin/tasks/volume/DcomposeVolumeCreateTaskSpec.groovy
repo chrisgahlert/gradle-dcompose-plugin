@@ -63,7 +63,7 @@ class DcomposeVolumeCreateTaskSpec extends AbstractDcomposeSpec {
 
         then:
         if (result.failure) {
-            assert result.standardOutput.contains('invalid option key: "opt1"')
+            assert (result.standardOutput + result.standardError).contains('invalid option key: "opt1"')
         }
     }
 
@@ -87,7 +87,7 @@ class DcomposeVolumeCreateTaskSpec extends AbstractDcomposeSpec {
         def result = runTasksWithFailure 'createMainContainer'
 
         then:
-        result.standardOutput.toLowerCase().contains 'error looking up volume plugin custom:'
+        (result.standardOutput + result.standardError).toLowerCase().contains 'error looking up volume plugin custom:'
     }
 
     def 'create volume should be up-to-date'() {
