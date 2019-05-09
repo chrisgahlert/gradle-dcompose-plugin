@@ -41,10 +41,6 @@ plugins {
   id "com.chrisgahlert.gradle-dcompose-plugin" version "0.11.2"
 }
 
-repositories {
-  mavenCentral()
-}
-
 dcompose {
   web {
     image = 'nginx:latest'
