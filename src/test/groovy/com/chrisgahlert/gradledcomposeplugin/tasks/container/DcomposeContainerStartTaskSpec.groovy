@@ -341,7 +341,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
     def 'start should work for linked cross project containers'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subServer', """
             dcompose {
@@ -383,7 +383,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
     def 'start should work for dependant cross project containers'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subServer', """
             dcompose {
@@ -425,7 +425,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
     def 'start should work for linked cross project containers with alias'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subServer', """
             dcompose {
@@ -462,7 +462,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
     def 'start should work for cross project containers with volumes from'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subData', """
             dcompose {
@@ -495,7 +495,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
     def 'start should work for linked cross project containers on update'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         def serverDir = addSubproject 'subServer', """
             dcompose {
@@ -546,7 +546,7 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
 
     def 'start should work for cross project containers with volumes from on update'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         def dataDir = addSubproject 'subData', """
             dcompose {

@@ -138,7 +138,7 @@ class DcomposeContainerRemoveTaskSpec extends AbstractDcomposeSpec {
 
     def 'remove should work for linked cross project containers'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subServer', """
             dcompose {
@@ -173,7 +173,7 @@ class DcomposeContainerRemoveTaskSpec extends AbstractDcomposeSpec {
 
     def 'remove should work for dependant cross project containers'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subServer', """
             dcompose {
@@ -208,7 +208,7 @@ class DcomposeContainerRemoveTaskSpec extends AbstractDcomposeSpec {
 
     def 'remove should work for cross project containers with volumes from'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subData', """
             dcompose {

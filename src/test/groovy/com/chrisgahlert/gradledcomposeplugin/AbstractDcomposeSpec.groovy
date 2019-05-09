@@ -32,12 +32,15 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
             }
         }
 
-    """
+    """.stripIndent()
 
-    public static final String DEFAULT_PLUGIN_INIT = '''
-        repositories { mavenCentral() }
-        apply plugin: "com.chrisgahlert.gradle-dcompose-plugin"
-    '''
+    protected static final String DEFAULT_PLUGIN_INIT = 'apply plugin: "com.chrisgahlert.gradle-dcompose-plugin"'
+
+    protected static final String DEFAULT_REPOSITORY_INIT = '''
+        buildscript {
+            repositories { mavenCentral() }
+        }
+    '''.stripIndent()
 
     protected List<String> cleanupTasks = ['removeContainers', 'removeNetworks', 'removeVolumes']
 
@@ -64,7 +67,11 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
     """
 
     def setup() {
-        buildFile << DEFAULT_PLUGIN_INIT
+        buildFile << """
+            $DEFAULT_REPOSITORY_INIT
+            $DEFAULT_PLUGIN_INIT
+        """.stripIndent()
+
         file('gradle.properties').text = '''
             org.gradle.daemon=true
             org.gradle.jvmargs=-Xmx196m
@@ -82,12 +89,16 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
 //        }
     }
 
+    protected void resetBuildFile() {
+        buildFile.text = DEFAULT_REPOSITORY_INIT
+    }
+
     @Override
     protected File addSubproject(String subprojectName, String subBuildGradleText) {
         return super.addSubproject(subprojectName, """
             $DEFAULT_PLUGIN_INIT
             $subBuildGradleText
-        """)
+        """.stripIndent())
     }
 
     @Override

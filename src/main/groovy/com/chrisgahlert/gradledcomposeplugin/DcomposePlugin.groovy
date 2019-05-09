@@ -41,6 +41,9 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ConfigurationContainer
+import org.gradle.api.artifacts.dsl.DependencyHandler
+import org.gradle.api.initialization.dsl.ScriptHandler
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskContainer
 
@@ -59,15 +62,14 @@ class DcomposePlugin implements Plugin<Project> {
     public static final String SLF4J_DEPENDENCY = 'org.slf4j:slf4j-simple:1.7.5'
     public static final String SNAKEYAML_DEPENDENCY = 'org.yaml:snakeyaml:1.17'
     public static final String ACTIVATION_DEPENDENCY = 'javax.activation:activation:1.1.1'
+    public static final String LEGACY_CLASSPATH_PROPERTY = 'com.chrisgahlert.gradledcomposeplugin.LEGACY_CLASSPATH'
 
     @Override
     @TypeChecked(TypeCheckingMode.SKIP)
     void apply(Project project) {
         def extension = createExtension(project)
 
-        def config = createDockerConfiguration(project, extension)
-
-        def classLoaderFactory = new DockerClassLoaderFactory(config)
+        def classLoaderFactory = createOrGetClassLoaderFactory(project)
         def dockerExecutor = new DockerExecutor(classLoaderFactory, extension)
         extension.setDockerHostUri({ dockerExecutor.buildClientConfig().dockerHost })
 
@@ -90,17 +92,41 @@ class DcomposePlugin implements Plugin<Project> {
         project.extensions.create(EXTENSION_NAME, DcomposeExtension, project, namePrefix as String)
     }
 
-    private Configuration createDockerConfiguration(Project project, DcomposeExtension extension) {
-        def config = project.configurations.create(CONFIGURATION_NAME)
+    private DockerClassLoaderFactory createOrGetClassLoaderFactory(Project project) {
+        def useLegacyClasspath = Boolean.valueOf(System.getProperty(LEGACY_CLASSPATH_PROPERTY, 'false'))
+
+        def config
+        if (useLegacyClasspath) {
+            config = createOrGetDockerConfiguration(project.configurations, project.dependencies)
+        } else {
+            def rootBuildscript = project.rootProject.buildscript
+            config = createOrGetDockerConfiguration(rootBuildscript.configurations, rootBuildscript.dependencies)
+        }
+
+        return new DockerClassLoaderFactory(config)
+    }
+
+    private Configuration createOrGetDockerConfiguration(ConfigurationContainer configurations, DependencyHandler dependencies) {
+        def config = configurations.findByName(CONFIGURATION_NAME)
+        if (config != null) {
+            return config
+        }
+
+        config = configurations.create(CONFIGURATION_NAME)
                 .setVisible(false)
                 .setTransitive(true)
 
-        config.dependencies.add(project.dependencies.create(DOCKER_DEPENDENCY))
-        config.dependencies.add(project.dependencies.create(SLF4J_DEPENDENCY))
-        config.dependencies.add(project.dependencies.create(SNAKEYAML_DEPENDENCY))
-        config.dependencies.add(project.dependencies.create(ACTIVATION_DEPENDENCY))
+        config.setCanBeResolved(true)
+        config.setCanBeConsumed(false)
 
-        config
+        config.dependencies.addAll([
+                dependencies.create(DOCKER_DEPENDENCY),
+                dependencies.create(SLF4J_DEPENDENCY),
+                dependencies.create(SNAKEYAML_DEPENDENCY),
+                dependencies.create(ACTIVATION_DEPENDENCY)
+        ])
+
+        return config
     }
 
     private injectClassLoaderUtil(Project project, DockerExecutor dockerExecutor) {

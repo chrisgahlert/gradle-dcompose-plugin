@@ -119,7 +119,7 @@ class AbstractDcomposeTask extends DefaultTask {
             return action()
         } catch (Throwable t) {
             def exceptionMatched = exceptionClassNames.find { exceptionClassName ->
-                t.getClass() == dockerExecutor.loadClass("com.github.dockerjava.api.exception.$exceptionClassName")
+                t.getClass().name == "com.github.dockerjava.api.exception.$exceptionClassName"
             }
 
             if (exceptionMatched) {

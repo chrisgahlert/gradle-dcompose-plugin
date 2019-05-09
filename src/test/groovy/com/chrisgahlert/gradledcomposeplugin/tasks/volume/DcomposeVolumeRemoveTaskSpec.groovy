@@ -114,6 +114,7 @@ class DcomposeVolumeRemoveTaskSpec extends AbstractDcomposeSpec {
 
         when:
         buildFile.text = """
+            $DEFAULT_REPOSITORY_INIT
             $DEFAULT_PLUGIN_INIT
             dcompose {
                 volumes {

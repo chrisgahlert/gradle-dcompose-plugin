@@ -97,7 +97,7 @@ class DcomposeNetworkRemoveTaskSpec extends AbstractDcomposeSpec {
 
     def 'remove should work for networked cross project containers'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subDatabase', """
             dcompose {

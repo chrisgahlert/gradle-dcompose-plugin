@@ -97,6 +97,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
 
         and:
         buildFile.text = """
+            $DEFAULT_REPOSITORY_INIT
             $DEFAULT_PLUGIN_INIT
 
             dcompose {
@@ -155,6 +156,7 @@ class DcomposeImagePushTaskSpec extends AbstractDcomposeSpec {
         """.stripIndent()
 
         buildFile.text = """
+            $DEFAULT_REPOSITORY_INIT
             $DEFAULT_PLUGIN_INIT
 
             dcompose {

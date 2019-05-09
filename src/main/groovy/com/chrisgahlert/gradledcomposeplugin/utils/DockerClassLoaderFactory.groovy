@@ -18,15 +18,16 @@ package com.chrisgahlert.gradledcomposeplugin.utils
 import groovy.transform.TypeChecked
 import org.gradle.api.artifacts.Configuration
 
+
 @TypeChecked
 class DockerClassLoaderFactory {
 
-    final private Configuration dockerConfiguration
+    private Configuration config
 
     private ClassLoader instance
 
-    DockerClassLoaderFactory(Configuration dockerConfiguration) {
-        this.dockerConfiguration = dockerConfiguration
+    DockerClassLoaderFactory(Configuration config) {
+        this.config = config
     }
 
     synchronized ClassLoader getDefaultInstance() {
@@ -38,7 +39,7 @@ class DockerClassLoaderFactory {
     }
 
     URLClassLoader createClassLoader() {
-        new URLClassLoader(toURLArray(dockerConfiguration.files), ClassLoader.systemClassLoader.parent)
+        new URLClassLoader(toURLArray(config.resolvedConfiguration.files), ClassLoader.systemClassLoader.parent)
     }
 
     private URL[] toURLArray(Set<File> files) {

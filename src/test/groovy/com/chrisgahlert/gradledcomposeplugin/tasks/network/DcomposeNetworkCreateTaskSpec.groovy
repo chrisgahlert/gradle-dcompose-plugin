@@ -255,7 +255,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         given:
         fork = true
 
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subDatabase', """
             dcompose {
@@ -313,7 +313,7 @@ class DcomposeNetworkCreateTaskSpec extends AbstractDcomposeSpec {
         given:
         fork = true
 
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subServer', """
             dcompose {

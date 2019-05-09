@@ -404,7 +404,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
 
     def 'create should work for linked cross project containers'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subServer', """
             dcompose {
@@ -448,7 +448,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
 
     def 'create should work for dependant cross project containers'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subServer', """
             dcompose {
@@ -492,7 +492,7 @@ class DcomposeContainerCreateTaskSpec extends AbstractDcomposeSpec {
 
     def 'create should work for cross-project containers with volumes from'() {
         given:
-        buildFile.text = ''
+        resetBuildFile()
 
         addSubproject 'subData', """
             dcompose {
