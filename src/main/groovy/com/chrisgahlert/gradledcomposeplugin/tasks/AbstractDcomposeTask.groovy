@@ -67,8 +67,8 @@ class AbstractDcomposeTask extends DefaultTask {
             logger.info("Cannot find auth config for registry '$registryAddress' - trying to use auth config from $extension.dockerConfigPath.canonicalPath")
 
             def dockerConfigFileClass = dockerExecutor.loadClass('com.github.dockerjava.core.DockerConfigFile')
-            def loadConfigMethod = dockerConfigFileClass.getMethod('loadConfig', File)
-            def dockerConfigFile = loadConfigMethod.invoke(null, extension.dockerConfigPath)
+            def loadConfigMethod = dockerConfigFileClass.getMethod('loadConfig', String)
+            def dockerConfigFile = loadConfigMethod.invoke(null, extension.dockerConfigPath.absolutePath)
             authConfig = dockerConfigFile.resolveAuthConfig(registryAddress)
         }
 
