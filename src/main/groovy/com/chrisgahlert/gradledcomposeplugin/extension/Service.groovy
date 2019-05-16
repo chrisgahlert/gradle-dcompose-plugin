@@ -16,10 +16,14 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.TypeChecked
+import org.gradle.api.Task
 import org.gradle.api.file.CopySpec
+import org.gradle.api.tasks.TaskDependency
+
+import javax.annotation.Nullable
 
 @TypeChecked
-abstract class Service extends AbstractEntity {
+abstract class Service extends AbstractEntity implements TaskDependency {
     Service(String name, String projectPath) {
         super(name, projectPath)
     }
@@ -88,6 +92,22 @@ abstract class Service extends AbstractEntity {
     @Override
     String toString() {
         containerName
+    }
+
+    @Override
+    Set<? extends Task> getDependencies(@Nullable Task task) {
+        if (task == null) {
+            return [].toSet()
+        } else {
+            def startTask = task.project.rootProject.tasks.getByPath("$projectPath:$startContainerTaskName")
+
+            Set<? extends Task> result = []
+            result.addAll(dependsOn.collectMany { it.getDependencies(task) })
+            result.addAll(linkDependencies.collectMany { it.getDependencies(task) })
+            result.addAll(dependsOnRuntime.collectMany { it.getDependencies(task) })
+            result.add(startTask)
+            return result
+        }
     }
 
     abstract String getContainerName()
@@ -225,6 +245,10 @@ abstract class Service extends AbstractEntity {
     abstract List<Service> getDependsOn()
 
     abstract void setDependsOn(List<Service> dependencies)
+
+    abstract List<Service> getDependsOnRuntime()
+
+    abstract void setDependsOnRuntime(List<Service> dependencies)
 
     abstract String getRestart()
 

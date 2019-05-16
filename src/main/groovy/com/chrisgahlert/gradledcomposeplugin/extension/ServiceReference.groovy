@@ -349,6 +349,16 @@ class ServiceReference extends Service {
     }
 
     @Override
+    List<Service> getDependsOnRuntime() {
+        resolved.dependsOn
+    }
+
+    @Override
+    void setDependsOnRuntime(List<Service> dependencies) {
+        resolved.dependsOn = dependencies
+    }
+
+    @Override
     String getRestart() {
         resolved.restart
     }

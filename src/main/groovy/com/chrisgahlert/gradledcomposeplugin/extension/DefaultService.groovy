@@ -79,6 +79,11 @@ class DefaultService extends Service {
     List<Service> dependsOn
 
     /**
+     * Services that shoud be started, when depending on the service itself
+     */
+    List<Service> dependsOnRuntime
+
+    /**
      * The name of the repository for publishing
      */
     String repository
@@ -238,6 +243,11 @@ class DefaultService extends Service {
     @Override
     List<Service> getDependsOn() {
         dependsOn ?: [] as List<Service>
+    }
+
+    @Override
+    List<Service> getDependsOnRuntime() {
+        dependsOnRuntime ?: [] as List<Service>
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)

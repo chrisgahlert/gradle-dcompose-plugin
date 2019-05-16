@@ -215,6 +215,82 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         file('build/copy/transfer').text.trim() == 'linkcool'
     }
 
+    def 'start should work for runtime dependant containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                firstServer {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo -n yee | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                }
+                secondServer {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'sleep 5 && (nc first-server 8000 && echo haw) | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                    dependsOnRuntime = [firstServer]
+                }
+                xClient {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'sleep 10 && nc second-server 8000 > /transfer']
+                    dependsOnRuntime = [secondServer]
+                    waitForCommand = true
+                }
+            }
+            
+            task test(dependsOn: dcompose.xClient) {}
+
+            ${copyTaskConfig('xClient', '/transfer')}
+        """
+
+        when:
+        def result = runTasksSuccessfully 'test', 'copy'
+
+        then:
+        result.wasExecuted(':startFirstServerContainer')
+        result.wasExecuted(':startSecondServerContainer')
+        result.wasExecuted(':startXClientContainer')
+        file('build/copy/transfer').text.trim() == 'yeehaw'
+    }
+
+    def 'start should work for runtime also with normal dependencies and runtime dependant containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                firstServer {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo -n yeehaw | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                }
+                secondServer {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'sleep 5 && (nc first-server 8000 && echo haw) | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                    dependsOnRuntime = [firstServer]
+                }
+                xClient {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'sleep 10 && nc second-server 8000 > /transfer']
+                    dependsOn = [secondServer]
+                    waitForCommand = true
+                }
+            }
+            
+            task test(dependsOn: dcompose.xClient) {}
+
+            ${copyTaskConfig('xClient', '/transfer')}
+        """
+
+        when:
+        def result = runTasksSuccessfully 'test', 'copy'
+
+        then:
+        result.wasExecuted(':startFirstServerContainer')
+        result.wasExecuted(':startSecondServerContainer')
+        result.wasExecuted(':startXClientContainer')
+        file('build/copy/transfer').text.trim() == 'yeehawhaw'
+    }
+
     def 'start should work for linked containers with alias'() {
         given:
         buildFile << """
