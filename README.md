@@ -38,7 +38,7 @@ Next, add the following to your build.gradle file:
 
 ```gradle
 plugins {
-  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.11.2"
+  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.15.1"
 }
 
 dcompose {
