@@ -291,6 +291,45 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         file('build/copy/transfer').text.trim() == 'yeehawhaw'
     }
 
+    def 'start should work for runtime also with circular runtime dependant containers'() {
+        given:
+        buildFile << """
+            dcompose {
+                firstServer {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo -n walter | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                    dependsOnRuntime = [service('xClient')]
+                }
+                secondServer {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'sleep 5 && (nc first-server 8000 && echo white) | nc -l -p 8000']
+                    exposedPorts = ['8000']
+                    dependsOnRuntime = [service('firstServer')]
+                }
+                xClient {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'sleep 10 && nc second-server 8000 > /transfer']
+                    dependsOnRuntime = [service('secondServer')]
+                    waitForCommand = true
+                }
+            }
+            
+            task test(dependsOn: dcompose.xClient) {}
+
+            ${copyTaskConfig('xClient', '/transfer')}
+        """
+
+        when:
+        def result = runTasksSuccessfully 'test', 'copy'
+
+        then:
+        result.wasExecuted(':startFirstServerContainer')
+        result.wasExecuted(':startSecondServerContainer')
+        result.wasExecuted(':startXClientContainer')
+        file('build/copy/transfer').text.trim() == 'walterwhite'
+    }
+
     def 'start should work for linked containers with alias'() {
         given:
         buildFile << """

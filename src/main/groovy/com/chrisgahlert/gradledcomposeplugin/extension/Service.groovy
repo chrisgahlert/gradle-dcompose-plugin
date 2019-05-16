@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import org.gradle.api.Task
 import org.gradle.api.file.CopySpec
 import org.gradle.api.tasks.TaskDependency
@@ -95,18 +96,29 @@ abstract class Service extends AbstractEntity implements TaskDependency {
     }
 
     @Override
+    @TypeChecked(TypeCheckingMode.SKIP)
     Set<? extends Task> getDependencies(@Nullable Task task) {
         if (task == null) {
             return [].toSet()
         } else {
-            def startTask = task.project.rootProject.tasks.getByPath("$projectPath:$startContainerTaskName")
+            Set<Service> services = []
+            calculateRuntimeDependencies(this, services)
 
-            Set<? extends Task> result = []
-            result.addAll(dependsOn.collectMany { it.getDependencies(task) })
-            result.addAll(linkDependencies.collectMany { it.getDependencies(task) })
-            result.addAll(dependsOnRuntime.collectMany { it.getDependencies(task) })
-            result.add(startTask)
-            return result
+            return services
+                    .collect {
+                        task.project.rootProject.tasks.getByPath("$it.projectPath:$it.startContainerTaskName")
+                    }
+                    .toSet()
+        }
+    }
+
+    private static void calculateRuntimeDependencies(Service service, Set<Service> result) {
+        result.add(service)
+
+        (service.dependsOn + service.dependsOnRuntime + service.linkDependencies).each {
+            if (result.add(it)) {
+                calculateRuntimeDependencies(it, result)
+            }
         }
     }
 
