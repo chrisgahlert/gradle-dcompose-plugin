@@ -350,12 +350,12 @@ class ServiceReference extends Service {
 
     @Override
     List<Service> getDependsOnRuntime() {
-        resolved.dependsOn
+        resolved.dependsOnRuntime
     }
 
     @Override
     void setDependsOnRuntime(List<Service> dependencies) {
-        resolved.dependsOn = dependencies
+        resolved.dependsOnRuntime = dependencies
     }
 
     @Override
