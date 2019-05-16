@@ -72,6 +72,7 @@ dcompose {
     image = 'mongo:latest'
     volumes = ['/var/lib/mongodb']
     preserveVolumes = true
+    deploy = false
   }
   db {
     image = 'mongo:latest'
@@ -91,6 +92,24 @@ dcompose {
     env = ['MONGO_HOST=mongo_db', 'REDIS_HOST=cache']
     repository = 'someuser/mywebimage:latest'
     networks = [frontend, backend]
+  }
+  
+  testDb {
+    image = 'mongo:latest'
+    portBindings = ['27017']
+    deploy = false
+  }
+}
+
+test {
+  dependsOn dcompose.testDb
+  doFirst {
+    // The host port is only availble after launching the container, therefore it needs to be added in the doFirst 
+    systemProperty 'mongo.url', "mongodb://${dcompose.dockerHost}:${dcompose.testDb.findHostPort(27017)}/mydb" 
+  }
+  doLast { 
+    // If we don't remove the property in the doLast, Gradle's UP-TO-DATE checks will be broken
+    systemProperties.remove 'mongo.url' 
   }
 }
 
