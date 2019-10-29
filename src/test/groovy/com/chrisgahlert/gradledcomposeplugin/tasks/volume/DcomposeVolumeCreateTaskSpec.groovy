@@ -63,7 +63,7 @@ class DcomposeVolumeCreateTaskSpec extends AbstractDcomposeSpec {
 
         then:
         if (result.failure) {
-            assert (result.standardOutput + result.standardError).contains('invalid option key: "opt1"')
+            assert (result.standardOutput + result.standardError) =~ /invalid option( key)?: "opt1"/
         }
     }
 
