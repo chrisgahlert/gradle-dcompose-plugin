@@ -16,6 +16,7 @@
 package com.chrisgahlert.gradledcomposeplugin.extension
 
 import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
@@ -178,8 +179,16 @@ class DcomposeExtension {
         namePrefix
     }
 
-    void registry(String name, Closure authConfig) {
-        registries[name] = authConfig
+    @TypeChecked(TypeCheckingMode.SKIP)
+    void registry(String registryName, String username, String password) {
+        registry(registryName) {
+            withUsername username
+            withPassword password
+        }
+    }
+
+    void registry(String registryName, Closure authConfig) {
+        registries[registryName] = authConfig
     }
 
     def methodMissing(String name, def args) {

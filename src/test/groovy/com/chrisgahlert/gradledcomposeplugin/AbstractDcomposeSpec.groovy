@@ -60,10 +60,7 @@ abstract class AbstractDcomposeSpec extends IntegrationSpec {
     protected registryPass = System.getProperty('testreg.pass')
 
     protected registryClientConfig = """
-        registry ('$registryUrl') {
-            withUsername '$registryUser'
-            withPassword '$registryPass'
-        }
+        registry ('$registryUrl', '$registryUser', '$registryPass')
     """
 
     def setup() {
