@@ -11,25 +11,25 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.gradle:build-scan-plugin:2.1"
+        classpath "com.gradle:gradle-enterprise-gradle-plugin:3.0"
         classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
         classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.13.1'
     }
 }
 
-apply plugin: 'com.gradle.build-scan'
+//apply plugin: 'com.gradle.enterprise' fixme
 apply plugin: 'com.gradle.plugin-publish'
 apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'com.chrisgahlert.gradle-dcompose-plugin'
 
-buildScan {
-    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-    termsOfServiceAgree = 'yes'
-
-    publishAlways()
-}
+//buildScan {
+//    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+//    termsOfServiceAgree = 'yes'
+//
+//    publishAlways()
+//}
 
 repositories {
     mavenCentral()
@@ -59,6 +59,7 @@ dcompose {
         privileged = true
         exposedPorts = ['1500']
         portBindings = ['2375', '1500']
+        env = ['DOCKER_TLS_CERTDIR=']
     }
     dockerRegistry {
         baseDir = file('src/test/docker/')
