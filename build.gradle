@@ -11,9 +11,9 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.gradle:gradle-enterprise-gradle-plugin:3.0"
-        classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
-        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.13.1'
+        classpath "com.gradle:gradle-enterprise-gradle-plugin:3.1.1"
+        classpath 'com.gradle.publish:plugin-publish-plugin:0.10.1'
+        classpath 'gradle.plugin.com.chrisgahlert:gradle-dcompose-plugin:0.15.4'
     }
 }
 
@@ -35,7 +35,7 @@ repositories {
     mavenCentral()
 }
 
-sourceCompatibility = targetCompatibility = 1.6
+sourceCompatibility = targetCompatibility = 1.8
 
 dependencies {
     compile gradleApi()
