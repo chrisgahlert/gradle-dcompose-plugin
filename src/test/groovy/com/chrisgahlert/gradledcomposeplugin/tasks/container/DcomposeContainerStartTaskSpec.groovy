@@ -186,6 +186,50 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         file('build/copy/transfer').text.trim() == 'linkcool'
     }
 
+    def 'start should work for containers connected via external network'() {
+        given:
+        buildFile << """
+            dcompose {
+                networks {
+                    custom 
+                }
+                server {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'echo linkcool | nc -l -p 8000']
+                    networks = []
+                    externalNetworks = [project.getProperty('myExternalNetworkName')]
+                }
+                client {
+                    image = '$DEFAULT_IMAGE'
+                    command = ['sh', '-c', 'nc server 8000 > /transfer']
+                    links = [server.link()]
+                    waitForCommand = true
+                    networks = []
+                    externalNetworks = [project.getProperty('myExternalNetworkName')]
+                }
+            }
+
+            ${copyTaskConfig('client', '/transfer')}
+            
+            createCustomNetwork.doLast {
+                println 'customNetworkName: ' + networkName 
+            }
+            removeServerContainer.dependsOn removeCustomNetwork
+            removeClientContainer.dependsOn removeCustomNetwork
+        """
+
+        def createNetworkResult = runTasksSuccessfully 'createCustomNetwork', '-PmyExternalNetworkName=foobar'
+        def networkName = (createNetworkResult.standardOutput =~ /customNetworkName: (.+)\r?\n/)[0][1]
+
+        when:
+        def result = runTasksSuccessfully 'startClientContainer', 'copy', "-PmyExternalNetworkName=$networkName"
+
+        then:
+        result.wasExecuted(':startServerContainer')
+        result.wasExecuted(':startClientContainer')
+        file('build/copy/transfer').text.trim() == 'linkcool'
+    }
+
     def 'start should work for dependant containers'() {
         given:
         buildFile << """

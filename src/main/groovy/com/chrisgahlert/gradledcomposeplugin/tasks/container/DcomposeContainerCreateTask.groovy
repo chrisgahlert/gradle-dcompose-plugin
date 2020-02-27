@@ -232,6 +232,12 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
 
     @Input
     @Optional
+    List<String> getExternalNetworks() {
+        service.externalNetworks
+    }
+
+    @Input
+    @Optional
     List<String> getAliases() {
         service.aliases
     }
@@ -501,7 +507,17 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                             .exec()
                 }
 
+                List<String> connectNetworkNames = []
+
                 service.networks?.each { Network network ->
+                    connectNetworkNames << network.networkName
+                }
+
+                externalNetworks?.each { String networkName ->
+                    connectNetworkNames << networkName
+                }
+
+                connectNetworkNames.each { String networkName ->
                     def defaultAliases = [service.name, service.nameCamelCase, service.nameDashed]
                     def serviceAliases = service.aliases ?: []
                     def aliases = (serviceAliases + defaultAliases).unique()
@@ -517,12 +533,12 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                     }
 
                     dockerExecutor.client.connectToNetworkCmd()
-                            .withNetworkId(network.networkName)
+                            .withNetworkId(networkName)
                             .withContainerId(service.containerId)
                             .withContainerNetwork(networkSettings)
                             .exec()
 
-                    logger.info("Connected container $containerName to network $network")
+                    logger.info("Connected container $containerName to network $networkName")
                 }
             }
         }

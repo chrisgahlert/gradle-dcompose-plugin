@@ -244,6 +244,8 @@ abstract class Service extends AbstractEntity implements TaskDependency {
 
     abstract List<Network> getNetworks()
 
+    abstract List<String> getExternalNetworks()
+
     abstract List<String> getAliases()
 
     abstract Integer getStopTimeout()

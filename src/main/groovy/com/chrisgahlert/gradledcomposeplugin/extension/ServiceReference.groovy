@@ -324,6 +324,11 @@ class ServiceReference extends Service {
     }
 
     @Override
+    List<String> getExternalNetworks() {
+        resolved.externalNetworks
+    }
+
+    @Override
     List<String> getAliases() {
         resolved.aliases
     }

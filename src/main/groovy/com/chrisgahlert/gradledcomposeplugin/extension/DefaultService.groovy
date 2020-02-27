@@ -124,6 +124,7 @@ class DefaultService extends Service {
     Boolean attachStderr
     Boolean privileged
     List<? extends Network> networks
+    List<String> externalNetworks
     List<String> aliases
     String restart
     Long memLimit
@@ -352,7 +353,11 @@ class DefaultService extends Service {
 
                 def sharedNetworks = new HashSet<>(networks)
                 sharedNetworks.retainAll(dep.service.networks)
-                if (sharedNetworks.size() == 0) {
+
+                def sharedExternalNetworks = new HashSet<>(externalNetworks ?: [])
+                sharedExternalNetworks.retainAll(dep.service.externalNetworks ?: [])
+
+                if (sharedNetworks.size() == 0 && sharedExternalNetworks.size() == 0) {
                     throw new GradleException("Cannot create link from $projectPath:$name " +
                             "to $dep.service.projectPath:$dep.service.name: " +
                             "They don't share any networks. Please make sure they are on the same network")
