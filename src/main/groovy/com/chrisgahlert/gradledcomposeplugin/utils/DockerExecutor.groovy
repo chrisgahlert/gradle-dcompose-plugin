@@ -38,10 +38,10 @@ class DockerExecutor {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    def buildClientConfig() {
+    def buildClientConfig(String dockerApiVersion = DOCKER_API_VERSION) {
         def configBuilderClass = loadClass('com.github.dockerjava.core.DefaultDockerClientConfig')
         def configBuilder = configBuilderClass.getMethod('createDefaultConfigBuilder').invoke(null)
-        configBuilder.withApiVersion(DOCKER_API_VERSION)
+        configBuilder.withApiVersion(dockerApiVersion)
 
         if (extension.dockerClientConfig != null) {
             ConfigureUtil.configure(extension.dockerClientConfig, configBuilder)
@@ -52,7 +52,7 @@ class DockerExecutor {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     def getClient(def properties = [:]) {
-        def clientConfig = buildClientConfig()
+        def clientConfig = buildClientConfig(properties.dockerApiVersion ?: DOCKER_API_VERSION)
         def clientConfigClass = loadClass('com.github.dockerjava.core.DockerClientConfig')
         def clientBuilderClass = loadClass('com.github.dockerjava.core.DockerClientBuilder')
         def getInstanceMethod = clientBuilderClass.getMethod('getInstance', clientConfigClass)

@@ -128,6 +128,16 @@ abstract class Service extends AbstractEntity implements TaskDependency {
 
     abstract boolean isWaitForHealthcheck()
 
+    abstract Long getHealthcheckStartPeriod()
+
+    abstract Long getHealthcheckInterval()
+
+    abstract Long getHealthcheckTimeout()
+
+    abstract Integer getHealthcheckRetries()
+
+    abstract List<String> getHealthcheckTest()
+
     abstract boolean isIgnoreExitCode()
 
     abstract int getWaitTimeout()

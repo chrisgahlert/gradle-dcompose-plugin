@@ -129,6 +129,11 @@ class DefaultService extends Service {
     Long memLimit
     String logConfig
     Map<String, String> logOpts
+    Long healthcheckStartPeriod
+    Long healthcheckInterval
+    Long healthcheckTimeout
+    Integer healthcheckRetries
+    List<String> healthcheckTest
 
     /**
      * Build image specific properties (can only be used when no image is defined). Properties are optional by default.

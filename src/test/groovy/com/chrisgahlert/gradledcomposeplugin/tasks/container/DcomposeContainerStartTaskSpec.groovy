@@ -875,12 +875,39 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         result.standardOutput.contains('_app doesn\'t provide a health state - ignoring')
     }
 
-    def 'should fail waiting for healthcheck if timeout exceeded'() {
+    def 'should pass waiting for healthcheck if specifying NONE over dockerfile'() {
         given:
         def dockerFile = file('docker/Dockerfile')
         dockerFile.text = """
             FROM $DEFAULT_IMAGE
-            HEALTHCHECK --interval=1s --timeout=1s --retries=3 CMD grep wadewilson /test.txt || exit 1
+            HEALTHCHECK --interval=1s --timeout=1s --retries=3 CMD grep wadewilson /test.txt
+            CMD ["sh", "-c", "sleep 10 && echo wadewilson > /test.txt && sleep 300"]
+        """.stripIndent()
+
+        buildFile << """
+            dcompose {
+                app {
+                    baseDir = file('docker/')
+                    waitForHealthcheck = true
+                    healthcheckTest = ['NONE']
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startAppContainer'
+
+        then:
+        result.wasExecuted('startAppContainer')
+        result.standardOutput.contains('_app doesn\'t provide a health state - ignoring')
+    }
+
+    def 'should fail waiting for dockerfile healthcheck if timeout exceeded'() {
+        given:
+        def dockerFile = file('docker/Dockerfile')
+        dockerFile.text = """
+            FROM $DEFAULT_IMAGE
+            HEALTHCHECK --interval=1s --timeout=1s --retries=3 CMD grep wadewilson /test.txt
             CMD ["sh", "-c", "sleep 10 && echo wadewilson > /test.txt && sleep 300"]
         """.stripIndent()
 
@@ -901,12 +928,12 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
         (result.standardOutput + result.standardError).contains('_app failed it\'s healthcheck')
     }
 
-    def 'should succeed waiting for healthcheck'() {
+    def 'should succeed waiting for dockerfile healthcheck'() {
         given:
         def dockerFile = file('docker/Dockerfile')
         dockerFile.text = """
             FROM $DEFAULT_IMAGE
-            HEALTHCHECK --interval=1s --timeout=1s --retries=20 CMD grep wadewilson /test.txt || exit 1
+            HEALTHCHECK --interval=1s --timeout=1s --retries=20 CMD grep wadewilson /test.txt
             CMD ["sh", "-c", "sleep 10 && echo wadewilson > /test.txt && sleep 300"]
         """.stripIndent()
 
@@ -915,6 +942,67 @@ class DcomposeContainerStartTaskSpec extends AbstractDcomposeSpec {
                 app {
                     baseDir = file('docker/')
                     waitForHealthcheck = true
+                }
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully 'startAppContainer'
+
+        then:
+        result.wasExecuted('startAppContainer')
+        result.standardOutput.contains('_app passed it\'s healthcheck')
+    }
+
+    def 'should fail waiting for dcompose healthcheck if timeout exceeded'() {
+        given:
+        def dockerFile = file('docker/Dockerfile')
+        dockerFile.text = """
+            FROM $DEFAULT_IMAGE
+            HEALTHCHECK --interval=1s --timeout=1s --retries=3 CMD exit 1
+            CMD ["sh", "-c", "sleep 10 && echo wadewilson > /test.txt && sleep 300"]
+        """.stripIndent()
+
+        buildFile << """
+            dcompose {
+                app {
+                    baseDir = file('docker/')
+                    waitForHealthcheck = true
+                    healthcheckStartPeriod = 1L
+                    healthcheckInterval = 1000L
+                    healthcheckTimeout = 1000L
+                    healthcheckRetries = 3
+                    healthcheckTest = ['CMD', 'grep', 'wadewilson', '/test.txt']
+                }
+            }
+        """
+
+        when:
+        def result = runTasksWithFailure 'startAppContainer'
+
+        then:
+        result.wasExecuted('startAppContainer')
+        (result.standardOutput + result.standardError).contains('_app failed it\'s healthcheck')
+    }
+
+    def 'should succeed waiting for dcompose healthcheck'() {
+        given:
+        def dockerFile = file('docker/Dockerfile')
+        dockerFile.text = """
+            FROM $DEFAULT_IMAGE
+            HEALTHCHECK --interval=1s --timeout=1s --retries=20 CMD exit 1
+            CMD ["sh", "-c", "sleep 10 && echo wadewilson > /test.txt && sleep 300"]
+        """.stripIndent()
+
+        buildFile << """
+            dcompose {
+                app {
+                    baseDir = file('docker/')
+                    waitForHealthcheck = true
+                    healthcheckInterval = 1000L
+                    healthcheckTimeout = 1000L
+                    healthcheckRetries = 20
+                    healthcheckTest = ['CMD', 'grep', 'wadewilson', '/test.txt']
                 }
             }
         """

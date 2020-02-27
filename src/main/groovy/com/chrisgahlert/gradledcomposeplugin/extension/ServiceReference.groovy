@@ -59,6 +59,31 @@ class ServiceReference extends Service {
     }
 
     @Override
+    Long getHealthcheckStartPeriod() {
+        resolved.healthcheckStartPeriod
+    }
+
+    @Override
+    Long getHealthcheckInterval() {
+        resolved.healthcheckInterval
+    }
+
+    @Override
+    Long getHealthcheckTimeout() {
+        resolved.healthcheckTimeout
+    }
+
+    @Override
+    Integer getHealthcheckRetries() {
+        resolved.healthcheckRetries
+    }
+
+    @Override
+    List<String> getHealthcheckTest() {
+        resolved.healthcheckTest
+    }
+
+    @Override
     boolean isIgnoreExitCode() {
         resolved.ignoreExitCode
     }

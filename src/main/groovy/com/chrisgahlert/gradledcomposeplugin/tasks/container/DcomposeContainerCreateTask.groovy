@@ -283,6 +283,36 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
         service.logOpts
     }
 
+    @Input
+    @Optional
+    Long getHealthcheckStartPeriod() {
+        service.healthcheckStartPeriod
+    }
+
+    @Input
+    @Optional
+    Long getHealthcheckInterval() {
+        service.healthcheckInterval
+    }
+
+    @Input
+    @Optional
+    Long getHealthcheckTimeout() {
+        service.healthcheckTimeout
+    }
+
+    @Input
+    @Optional
+    Integer getHealthcheckRetries() {
+        service.healthcheckRetries
+    }
+
+    @Input
+    @Optional
+    List<String> getHealthcheckTest() {
+        service.healthcheckTest
+    }
+
     @TaskAction
     @TypeChecked(TypeCheckingMode.SKIP)
     void createNewContainer() {
@@ -290,8 +320,17 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
             removeOldContainer(service)
 
             def hostConfig = dockerExecutor.loadClass('com.github.dockerjava.api.model.HostConfig').newInstance()
-            def cmd = dockerExecutor.client.createContainerCmd(imageId)
+            def healthcheckConfig = dockerExecutor.loadClass('com.github.dockerjava.api.model.HealthCheck').newInstance()
+
+            def dockerClientProperties = [:]
+            if (healthcheckTest != null || healthcheckRetries != null || healthcheckStartPeriod != null) {
+                // The correct implementation of healthcheck is only available if using API version >=1.26
+                dockerClientProperties.dockerApiVersion = '1.26'
+            }
+
+            def cmd = dockerExecutor.getClient(dockerClientProperties).createContainerCmd(imageId)
                     .withHostConfig(hostConfig)
+                    .withHealthcheck(healthcheckConfig)
 
             if (portBindings) {
                 def portParser = dockerExecutor.loadClass('com.github.dockerjava.api.model.PortBinding')
@@ -428,6 +467,26 @@ class DcomposeContainerCreateTask extends AbstractDcomposeServiceTask {
                 def logConfClass = dockerExecutor.loadClass('com.github.dockerjava.api.model.LogConfig')
                 def args = logOpts ? [loggingType, logOpts] : [loggingType]
                 hostConfig.withLogConfig(logConfClass.newInstance(*args))
+            }
+
+            if (healthcheckStartPeriod != null) {
+                healthcheckConfig.withStartPeriod(healthcheckStartPeriod * 1000000L)
+            }
+
+            if (healthcheckInterval != null) {
+                healthcheckConfig.withInterval(healthcheckInterval * 1000000L)
+            }
+
+            if (healthcheckTimeout != null) {
+                healthcheckConfig.withTimeout(healthcheckTimeout * 1000000L)
+            }
+
+            if (healthcheckRetries != null) {
+                healthcheckConfig.withRetries(healthcheckRetries)
+            }
+
+            if (healthcheckTest != null) {
+                healthcheckConfig.withTest(healthcheckTest)
             }
 
             def result = cmd.withName(containerName).exec()
