@@ -153,6 +153,7 @@ class DcomposeTaskGraphSpec extends AbstractDcomposeSpec {
     def 'executing #task should work with configuration-on-demand'() {
         given:
         buildFile.text = """
+            $DEFAULT_REPOSITORY_INIT
             subprojects {
                 afterEvaluate {
                     logger.warn "#eval \$it.name#"
