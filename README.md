@@ -37,8 +37,15 @@ disabling the option to store password in the OS' keychain (via Settings -> Gene
 Next, add the following to your build.gradle file:
 
 ```gradle
+buildscript {
+    repositories {
+        // The root-Project's buildscript must have a Repo (or Mirror) defined for Maven Central
+        mavenCentral()
+    }
+}
+
 plugins {
-  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.15.1"
+  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.16.0"
 }
 
 dcompose {
