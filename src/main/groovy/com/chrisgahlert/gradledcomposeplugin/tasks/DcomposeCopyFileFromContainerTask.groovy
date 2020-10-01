@@ -66,7 +66,7 @@ class DcomposeCopyFileFromContainerTask extends AbstractDcomposeServiceTask {
     @TypeChecked(TypeCheckingMode.SKIP)
     void copyFromContainer() {
         dockerExecutor.runInDockerClasspath {
-            def cmd = dockerExecutor.client.copyFileFromContainerCmd(containerName, containerPath)
+            def cmd = dockerExecutor.client.copyArchiveFromContainerCmd(containerName, containerPath)
 
             def tarStream
             try {
