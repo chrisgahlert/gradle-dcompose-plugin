@@ -19,6 +19,7 @@ import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeServiceTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.Console
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
@@ -32,8 +33,13 @@ import java.util.concurrent.TimeUnit
 @TypeChecked
 class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
 
+    @Console
     InputStream stdIn = System.in
+
+    @Console
     OutputStream stdOut = System.out
+
+    @Console
     OutputStream stdErr = System.err
 
     DcomposeContainerStartTask() {

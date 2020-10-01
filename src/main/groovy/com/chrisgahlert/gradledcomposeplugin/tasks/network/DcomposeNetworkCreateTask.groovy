@@ -21,6 +21,7 @@ import com.chrisgahlert.gradledcomposeplugin.tasks.AbstractDcomposeNetworkTask
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -59,6 +60,7 @@ class DcomposeNetworkCreateTask extends AbstractDcomposeNetworkTask {
         network.ipam.hashCode()
     }
 
+    @Internal
     Network.Ipam getIpam() {
         network.ipam
     }

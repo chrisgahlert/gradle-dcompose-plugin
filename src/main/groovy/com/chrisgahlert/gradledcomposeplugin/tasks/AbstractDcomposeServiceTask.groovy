@@ -17,12 +17,14 @@ package com.chrisgahlert.gradledcomposeplugin.tasks
 
 import com.chrisgahlert.gradledcomposeplugin.extension.Service
 import groovy.transform.TypeChecked
+import org.gradle.api.tasks.Internal
 
 @TypeChecked
 class AbstractDcomposeServiceTask extends AbstractDcomposeTask {
 
     private Service service
 
+    @Internal
     void setService(Service service) {
         if (this.service != null) {
             throw new ReadOnlyPropertyException("service", this.class)
@@ -31,16 +33,19 @@ class AbstractDcomposeServiceTask extends AbstractDcomposeTask {
         this.service = service
     }
 
+    @Internal
     Service getService() {
         return service
     }
 
     @Deprecated
-    public Service getContainer() {
+    @Internal
+    Service getContainer() {
         logger.warn 'Deprecation warning: Please use the service property instead of the container property'
         service
     }
 
+    @Internal
     protected Set<Service> getOtherServices() {
         new HashSet<>(allServices.findAll { it != service })
     }

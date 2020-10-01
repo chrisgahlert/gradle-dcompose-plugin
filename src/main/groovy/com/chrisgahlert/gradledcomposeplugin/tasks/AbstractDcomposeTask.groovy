@@ -28,6 +28,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.util.ConfigureUtil
 
 @TypeChecked
@@ -35,6 +36,7 @@ class AbstractDcomposeTask extends DefaultTask {
 
     private Set<String> initializedOutputs = []
 
+    @Internal
     DockerExecutor dockerExecutor
 
     @Input
@@ -79,12 +81,14 @@ class AbstractDcomposeTask extends DefaultTask {
         cmd.withAuthConfig(authConfig)
     }
 
+    @Internal
     protected String getDefaultRegistryAddress() {
         def authConfigClass = dockerExecutor.loadClass('com.github.dockerjava.api.model.AuthConfig')
         authConfigClass.getDeclaredField('DEFAULT_SERVER_ADDRESS').get(null)
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
+    @Internal
     protected def getAuthConfigs() {
         def result = dockerExecutor.loadClass('com.github.dockerjava.api.model.AuthConfigurations')
                 .newInstance()
@@ -172,6 +176,7 @@ class AbstractDcomposeTask extends DefaultTask {
         debugOutputFile.bytes = outputFile.bytes
     }
 
+    @Internal
     protected Set<Service> getAllServices() {
         Set<DefaultService> result = new HashSet<>()
 

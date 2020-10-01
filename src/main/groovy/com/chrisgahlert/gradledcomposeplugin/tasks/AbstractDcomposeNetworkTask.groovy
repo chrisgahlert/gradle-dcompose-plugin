@@ -21,9 +21,11 @@ import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
 import com.chrisgahlert.gradledcomposeplugin.extension.Network
 import groovy.transform.TypeChecked
 import org.gradle.api.internal.project.ProjectInternal
+import org.gradle.api.tasks.Internal
 
 @TypeChecked
 class AbstractDcomposeNetworkTask extends AbstractDcomposeTask {
+    @Internal
     private Network network
 
     void setNetwork(Network network) {

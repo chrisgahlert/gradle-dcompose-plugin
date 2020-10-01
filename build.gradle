@@ -38,8 +38,8 @@ repositories {
 sourceCompatibility = targetCompatibility = 1.8
 
 dependencies {
-    compile gradleApi()
-    testCompile 'com.netflix.nebula:nebula-test:6.7.1'
+    implementation gradleApi()
+    testImplementation 'com.netflix.nebula:nebula-test:6.7.1'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
