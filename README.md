@@ -45,7 +45,8 @@ buildscript {
 }
 
 plugins {
-  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.16.0"
+  // check for latest version in the release tab as this doesn't get updated regularly
+  id "com.chrisgahlert.gradle-dcompose-plugin" version "0.16.0" 
 }
 
 dcompose {
