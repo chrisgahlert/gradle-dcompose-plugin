@@ -20,6 +20,7 @@ import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
@@ -62,6 +63,7 @@ class DcomposeImagePullTask extends AbstractDcomposeServiceTask {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
+    @Internal
     protected String getImageId() {
         dockerExecutor.runInDockerClasspath {
             ignoreDockerException('NotFoundException') {

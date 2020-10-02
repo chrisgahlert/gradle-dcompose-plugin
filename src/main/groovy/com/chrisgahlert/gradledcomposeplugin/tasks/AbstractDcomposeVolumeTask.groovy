@@ -21,6 +21,7 @@ import com.chrisgahlert.gradledcomposeplugin.extension.DefaultService
 import com.chrisgahlert.gradledcomposeplugin.extension.Volume
 import groovy.transform.TypeChecked
 import org.gradle.api.internal.project.ProjectInternal
+import org.gradle.api.tasks.Internal
 
 @TypeChecked
 class AbstractDcomposeVolumeTask extends AbstractDcomposeTask {
@@ -34,10 +35,12 @@ class AbstractDcomposeVolumeTask extends AbstractDcomposeTask {
         this.volume = volume
     }
 
+    @Internal
     Volume getVolume() {
         return volume
     }
 
+    @Internal
     protected Set<DefaultService> getServicesUsingVolume() {
         Set<DefaultService> result = []
 

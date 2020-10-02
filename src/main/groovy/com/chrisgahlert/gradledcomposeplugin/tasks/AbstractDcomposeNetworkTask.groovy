@@ -25,9 +25,9 @@ import org.gradle.api.tasks.Internal
 
 @TypeChecked
 class AbstractDcomposeNetworkTask extends AbstractDcomposeTask {
-    @Internal
     private Network network
 
+    @Internal
     void setNetwork(Network network) {
         if (this.network != null) {
             throw new ReadOnlyPropertyException("network", this.class)
@@ -36,10 +36,12 @@ class AbstractDcomposeNetworkTask extends AbstractDcomposeTask {
         this.network = network
     }
 
+    @Internal
     Network getNetwork() {
         return network
     }
 
+    @Internal
     protected Set<DefaultService> getServicesUsingNetwork() {
         Set<DefaultService> result = []
 

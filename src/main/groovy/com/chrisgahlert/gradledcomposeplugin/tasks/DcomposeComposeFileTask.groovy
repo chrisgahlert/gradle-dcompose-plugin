@@ -23,23 +23,35 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.GUtil
 
 @TypeChecked
 class DcomposeComposeFileTask extends AbstractDcomposeTask {
+    @Internal
     Collection<? extends Service> dcomposeServices = []
 
     @OutputFile
     File target
 
+    /**
+     * todo:
+     */
+    @Internal
     List<Closure> beforeSaves = []
 
+    @Input
+    @Optional
     Boolean useAWSCompat
 
+    @Input
     boolean useTags = false
 
+    @Input
     String version = '3'
 
     DcomposeComposeFileTask() {

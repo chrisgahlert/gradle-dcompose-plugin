@@ -136,7 +136,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
                 }
             }
 
-            updateServiceState()
+            getUpdateServiceState()
         }
     }
 
@@ -203,7 +203,7 @@ class DcomposeContainerStartTask extends AbstractDcomposeServiceTask {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     @Input
-    boolean updateServiceState() {
+    boolean getUpdateServiceState() {
         def result = ignoreDockerException('NotFoundException') {
             dockerExecutor.client.inspectContainerCmd(containerName).exec()
         }
