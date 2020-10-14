@@ -34,6 +34,8 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
                     memswap = 768 * 1024 * 1024
                     cpushares = 10
                     cpusetcpus = '0'
+                    logBuildStatus = true
+                    buildLogLevel = LogLevel.WARN
                 }
             }
 
@@ -42,6 +44,7 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
 
         file('docker/Dockerfile').text = """
             FROM $DEFAULT_IMAGE
+            RUN echo yeehaww
             CMD ["sh", "-c", "echo built > /test"]
         """.stripIndent()
 
@@ -52,6 +55,7 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':buildBuildimgImage')
         result.wasExecuted(':createBuildimgContainer')
         result.wasExecuted(':startBuildimgContainer')
+        result.standardOutput.contains('yeehaww')
         file('build/copy/test').text.trim() == 'built'
     }
 

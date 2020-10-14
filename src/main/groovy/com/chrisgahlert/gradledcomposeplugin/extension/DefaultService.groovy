@@ -20,6 +20,7 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
 import org.gradle.api.file.CopySpec
+import org.gradle.api.logging.LogLevel
 
 @TypeChecked
 class DefaultService extends Service {
@@ -151,6 +152,8 @@ class DefaultService extends Service {
     Boolean noPruneParentImages
     Boolean buildNoCache
     Boolean buildRemove
+    Boolean logBuildStatus
+    LogLevel buildLogLevel = LogLevel.INFO
 
     /**
      * Results populated after starting a container

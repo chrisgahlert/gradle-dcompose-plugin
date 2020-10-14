@@ -19,6 +19,7 @@ import groovy.transform.TypeChecked
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.CopySpec
+import org.gradle.api.logging.LogLevel
 
 @TypeChecked
 class ServiceReference extends Service {
@@ -266,6 +267,16 @@ class ServiceReference extends Service {
     @Override
     Boolean getBuildRemove() {
         resolved.buildRemove
+    }
+
+    @Override
+    Boolean getLogBuildStatus() {
+        resolved.logBuildStatus
+    }
+
+    @Override
+    LogLevel getBuildLogLevel() {
+        resolved.buildLogLevel
     }
 
     @Override

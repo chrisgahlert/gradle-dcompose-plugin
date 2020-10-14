@@ -20,7 +20,12 @@ import com.chrisgahlert.gradledcomposeplugin.utils.DcomposeUtils
 import com.chrisgahlert.gradledcomposeplugin.utils.ImageRef
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.*
+
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 
 class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
@@ -28,6 +33,16 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
         enabled = { !service.hasImage() }
 
         outputs.upToDateWhen { !service.forcePull }
+    }
+
+    @Console
+    Boolean getLogBuildStatus() {
+        service.logBuildStatus ?: false
+    }
+
+    @Console
+    LogLevel getBuildLogLevel() {
+        service.buildLogLevel
     }
 
     @Input
@@ -130,9 +145,44 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
             }
 
             def resultCallbackClass = dockerExecutor.loadClass('com.github.dockerjava.core.command.BuildImageResultCallback')
-            def response = cmd.exec(resultCallbackClass.newInstance())
+            def resultCallbackHandler = resultCallbackClass.newInstance()
+            def proxy = Proxy.newProxyInstance(
+                    dockerExecutor.dockerClassLoader,
+                    [dockerExecutor.loadClass('com.github.dockerjava.api.async.ResultCallback')] as Class[],
+                    new InvocationHandler() {
+                        @Override
+                        Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                            if (method.name == 'onNext' && args.size() == 1 && buildLogLevel != null) {
+                                String stream = args[0].stream
+                                if (stream != null) {
+                                    logger.log(buildLogLevel, stream.trim())
+                                } else if (logBuildStatus) {
+                                    String status = args[0].status
+                                    if (status != null) {
+                                        String text = status
+                                        String id = args[0].id
+                                        if (id != null && id != 'default') {
+                                            text = id + ': ' + text
+                                        }
+                                        String progress = args[0].progress
+                                        if (progress != null) {
+                                            text += ' [' + progress + ']'
+                                        }
 
-            service.imageId = response.awaitImageId()
+                                        logger.log(buildLogLevel, text)
+                                    }
+
+                                }
+
+                            }
+
+                            resultCallbackHandler.invokeMethod(method.name, args)
+                        }
+                    }
+            )
+            cmd.exec(proxy)
+
+            service.imageId = resultCallbackHandler.awaitImageId()
             logger.info("Built Docker image with id $service.imageId")
 
             tagImageInternal(service.imageId, buildTag)

@@ -19,6 +19,7 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Task
 import org.gradle.api.file.CopySpec
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.TaskDependency
 
 import javax.annotation.Nullable
@@ -211,6 +212,10 @@ abstract class Service extends AbstractEntity implements TaskDependency {
     abstract Boolean getBuildNoCache()
 
     abstract Boolean getBuildRemove()
+
+    abstract Boolean getLogBuildStatus()
+
+    abstract LogLevel getBuildLogLevel()
 
     @Deprecated
     final Boolean getBuildPull() {
