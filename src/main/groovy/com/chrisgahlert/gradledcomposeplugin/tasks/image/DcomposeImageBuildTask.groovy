@@ -45,6 +45,12 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
         service.buildLogLevel
     }
 
+    @OutputFile
+    @Optional
+    File getBuildLogFile() {
+        service.buildLogFile
+    }
+
     @Input
     @Optional
     Boolean getNoCache() {
@@ -146,43 +152,45 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
 
             def resultCallbackClass = dockerExecutor.loadClass('com.github.dockerjava.core.command.BuildImageResultCallback')
             def resultCallbackHandler = resultCallbackClass.newInstance()
-            def proxy = Proxy.newProxyInstance(
-                    dockerExecutor.dockerClassLoader,
-                    [dockerExecutor.loadClass('com.github.dockerjava.api.async.ResultCallback')] as Class[],
-                    new InvocationHandler() {
-                        @Override
-                        Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                            if (method.name == 'onNext' && args.size() == 1 && buildLogLevel != null) {
-                                String stream = args[0].stream
-                                if (stream != null) {
-                                    logger.log(buildLogLevel, stream.trim())
-                                } else if (logBuildStatus) {
-                                    String status = args[0].status
-                                    if (status != null) {
-                                        String text = status
-                                        String id = args[0].id
-                                        if (id != null && id != 'default') {
-                                            text = id + ': ' + text
-                                        }
-                                        String progress = args[0].progress
-                                        if (progress != null) {
-                                            text += ' [' + progress + ']'
+
+            BufferedWriter logWriter = null
+            try {
+                logWriter = buildLogFile?.newWriter('utf-8', false)
+
+                def proxy = Proxy.newProxyInstance(
+                        dockerExecutor.dockerClassLoader,
+                        [dockerExecutor.loadClass('com.github.dockerjava.api.async.ResultCallback')] as Class[],
+                        new InvocationHandler() {
+                            @Override
+                            Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                                if (method.name == 'onNext' && args.size() == 1) {
+                                    String message = getLogMessageInternal(args[0])
+                                    if (message != null) {
+                                        if (buildLogLevel != null) {
+                                            logger.log(buildLogLevel, message.trim())
                                         }
 
-                                        logger.log(buildLogLevel, text)
+                                        logWriter?.append(message)
                                     }
-
                                 }
 
+                                resultCallbackHandler.invokeMethod(method.name, args)
                             }
-
-                            resultCallbackHandler.invokeMethod(method.name, args)
                         }
-                    }
-            )
-            cmd.exec(proxy)
+                )
+                cmd.exec(proxy)
 
-            service.imageId = resultCallbackHandler.awaitImageId()
+                service.imageId = resultCallbackHandler.awaitImageId()
+
+                logWriter?.flush()
+                logWriter?.close()
+            } finally {
+                try {
+                    logWriter?.close()
+                } catch (IOException e) {
+                    logger.warn("Failed closing build log of $service.name to file $buildLogFile.absolutePath", e)
+                }
+            }
             logger.info("Built Docker image with id $service.imageId")
 
             tagImageInternal(service.imageId, buildTag)
@@ -190,6 +198,33 @@ class DcomposeImageBuildTask extends AbstractDcomposeServiceTask {
                 tagImageInternal(service.imageId, it)
             }
         }
+    }
+
+    protected String getLogMessageInternal(item) {
+        String message = null
+
+        String stream = item.stream
+        if (stream != null) {
+            message = stream
+        } else if (logBuildStatus) {
+            String status = item.status
+            if (status != null) {
+                message = status
+
+                String id = item.id
+                if (id != null && id != 'default') {
+                    message = id + ': ' + message
+                }
+
+                String progress = item.progress
+                if (progress != null) {
+                    message += ' [' + progress + ']'
+                }
+            }
+
+        }
+
+        return message
     }
 
     protected void tagImageInternal(String imageId, ImageRef imageTag) {

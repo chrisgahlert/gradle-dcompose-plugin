@@ -44,7 +44,7 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
 
         file('docker/Dockerfile').text = """
             FROM $DEFAULT_IMAGE
-            RUN echo yeehaww
+            RUN echo -n yee && echo haww
             CMD ["sh", "-c", "echo built > /test"]
         """.stripIndent()
 
@@ -55,7 +55,7 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':buildBuildimgImage')
         result.wasExecuted(':createBuildimgContainer')
         result.wasExecuted(':startBuildimgContainer')
-        result.standardOutput.contains('yeehaww')
+        result.standardOutput =~ /yee(\r?\n)?haww/
         file('build/copy/test').text.trim() == 'built'
     }
 
@@ -72,6 +72,7 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
                     memswap = 768 * 1024 * 1024
                     cpushares = 10
                     cpusetcpus = '0'
+                    buildLogFile = file('build/buildimg.log')
                 }
             }
 
@@ -80,6 +81,7 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
 
         file('docker/Dockerfile').text = """
             FROM $DEFAULT_IMAGE
+            RUN echo -n hello && echo world
             CMD ["sh", "-c", "echo built > /test"]
         """.stripIndent()
 
@@ -92,6 +94,7 @@ class DcomposeImageBuildTaskSpec extends AbstractDcomposeSpec {
         result.wasExecuted(':createBuildimgContainer')
         result.wasExecuted(':startBuildimgContainer')
         file('build/copy/test').text.trim() == 'built'
+        file('build/buildimg.log').text.contains('helloworld')
     }
 
     def 'should be able to build image with custom dockerfile name'() {

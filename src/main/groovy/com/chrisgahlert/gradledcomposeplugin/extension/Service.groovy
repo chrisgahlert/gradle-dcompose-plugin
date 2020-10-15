@@ -217,6 +217,8 @@ abstract class Service extends AbstractEntity implements TaskDependency {
 
     abstract LogLevel getBuildLogLevel()
 
+    abstract File getBuildLogFile()
+
     @Deprecated
     final Boolean getBuildPull() {
         forcePull

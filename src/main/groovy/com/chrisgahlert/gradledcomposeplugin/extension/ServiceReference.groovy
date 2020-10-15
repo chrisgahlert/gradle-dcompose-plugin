@@ -280,6 +280,11 @@ class ServiceReference extends Service {
     }
 
     @Override
+    File getBuildLogFile() {
+        resolved.buildLogFile
+    }
+
+    @Override
     void setForcePull(boolean forcePull) {
         resolved.forcePull = forcePull
     }

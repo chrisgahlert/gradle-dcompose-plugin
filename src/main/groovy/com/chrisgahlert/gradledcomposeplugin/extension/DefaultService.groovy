@@ -154,6 +154,7 @@ class DefaultService extends Service {
     Boolean buildRemove
     Boolean logBuildStatus
     LogLevel buildLogLevel = LogLevel.INFO
+    File buildLogFile
 
     /**
      * Results populated after starting a container
