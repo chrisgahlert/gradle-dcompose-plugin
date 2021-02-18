@@ -31,9 +31,9 @@ class ImageRef implements Serializable {
     static ImageRef parse(String image) {
         def parts = image.split('/')
         def registry, repositoryWithTag
-        if (parts.length == 3) {
-            registry = parts[0]
-            repositoryWithTag = parts[1] + '/' + parts[2]
+        if (parts.length >= 3) {
+            registry = parts.first()
+            repositoryWithTag = parts.drop(1).join("/")
         } else if (parts.length == 2) {
             if (parts[0].contains(':') || parts[0].contains('.')) {
                 registry = parts[0]
